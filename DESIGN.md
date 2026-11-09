@@ -1,8 +1,6 @@
 # The Steppe Rescue: Design
 
-*Status: a first draft, for review.*
-
-**The Steppe Rescue is a riding and searching game for children of about ten, played by doing squats in front of a webcam.**
+**The Steppe Rescue is a riding and searching game for children of about seven-ten, played by doing squats in front of a webcam.**
 You are a girl from a small aul (a village of yurts) in the steppe near Astana. The animals of the aul have wandered off: sheep, horses and camels. You ride out on your horse, ask the people you meet where they saw the animals, find them, and lead them home.
 Nobody fights and nothing can hurt you. You win by riding, listening and being kind.
 

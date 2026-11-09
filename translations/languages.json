@@ -1,0 +1,20 @@
+[
+    {
+        "code": "en",
+        "name": "English",
+        "prompt": "Choose your language",
+        "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    },
+    {
+        "code": "ru",
+        "name": "Русский",
+        "prompt": "Выбери язык",
+        "alphabet": "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+    },
+    {
+        "code": "kk",
+        "name": "Қазақша",
+        "prompt": "Тілді таңда",
+        "alphabet": "АӘБВГҒДЕЁЖЗИЙКҚЛМНҢОӨПРСТУҰҮФХҺЦЧШЩЪЫІЬЭЮЯ"
+    }
+]

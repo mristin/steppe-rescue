@@ -1,0 +1,11 @@
+[gd_resource type="Theme" format=3]
+
+[ext_resource type="FontFile" path="res://assets/fonts/unifont/unifont-16.0.04.otf" id="1_unifont"]
+
+[resource]
+default_font = ExtResource("1_unifont")
+default_font_size = 16
+Label/colors/font_color = Color(0.956863, 0.917647, 0.835294, 1)
+Label/colors/font_shadow_color = Color(0.168627, 0.101961, 0.0627451, 1)
+Label/constants/shadow_offset_x = 1
+Label/constants/shadow_offset_y = 1

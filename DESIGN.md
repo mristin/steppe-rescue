@@ -288,7 +288,7 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 * **The languages:** English, Russian and Kazakh, all three from the first version. Kazakh is written in Cyrillic (the alphabet in use in schools today); a Latin-script Kazakh can be added later as its own language.
 * **Adding a language** is one entry in the list of languages and one translation file. No code names a language.
-* **The font** is a pixel font that must cover Latin, Russian Cyrillic and the Kazakh letters (ә, ғ, қ, ң, ө, ұ, ү, һ, і). Since pixel fonts with all the Kazakh letters are rare, we may have to draw the missing letters ourselves.
+* **The font** is a pixel font that must cover Latin, Russian Cyrillic and the Kazakh letters (ә, ғ, қ, ң, ө, ұ, ү, һ, і). Pixel fonts with all the Kazakh letters are rare: we use GNU Unifont (SIL Open Font License) at 16 pixels, and a test checks that it has every letter of every translation.
 * **All the texts are in translation files** (one per language), from the very first screen. The clues are written once as patterns with placeholders ("I saw {animal} between {landmark_a} and {landmark_b}"), and the translators translate the patterns and the names of the animals and the landmarks.
 * **Grammar in the patterns:** Russian needs the cases and the numbers ("две овцы", "пять овец", "у родника", "между кустами и родником"), and Kazakh the case endings ("бұлақтың жанында", "тасқа жақын"). So the names of the landmarks and the animals carry their forms in each case, and the patterns pick the right one. The rider is a girl, so the Russian texts which address her use the feminine ("ты нашла").
 * **Kazakh words in the other languages:** some words stay Kazakh in all three languages, where they add colour and are explained by a picture (*әже*, *тақия*, *шапан*). The names of the tack keep their Kazakh name as a subtitle in the reward cards.
@@ -300,13 +300,13 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 ### Art
 
 * **Pixel art.** The whole game is pixel art: the steppe, the landmarks, the rider, the horse, the animals, the people, the portraits, the icons, the speed bar, the map and the interface.
-  * The game renders at a low resolution (e.g., 480 × 270) and is scaled up by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp on any screen.
+  * The game renders at 640 × 360 and is scaled up by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp on any screen: 3× on a 1080p screen, and 2× on the 1366 × 768 screens of many school laptops. (A lower resolution, such as 480 × 270, would leave too little room for the 16-pixel font.)
   * One limited palette for the whole game, taken from the colours of the intro picture and the steppe: golden grass, sky blue, crimson, emerald, ochre, white felt and dark outlines.
   * **Top-down sprites:** the rider and the horse have sprites in 8 directions with walk, trot and gallop cycles; the animals in 8 directions with a walk and an idle (grazing) cycle. The pieces of finery (section 8) and the looks from the creator are separate sprite layers drawn over the base sprites, so that every combination works without drawing each one.
   * **The portraits** in the conversations and the preview in the creator are larger pixel-art pictures, in the same palette.
   * **The face overlay** draws the hat, the braids and the finery as pixel-art sprites over the camera picture, which is itself shown pixelated (at a low resolution, in the palette), so that it fits the game.
 * **The intro screen** is the one exception: the painted intro picture stays painted, as the cover of the game, without its text (the title and the buttons are drawn by the game in a pixel font). Open question: should it be redrawn as pixel art, too?
-* **The font** is a pixel font with Latin, Cyrillic and the Kazakh letters.
+* **The font** is a pixel font with Latin, Cyrillic and the Kazakh letters (GNU Unifont, section 10).
 * **The ornaments** follow the traditional Kazakh patterns (*ою-өрнек*): the ram's horn, the wave, the four-pointed star. They frame the conversations, the reward cards and the map.
 * **No text in the pictures** that the player has to read, since the game is translated. The intro picture is used without its text, and the game writes the title and the buttons on top.
 
@@ -321,14 +321,17 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 ## 12. Technical outline
 
-* **Godot 4 (.NET).** The vision is in C#; the game is in GDScript.
+* **Godot 4.6 (.NET)**, with the Compatibility renderer (OpenGL), which suits the old school laptops. The vision is in C#; the game is in GDScript.
 * **The vision** runs ONNX models on the CPU:
-  * **a body pose model** with the standard 17 key points (the nose, the eyes, the ears, the shoulders, the elbows, the wrists, ...). From it we take the head (the nose and the ears) and the wrists.
-  * **a face landmark model** for the overlay: it gives the outline of the face, the eyes and the forehead, from which we compute the position, the size and the tilt of the head.
+  * **a body pose model** with the standard 17 key points (the nose, the eyes, the ears, the shoulders, the elbows, the wrists, ...): RTMO-t of MMPose (Apache-2.0). From it we take the head (the mean of the nose, the eyes and the ears), the unit of length (the width of the shoulders) and the wrists. The pose model tells the left wrist from the right one, which the turning needs.
+  * **a head detector** for the overlay: YOLOX-Body-Head-Hand nano (Apache-2.0) at 320x256. The pose model is too slow on a school laptop for the overlay to stick to the face, so the small head detector runs next to it, on every camera frame. The pose tells which of the heads is the player's.
+  * **a face landmark model** for the overlay: YuNet (MIT), run on a small crop around the head the detector found. It gives the eyes, the nose and the corners of the mouth, from which we compute the position, the size and the tilt of the head.
 * **New in C#, without any Godot dependency, so that it can be unit-tested:**
-  * `SquatMeter`: from the vertical position of the head over time (smoothed), it finds the squats, their depth and their rate, and gives a speed in [0, 1].
-  * `ReinClassifier`: from the head axis and the wrists, it gives the turn in [-1, 1] (negative to the left).
-  * `FaceAnchor`: from the face landmarks, the anchor points of the overlay (the top of the head, the ears, the chin) and the tilt.
+  * `SquatMeter`: from the vertical position of the head over time (smoothed), it finds the squats, their depth and their rate, and gives a speed in [0, 1] and the gait. The keyboard registers its squats through the same rules.
+  * `Reins`: from the head axis and the wrists, it gives the turn in [-1, 1] (negative to the left).
+  * `FaceTracker`: the head detector and the face landmarks together, on every frame. Once it found the face, it follows it with the face landmarks alone in a crop around where it was (about 3 ms instead of 25 ms), and runs the head detector only when the face is lost and four times a second, to check that it still follows the player's head.
+  * `FaceAnchor`: from the face landmarks, the anchor of the overlay (the point between the eyes, the distance between the eyes, and the tilt), smoothed, held briefly and faded out when the face is lost.
+  * `VisionService` (the only part which depends on Godot) runs the camera, the pose on one background thread and the face on another, and offers plain getters to GDScript.
 * **The scenes** (GDScript):
   * `intro`, `language_select`, `rider_select`,
   * `rider_creator` (with the on-screen keyboard),
@@ -347,7 +350,7 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
   * `data/finery/`: the pieces for the rider and the horse, with their steps,
   * `translations/`: `messages.pot`, `ru.po`, `kk.po`.
 * **The tests:**
-  * unit tests for `SquatMeter` and `ReinClassifier`, on recordings of real players,
+  * unit tests for `SquatMeter` and `Reins`, on synthetic movements now and on recordings of real players later, and of the models on a test photo,
   * a check of every level: each animal is covered by a clue, each clue points to exactly one area, and every animal is reachable,
   * a check that every text has a translation in Russian and Kazakh,
   * a headless run of a level in keyboard mode.
@@ -356,7 +359,13 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 ## 13. The first thing we build: the movement test
 
-Before the game, a test scene with only the camera, the two detectors and the measurements on the screen: the head's height over time, the counted squats, the speed of a horse, the turn from the hands, and the face overlay with a single hat. We record players of about ten, and tune the thresholds on those recordings.
+Before the game, a test scene with only the camera, the two detectors and the measurements on the screen: the head's height over time, the counted squats, the speed of a horse, the turn from the hands, and the face overlay with a single hat. We record players of seven to ten, and tune the thresholds on those recordings.
+
+**Built** (`scenes/movement_test/`, the main scene for now): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
+
+* a squat counts when the head goes down by at least half the width of the shoulders, and fully at the whole width,
+* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the horse stops 4.5 s after the last squat,
+* a hand starts to turn at 0.1 of the width of the shoulders across the axis of the head, and turns fully at 0.6.
 
 ## 14. Open questions
 

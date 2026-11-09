@@ -1,0 +1,85 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: The Steppe Rescue\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: scenes/movement_test/movement_test.gd
+msgid "Movement test"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Squat depth"
+msgstr ""
+
+#. {count} is the number of the squats so far.
+#: scenes/movement_test/movement_test.gd
+msgid "Squats: {count}"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Space: squat · ←/→: turn · L: language · Esc: quit"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The horse walks."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The horse trots."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The horse gallops!"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The horse stands."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Turning left"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Turning right"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Straight ahead"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Step in front of the camera."
+msgstr ""
+
+#. {pose} and {face} are the milliseconds to find the body and the face.
+#: scenes/movement_test/movement_test.gd
+msgid "I see you! (body {pose} ms, face {face} ms)"
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The camera is off. Use the keyboard."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Looking for a camera..."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "Loading..."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "No camera found. Use the keyboard."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The models are missing. Use the keyboard."
+msgstr ""
+
+#: scenes/movement_test/movement_test.gd
+msgid "The camera failed. Use the keyboard."
+msgstr ""

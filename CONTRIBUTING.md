@@ -1,0 +1,162 @@
+# Contributing
+
+Thank you for helping with The Steppe Rescue!
+This guide explains how to set up the development environment, how to run and test the game, and how to prepare a pull request.
+
+## Overview
+
+The game is made with [Godot] 4.6 (.NET), written in GDScript and C#:
+
+* The vision runs in C# (`scenes/vision/`).
+  It finds the player's pose with RTMO on one background thread, and her face with YOLOX (the heads) and YuNet (the landmarks) on another, all through ONNX Runtime.
+  The pose is too slow for the looks to stick to the face, so the face runs on every camera frame, next to it.
+  The core (`scenes/vision/core/`) does not depend on Godot, so we unit-test it with plain .NET in `tests/SteppeRescue.Tests/`.
+  It also turns the pose into the riding: `SquatMeter` counts the squats and gives the speed of the horse, `Reins` gives the turn from the hands, and `FaceAnchor` says where to draw the looks over the face.
+  The node `VisionService` runs it all in the game and offers plain getters to GDScript; the autoload `Vision` keeps it running across the scenes.
+* The game itself is in GDScript (`scenes/`).
+* The development tools live in `dev/`.
+
+The game is pixel art.
+It renders at 640x360 and scales up by whole numbers (3x on a 1080p screen, 2x on a 1366x768 school laptop) with the nearest-neighbor filter.
+Draw with the colors of `Palette` (`scenes/pixel/palette.gd`) only.
+Until the drawn sprites arrive, the sprites are small pictures in characters in `scenes/pixel/sprites.gd`, which `PixelSprite` turns into textures.
+The text is set in GNU Unifont at 16 pixels, imported without anti-aliasing.
+
+[Godot]: https://godotengine.org
+
+## Setting up the development environment
+
+You need:
+
+* [Git] and [Git LFS], since we keep the ONNX models, the fonts and the images in LFS,
+* the [.NET 8 SDK],
+* the **.NET** build of [Godot 4.6.2] (also called "mono"; the standard build can not run C#), and
+* [Python] 3.10 or newer, for the formatter, the linter and the translation tools.
+
+[Git]: https://git-scm.com
+[Git LFS]: https://git-lfs.com
+[.NET 8 SDK]: https://dotnet.microsoft.com/download/dotnet/8.0
+[Godot 4.6.2]: https://godotengine.org/download/archive/4.6.2-stable/
+[Python]: https://www.python.org/downloads/
+
+### Clone the repository
+
+```
+git lfs install
+git clone https://github.com/mristin/steppe-rescue.git
+cd steppe-rescue
+git lfs pull
+```
+
+### Install Godot
+
+Download the .NET build of Godot 4.6.2 and unpack it anywhere.
+Our scripts find Godot through the `GODOT` environment variable, or as `godot` on your path, e.g.:
+
+```
+export GODOT=~/apps/Godot_v4.6.2-stable_mono_linux_x86_64/Godot_v4.6.2-stable_mono_linux.x86_64
+```
+
+### Restore and build the C# code
+
+```
+dotnet restore SteppeRescue.sln
+dotnet build SteppeRescue.sln
+```
+
+### Set up the Python environment
+
+The tools which keep the code tidy and the translations in order are written in Python, pinned in `dev/requirements.txt`.
+Install them in a virtual environment in `venv/` (it is ignored by Git):
+
+```
+python3 -m venv venv
+venv/bin/pip install -r dev/requirements.txt
+touch venv/.gdignore
+```
+
+**Do not skip the `.gdignore`!**
+Godot scans every directory of the project, and would otherwise try to import the files of the virtual environment.
+
+## Running the game
+
+Open the project in the Godot editor (Import, then select `project.godot`), and press F5.
+The game needs a webcam which supports 640x480.
+Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn.
+
+Start the game with `-- --no-camera` to switch the camera off, and with `-- --lang=ru` (or `kk`, `en`) to choose the language.
+
+## Translations
+
+Every text which a player sees goes through `tr()`, and lives in the translation files in `translations/`: `messages.pot`, `ru.po` and `kk.po`.
+After you add or change a text, run:
+
+```
+venv/bin/python dev/translations/extract.py
+```
+
+It updates the files and keeps the existing translations.
+Put a comment starting with `# TRANSLATORS:` right above a `tr()` to explain the text to the translators, e.g., what a placeholder like `{count}` stands for.
+`dev/translations/check.py` reports what is still to translate or to review, and fails on broken placeholders.
+
+A translation marked as fuzzy has not been reviewed by a native speaker yet.
+The game still shows it; remove the mark once a native speaker has checked it.
+The languages are listed in `translations/languages.json`; adding a language means adding it there and running `extract.py`.
+
+## Pre-commit checks
+
+Before you commit, run:
+
+```
+venv/bin/python dev/continuous_integration/precommit.py --overwrite
+```
+
+The script:
+
+1. re-formats the code (`reformat`): the GDScripts with `gdformat`, the C# code with `dotnet format` and the Python scripts in `dev/` with `black`,
+2. lints the GDScripts with `gdlint` (`lint`),
+3. updates and checks the translations (`translations`),
+4. runs the C# unit tests (`dotnet-test`),
+5. builds the C# part of the game, so that Godot can load it (`build`),
+6. imports the project with Godot (`import`),
+7. type-checks every GDScript with Godot (`check-scripts`),
+8. runs the Godot tests in `tests/godot/` (`godot-test`), and
+9. starts the main scene headless for a moment (`smoke-scenes`).
+
+Without `--overwrite`, the script only checks and changes no files; this is what the continuous integration runs.
+Select or skip steps with `--select` and `--skip`, and run only some Godot tests with `--only`.
+
+### The Godot tests
+
+Each Godot test in `tests/godot/test_*.gd` is a script extending `SceneTree`, which runs the game headless without the camera, checks the behavior, prints `RESULT: OK` and quits with zero on success.
+We run them with `--fixed-fps 60`, so a minute of play takes only a second or two.
+Without the camera, the vision measures the squats in game time, so the tests can squat with the keyboard (`SquatByKeyboard`).
+
+To run a single test directly:
+
+```
+$GODOT --headless --fixed-fps 60 --path . --script tests/godot/test_movement_test.gd -- --no-camera
+```
+
+## Continuous integration
+
+GitHub Actions runs the pre-commit checks (without `--overwrite`) on every pull request and on every push to `main`; see `.github/workflows/ci.yaml`.
+
+## Third-party components
+
+When you add a third-party component (a model, a font, a picture, a sound), list it in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) with its license, and put its license text next to it.
+We only use components whose licenses allow us to distribute them with the game.
+
+## Commit messages
+
+We follow Chris Beams' [guidelines on commit messages]:
+
+1) Separate subject from body with a blank line
+2) Limit the subject line to 50 characters
+3) Capitalize the subject line
+4) Do not end the subject line with a period
+5) Use the imperative mood in the subject line
+6) Wrap the body at 72 characters
+7) Use the body to explain *what* and *why* vs. *how*
+
+[guidelines on commit messages]: https://chris.beams.io/posts/git-commit/

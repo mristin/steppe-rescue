@@ -1,0 +1,115 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/movement_test/movement_test.gd" id="1_test"]
+[ext_resource type="Script" path="res://scenes/camera_panel/camera_panel.gd" id="2_camera"]
+[ext_resource type="Script" path="res://scenes/speed_bar/speed_bar.gd" id="3_speed"]
+[ext_resource type="Script" path="res://scenes/movement_test/turn_gauge.gd" id="4_turn"]
+[ext_resource type="Script" path="res://scenes/movement_test/depth_plot.gd" id="5_depth"]
+
+[node name="MovementTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_test")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.105882, 0.133333, 0.2, 1)
+
+[node name="Title" type="Label" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 2.0
+offset_right = 632.0
+offset_bottom = 20.0
+theme_override_colors/font_color = Color(0.94902, 0.756863, 0.305882, 1)
+text = "Movement test"
+
+[node name="CameraPanel" type="Control" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 328.0
+offset_bottom = 264.0
+script = ExtResource("2_camera")
+show_skeleton = true
+
+[node name="Right" type="Control" parent="."]
+layout_mode = 0
+offset_left = 340.0
+offset_top = 24.0
+offset_right = 632.0
+offset_bottom = 330.0
+
+[node name="SpeedBar" type="Control" parent="Right"]
+layout_mode = 0
+offset_right = 292.0
+offset_bottom = 48.0
+script = ExtResource("3_speed")
+
+[node name="GaitLabel" type="Label" parent="Right"]
+layout_mode = 0
+offset_top = 52.0
+offset_right = 292.0
+offset_bottom = 70.0
+text = "The horse stands."
+
+[node name="TurnLabel" type="Label" parent="Right"]
+layout_mode = 0
+offset_top = 78.0
+offset_right = 292.0
+offset_bottom = 96.0
+text = "Straight ahead"
+
+[node name="TurnGauge" type="Control" parent="Right"]
+layout_mode = 0
+offset_top = 98.0
+offset_right = 292.0
+offset_bottom = 118.0
+script = ExtResource("4_turn")
+
+[node name="DepthLabel" type="Label" parent="Right"]
+layout_mode = 0
+offset_top = 124.0
+offset_right = 292.0
+offset_bottom = 142.0
+text = "Squat depth"
+
+[node name="DepthPlot" type="Control" parent="Right"]
+layout_mode = 0
+offset_top = 144.0
+offset_right = 292.0
+offset_bottom = 216.0
+script = ExtResource("5_depth")
+
+[node name="SquatsLabel" type="Label" parent="Right"]
+layout_mode = 0
+offset_top = 222.0
+offset_right = 292.0
+offset_bottom = 240.0
+text = "Squats: 0"
+
+[node name="StatusLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 270.0
+offset_right = 632.0
+offset_bottom = 288.0
+text = "Looking for a camera..."
+
+[node name="KeysLabel" type="Label" parent="."]
+layout_mode = 0
+offset_left = 8.0
+offset_top = 338.0
+offset_right = 632.0
+offset_bottom = 356.0
+theme_override_colors/font_color = Color(0.560784, 0.721569, 0.878431, 1)
+text = "Space: squat · ←/→: turn · L: language · Esc: quit"

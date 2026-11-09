@@ -1,0 +1,106 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: The Steppe Rescue\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Movement test"
+msgstr "Проверка движений"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squat depth"
+msgstr "Глубина приседания"
+
+#. {count} is the number of the squats so far.
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squats: {count}"
+msgstr "Приседания: {count}"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Space: squat · ←/→: turn · L: language · Esc: quit"
+msgstr "Пробел: присесть · ←/→: поворот · L: язык · Esc: выход"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse walks."
+msgstr "Лошадь идёт шагом."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse trots."
+msgstr "Лошадь бежит рысью."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse gallops!"
+msgstr "Лошадь скачет галопом!"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse stands."
+msgstr "Лошадь стоит."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning left"
+msgstr "Поворот налево"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning right"
+msgstr "Поворот направо"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Straight ahead"
+msgstr "Прямо"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Step in front of the camera."
+msgstr "Встань перед камерой."
+
+#. {pose} and {face} are the milliseconds to find the body and the face.
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "I see you! (body {pose} ms, face {face} ms)"
+msgstr "Я тебя вижу! (тело {pose} мс, лицо {face} мс)"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The camera is off. Use the keyboard."
+msgstr "Камера выключена. Играй с клавиатуры."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Looking for a camera..."
+msgstr "Ищу камеру..."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Loading..."
+msgstr "Загрузка..."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "No camera found. Use the keyboard."
+msgstr "Камера не найдена. Играй с клавиатуры."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The models are missing. Use the keyboard."
+msgstr "Не хватает моделей. Играй с клавиатуры."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The camera failed. Use the keyboard."
+msgstr "Ошибка камеры. Играй с клавиатуры."

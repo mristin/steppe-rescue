@@ -1,0 +1,106 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: The Steppe Rescue\n"
+"Language: kk\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Movement test"
+msgstr "Қимылдарды тексеру"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squat depth"
+msgstr "Отырып-тұрудың тереңдігі"
+
+#. {count} is the number of the squats so far.
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squats: {count}"
+msgstr "Отырып-тұру: {count}"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Space: squat · ←/→: turn · L: language · Esc: quit"
+msgstr "Пробел: отырып-тұру · ←/→: бұрылу · L: тіл · Esc: шығу"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse walks."
+msgstr "Ат аяңдап жүр."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse trots."
+msgstr "Ат желіп жүр."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse gallops!"
+msgstr "Ат шауып барады!"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse stands."
+msgstr "Ат тұр."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning left"
+msgstr "Солға бұрылу"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning right"
+msgstr "Оңға бұрылу"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Straight ahead"
+msgstr "Тура алға"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Step in front of the camera."
+msgstr "Камераның алдына тұр."
+
+#. {pose} and {face} are the milliseconds to find the body and the face.
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "I see you! (body {pose} ms, face {face} ms)"
+msgstr "Мен сені көріп тұрмын! (дене {pose} мс, бет {face} мс)"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The camera is off. Use the keyboard."
+msgstr "Камера сөндірулі. Пернетақтаны қолдан."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Looking for a camera..."
+msgstr "Камераны іздеп жатырмын..."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Loading..."
+msgstr "Жүктелуде..."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "No camera found. Use the keyboard."
+msgstr "Камера табылмады. Пернетақтаны қолдан."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The models are missing. Use the keyboard."
+msgstr "Модельдер жоқ. Пернетақтаны қолдан."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The camera failed. Use the keyboard."
+msgstr "Камера істен шықты. Пернетақтаны қолдан."

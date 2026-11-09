@@ -245,7 +245,10 @@ def smoke_scenes(godot: str, jobs: int) -> int:
     The test screens show the parts of the game in isolation, so this catches
     the scenes which do not even start.
     """
-    scenes = [REPO_ROOT / "scenes" / "movement_test" / "movement_test.tscn"]
+    scenes = [
+        REPO_ROOT / "scenes" / "level" / "level.tscn",
+        REPO_ROOT / "scenes" / "movement_test" / "movement_test.tscn",
+    ]
     scenes.extend(sorted((REPO_ROOT / "scenes" / "tests").rglob("*.tscn")))
     print(f"Starting {len(scenes)} scene(s) headless...", flush=True)
 

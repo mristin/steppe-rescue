@@ -47,7 +47,7 @@ func _run() -> void:
     var speed_bar: SpeedBar = scene.get_node("Right/SpeedBar")
     _check(speed_bar.gait() == 3, "the speed bar shows the gallop")
 
-    await create_timer(10.0).timeout
+    await create_timer(14.0).timeout
     _check(service.GetGait() == 0, "the horse stops after the squats stop")
 
     var left := InputEventKey.new()

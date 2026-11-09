@@ -2,3 +2,4 @@
 black==24.10.0
 gdtoolkit==4.5.0
 polib==1.2.0
+pillow==11.0.0

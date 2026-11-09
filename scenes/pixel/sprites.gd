@@ -6,70 +6,135 @@ extends RefCounted
 
 # gdlint: disable=max-line-length
 
-## The upper part of the horse, seen from the side, facing right; the legs
-## differ per gait and frame.
-const _HORSE_TOP := [
-    "................kk..",
-    "...............kbbk.",
-    "..............kbbbbk",
-    ".............kbblbbk",
-    "............kbbk.kkk",
-    "...........kbbk.....",
-    "..kkkkkkkkkbbbk.....",
-    ".kbbbbbbbbbbbbk.....",
-    "kkbbbbbbbbbbbbk.....",
-    "k.kbbbbbbbbbbk......",
+## The horse walking, seen from the side, facing right, in two frames.
+const _WALK := [
+    [
+        "....................kk....",
+        "...................khhk...",
+        "..................khbbbk..",
+        ".................khbbbbbk.",
+        "................khbbkbbbbk",
+        "...............khbbbbbbbbk",
+        "..............khbbbkkkbbk.",
+        "....kkkkkkkkkkhbbbk...kk..",
+        "..kkllllllllllllbbk.......",
+        ".khblllllllllllbbbbk......",
+        "khhbbbbbbbbbbbbbbbbk......",
+        "khkbbbbbbbbbbbbbbbk.......",
+        "kk.kbbbbbbbbbbbbbbk.......",
+        "....kbbbkkkkkkkbbbk.......",
+        "....kbbk.....kbbk.........",
+        "....kbk.......kbk.........",
+        "....kbk.......kbk.........",
+        "....khh.......khh.........",
+    ],
+    [
+        "....................kk....",
+        "...................khhk...",
+        "..................khbbbk..",
+        ".................khbbbbbk.",
+        "................khbbkbbbbk",
+        "...............khbbbbbbbbk",
+        "..............khbbbkkkbbk.",
+        "....kkkkkkkkkkhbbbk...kk..",
+        "..kkllllllllllllbbk.......",
+        ".khblllllllllllbbbbk......",
+        "khhbbbbbbbbbbbbbbbbk......",
+        "khkbbbbbbbbbbbbbbbk.......",
+        "kk.kbbbbbbbbbbbbbbk.......",
+        "....kbbbkkkkkkkbbbk.......",
+        "....kbbk.....kbbk.........",
+        "....kbk.......kbbk........",
+        "...kbk.........kbk........",
+        "...khh.........khh........",
+    ],
 ]
 
-const _WALK_LEGS := [
+## The horse trotting, seen from the side, facing right, in two frames.
+const _TROT := [
     [
-        "k..kbk....kbk.......",
-        "...kbk....kbk.......",
-        "...hh.....hh........",
+        "....................kk....",
+        "...................khhk...",
+        "..................khbbbk..",
+        ".................khbbbbbk.",
+        "................khbbkbbbbk",
+        "...............khbbbbbbbbk",
+        "..............khbbbkkkbbk.",
+        "....kkkkkkkkkkhbbbk...kk..",
+        "..kkllllllllllllbbk.......",
+        ".khblllllllllllbbbbk......",
+        "khhbbbbbbbbbbbbbbbbk......",
+        "khkbbbbbbbbbbbbbbbk.......",
+        "kk.kbbbbbbbbbbbbbbk.......",
+        "....kbbbkkkkkkkbbbk.......",
+        "...kbbk......kbbk.........",
+        "..kbk.kbk....kbk.kbk......",
+        "..khh..khh..kbk...khh.....",
+        ".............khh..........",
     ],
     [
-        "k..kbk....kbbk......",
-        "...kbk....k..bk.....",
-        "...hh.....h...hh....",
+        "....................kk....",
+        "...................khhk...",
+        "..................khbbbk..",
+        ".................khbbbbbk.",
+        "................khbbkbbbbk",
+        "...............khbbbbbbbbk",
+        "..............khbbbkkkbbk.",
+        "....kkkkkkkkkkhbbbk...kk..",
+        "..kkllllllllllllbbk.......",
+        ".khblllllllllllbbbbk......",
+        "khhbbbbbbbbbbbbbbbbk......",
+        "khkbbbbbbbbbbbbbbbk.......",
+        "kk.kbbbbbbbbbbbbbbk.......",
+        "....kbbbkkkkkkkbbbk.......",
+        "....kbbk....kbbk..........",
+        "...kbk.kbk.kbk.kbk........",
+        "..kbk...khhkbk...khh......",
+        "..khh......khh............",
     ],
 ]
 
-const _TROT_LEGS := [
+## The horse galloping, seen from the side, facing right, in two frames.
+const _GALLOP := [
     [
-        "k..kbbk...kbk.......",
-        "..kbk.bk..kbk.......",
-        ".hh....hh.hh........",
+        "......................kk..",
+        ".....................khhk.",
+        "....................khbbbk",
+        "...................khbbkbk",
+        "..................khbbbbbk",
+        ".................khbbkkkk.",
+        "kkk.............khbbk.....",
+        "khhkkkkkkkkkkkkkhbbbk.....",
+        ".kkhllllllllllllllbbk.....",
+        "...kblllllllllllbbbbk.....",
+        "...kbbbbbbbbbbbbbbbk......",
+        "...kbbbbbbbbbbbbbbbk......",
+        "....kbbbkkkkkkkbbbk.......",
+        "...kbbk........kbbk.......",
+        "..kbk...........kbbk......",
+        ".kbk..............kbk.....",
+        "khh................khh....",
+        "..........................",
     ],
     [
-        "k..kbk...kbbk.......",
-        "...kbk..kbk.bk......",
-        "...hh..hh....hh.....",
-    ],
-]
-
-const _GALLOP_BODY := [
-    "................kk..",
-    "...............kbbk.",
-    "..............kbbbbk",
-    ".............kbblbbk",
-    "............kbbk.kkk",
-    "...........kbbk.....",
-    "kkkkkkkkkkkbbbk.....",
-    ".kkbbbbbbbbbbbk.....",
-    "..kbbbbbbbbbbbk.....",
-    "..kbbbbbbbbbbk......",
-]
-
-const _GALLOP_LEGS := [
-    [
-        ".kbk.......kbk......",
-        "kbk.........kbk.....",
-        "hh...........hh.....",
-    ],
-    [
-        "...kbk...kbk........",
-        "....kbkkbk..........",
-        ".....hhhh...........",
+        "......................kk..",
+        ".....................khhk.",
+        "....................khbbbk",
+        "...................khbbkbk",
+        "..................khbbbbbk",
+        ".................khbbkkkk.",
+        "kkk.............khbbk.....",
+        "khhkkkkkkkkkkkkkhbbbk.....",
+        ".kkhllllllllllllllbbk.....",
+        "...kblllllllllllbbbbk.....",
+        "...kbbbbbbbbbbbbbbbk......",
+        "...kbbbbbbbbbbbbbbbk......",
+        "....kbbbkkkkkkkbbbk.......",
+        "......kbbk...kbbk.........",
+        ".......kbk..kbk...........",
+        "........kbkkbk............",
+        "........khhkhh............",
+        "..........................",
     ],
 ]
 
@@ -92,13 +157,13 @@ const TAKIYA := [
 static func horse(gait: int, frame: int) -> Array:
     match gait:
         2:
-            return _HORSE_TOP + _TROT_LEGS[frame % 2]
+            return _TROT[frame % 2]
         3:
-            return _GALLOP_BODY + _GALLOP_LEGS[frame % 2]
+            return _GALLOP[frame % 2]
         1:
-            return _HORSE_TOP + _WALK_LEGS[frame % 2]
+            return _WALK[frame % 2]
         _:
-            return _HORSE_TOP + _WALK_LEGS[0]
+            return _WALK[0]
 
 
 ## All the sprites with their names, for the tests.

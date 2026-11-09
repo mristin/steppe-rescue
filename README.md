@@ -15,8 +15,10 @@ The webcam images are processed locally, in memory, and are never saved or sent 
 
 ## Status
 
-We are building the movement test (section 13 of the design): the camera picture with the pose and a hat over the face, the speed bar from the squats, and the turn from the hands.
-Start the project in Godot and step in front of the webcam, or use the keyboard: Space is a squat, the arrows turn, L switches the language and Escape quits.
+We are building the first level, "The lamb by the spring" (section 14 of the design): Grandmother sends you out to find the lamb, you ride with the squats and turn with your hands, the lamb follows you once you stay next to it, and you bring it into the pen.
+Start the project in Godot and step in front of the webcam, or use the keyboard: Space is a squat, the arrows turn, C opens the map, L switches the language, R rides the level again and Escape twice quits.
+
+The movement test (`scenes/movement_test/movement_test.tscn`, section 13 of the design) shows what the camera sees: the pose, the hat over the face, the speed bar from the squats and the turn from the hands.
 
 ## Acknowledgments
 

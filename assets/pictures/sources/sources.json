@@ -1,0 +1,32 @@
+[
+  {
+    "id": "grandmother",
+    "source": "grandmother.jpg",
+    "crop": [335, 340, 635, 640],
+    "title": "Tipy narodnostei turkestanskago kraia. Kirgiz-Kazachki. Tunuk-ai LCCN2007682007.jpg",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazachki._Tunuk-ai_LCCN2007682007.jpg",
+    "author": "Turkestan Album (Library of Congress, Prints and Photographs Division)",
+    "date": "about 1865-1872",
+    "license": "Public domain (PD-old-100-1923)"
+  },
+  {
+    "id": "shepherd",
+    "source": "shepherd.jpg",
+    "crop": [285, 270, 685, 670],
+    "title": "Tipy narodnostei turkestanskago kraia. Kirgiz-Kazaki- Utkul'-bai LCCN2007681449.jpg",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazaki-_Utkul%27-bai_LCCN2007681449.jpg",
+    "author": "Turkestan Album (Library of Congress, Prints and Photographs Division)",
+    "date": "about 1865-1872",
+    "license": "Public domain (PD-old-100-1923)"
+  },
+  {
+    "id": "beekeeper",
+    "source": "beekeeper.jpg",
+    "crop": [310, 250, 720, 660],
+    "title": "Tipy narodnostei turkestanskago kraia. Cholak-Kazachki. Ai-kara LCCN2007682050.jpg",
+    "page_url": "https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Cholak-Kazachki._Ai-kara_LCCN2007682050.jpg",
+    "author": "Turkestan Album (Library of Congress, Prints and Photographs Division)",
+    "date": "about 1865-1872",
+    "license": "Public domain (PD-old-100-1923)"
+  }
+]

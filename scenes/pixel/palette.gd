@@ -22,10 +22,12 @@ const OCHRE := Color("#c9822b")
 const GOLD := Color("#f2c14e")
 const FELT := Color("#f4ead5")
 const STONE := Color("#8a8580")
+const STONE_LIGHT := Color("#b8b2a8")
 const HORSE_BAY := Color("#7a3f1d")
 const HORSE_BAY_LIGHT := Color("#a35a2c")
 const HOOF := Color("#3b2a20")
 const SKIN := Color("#e0a878")
+const SKIN_DARK := Color("#b97a52")
 const SHADOW := Color(0.0, 0.0, 0.0, 0.35)
 
 ## The legend of the characters in the sprites of [PixelSprite], shared by
@@ -44,4 +46,13 @@ const LEGEND := {
     "f": FELT,
     "g": GRASS,
     "s": SKIN,
+    "z": SKIN_DARK,
+    "a": STONE,
+    "w": STONE_LIGHT,
+    "u": SKY,
+    "i": SKY_LIGHT,
+    "m": EMERALD_LIGHT,
+    "n": NIGHT,
+    "c": GRASS_DARK,
+    "t": GRASS_LIGHT,
 }

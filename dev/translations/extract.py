@@ -5,7 +5,8 @@ Collect the translatable messages of the game into translations/messages.pot,
 and update the translations (translations/<language>.po) with them.
 
 The messages come from the ``tr("...")`` and ``tr("...", "context")`` calls in
-the GDScripts. A comment line starting with ``# TRANSLATORS:`` right above a
+the GDScripts, from the text fields of the data in ``data/`` (see DATA_FIELDS),
+and from the names of the landmarks with their grammatical forms (see FORMS). A comment line starting with ``# TRANSLATORS:`` right above a
 call is passed on to the translators.
 
 The existing translations are kept. A new message gets an empty translation,
@@ -45,6 +46,40 @@ _STRING = r'"((?:[^"\\]|\\.)*)"'
 TR_RE = re.compile(r"\btr\(\s*" + _STRING + r"(?:\s*,\s*" + _STRING + r")?\s*\)", re.DOTALL)
 
 TRANSLATORS_RE = re.compile(r"#\s*TRANSLATORS:\s*(.*)$")
+
+#: The translatable fields of the data (the levels, the landmarks and the
+#: animals in data/), and what they are, for the translators.
+DATA_FIELDS = {
+    "title": "the name of a level, a few words",
+    "thanks": "what Grandmother says when all the animals are home; {rider} is the rider's name",
+    "speaker": "the name of a person of the steppe",
+    "greeting": "what a person says to the rider, at most two short sentences; {rider} is her name",
+    "one": "one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'",
+    "many": "several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'",
+}
+
+#: A text field of the data.
+DATA_FIELD_RE = re.compile(
+    r"^(" + "|".join(DATA_FIELDS) + r") = " + r'"((?:[^"\\]|\\.)*)"$', re.MULTILINE
+)
+
+#: The grammatical forms which the translations may ask for (see
+#: scenes/languages/grammar.gd): the kind of the inserted value, where its
+#: messages come from (the folder and the field), and the contexts. A form
+#: carries its preposition or postposition, since it differs between the
+#: names ("у родника", "бұлақтың жанында").
+FORMS = {
+    "landmark": ("data/landmarks", "name", ["near", "of", "and", "between"]),
+}
+
+FORM_EXAMPLES = {
+    "near": "near the landmark, e.g. 'у родника', 'бұлақтың жанында'",
+    "of": "as in 'north of the landmark', e.g. 'родника' in 'к северу от родника', "
+    "'бұлақтың' in 'бұлақтың солтүстік жағында'",
+    "and": "the first of two, as in 'between the landmark and ...', e.g. 'родником', 'бұлақ пен'",
+    "between": "the second of two, as in 'between ... and the landmark', "
+    "e.g. 'родником', 'бұлақтың'",
+}
 
 #: (context, message id)
 Key = Tuple[str, str]
@@ -104,7 +139,34 @@ def collect_messages() -> Dict[Key, polib.POEntry]:
 
             _add(entries, msgid, context, relative, comment)
 
+    data = REPO_ROOT / "data"
+    for path in sorted([*data.rglob("*.tres"), *data.rglob("*.tscn")]):
+        text = path.read_text(encoding="utf-8")
+        relative = path.relative_to(REPO_ROOT).as_posix()
+        for match in DATA_FIELD_RE.finditer(text):
+            msgid = _unescape(match.group(2))
+            if msgid != "":
+                _add(entries, msgid, "", relative, DATA_FIELDS[match.group(1)])
+
+    collect_forms(entries)
     return entries
+
+
+def collect_forms(entries: Dict[Key, polib.POEntry]) -> None:
+    """Add the grammatical forms of the names (see FORMS)."""
+    for kind, (folder, field, contexts) in FORMS.items():
+        field_re = re.compile(r"^" + field + r" = " + _STRING + r"$", re.MULTILINE)
+        for path in sorted((REPO_ROOT / folder).rglob("*.tres")):
+            text = path.read_text(encoding="utf-8")
+            relative = path.relative_to(REPO_ROOT).as_posix()
+            for match in field_re.finditer(text):
+                msgid = _unescape(match.group(1))
+                for context in contexts:
+                    comment = (
+                        f"the form of the {kind} for {{{kind}@{context}}} in the translations: "
+                        f"{FORM_EXAMPLES[context]}"
+                    )
+                    _add(entries, msgid, context, relative, comment)
 
 
 def _key(entry: polib.POEntry) -> Key:

@@ -8,6 +8,57 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#: scenes/level/level.gd
+#, fuzzy
+msgid "Don't ride too far away!"
+msgstr "Тым алысқа кетпе!"
+
+#: scenes/level/level.gd
+#, fuzzy
+msgid "Aigerim"
+msgstr "Айгерім"
+
+#: scenes/level/level.gd
+#, fuzzy
+msgid "R: ride again · Esc: quit"
+msgstr "R: қайта ойнау · Esc: шығу"
+
+#. {landmark@near} is a landmark in its form "near", e.g., "у родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} near {landmark@near}."
+msgstr "{landmark@near} {animals} көрдім."
+
+#. {landmark@and}, {other@between}: landmarks in the forms "and", "between".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} between {landmark@and} and {other@between}."
+msgstr "{landmark@and} {other@between} арасында {animals} көрдім."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} north of {landmark@of}."
+msgstr "{landmark@of} солтүстік жағында {animals} көрдім."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} south of {landmark@of}."
+msgstr "{landmark@of} оңтүстік жағында {animals} көрдім."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} east of {landmark@of}."
+msgstr "{landmark@of} шығыс жағында {animals} көрдім."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} west of {landmark@of}."
+msgstr "{landmark@of} батыс жағында {animals} көрдім."
+
 #: scenes/movement_test/movement_test.gd
 #, fuzzy
 msgid "Movement test"
@@ -64,43 +115,364 @@ msgstr "Оңға бұрылу"
 msgid "Straight ahead"
 msgstr "Тура алға"
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/quit_hint/quit_hint.gd
+#, fuzzy
+msgid "Press Esc again to quit."
+msgstr "Шығу үшін Esc пернесін тағы бір рет бас."
+
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "Step in front of the camera."
 msgstr "Камераның алдына тұр."
 
 #. {pose} and {face} are the milliseconds to find the body and the face.
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "I see you! (body {pose} ms, face {face} ms)"
 msgstr "Мен сені көріп тұрмын! (дене {pose} мс, бет {face} мс)"
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "The camera is off. Use the keyboard."
 msgstr "Камера сөндірулі. Пернетақтаны қолдан."
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "Looking for a camera..."
 msgstr "Камераны іздеп жатырмын..."
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "Loading..."
 msgstr "Жүктелуде..."
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "No camera found. Use the keyboard."
 msgstr "Камера табылмады. Пернетақтаны қолдан."
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "The models are missing. Use the keyboard."
 msgstr "Модельдер жоқ. Пернетақтаны қолдан."
 
-#: scenes/movement_test/movement_test.gd
+#: scenes/vision/vision_status.gd
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Камера істен шықты. Пернетақтаны қолдан."
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/camel.tres
+#, fuzzy
+msgid "a camel"
+msgstr "бір түйе"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/camel.tres
+#, fuzzy
+msgid "camels"
+msgstr "түйелер"
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/horse.tres
+#, fuzzy
+msgid "a horse"
+msgstr "бір жылқы"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/horse.tres
+#, fuzzy
+msgid "horses"
+msgstr "жылқылар"
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/sheep.tres
+#, fuzzy
+msgid "a sheep"
+msgstr "бір қой"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/sheep.tres
+#, fuzzy
+msgid "sheep"
+msgstr "қойлар"
+
+#. the name of a level, a few words
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "The lamb by the spring"
+msgstr "Бұлақ басындағы қозы"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "Thank you, {rider}! The lamb is home again."
+msgstr "Рақмет, {rider}! Қозы қайтадан үйде."
+
+#. the name of a person of the steppe
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "Grandmother"
+msgstr "Әже"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "Our lamb ran off in the night. Please bring it home, {rider}!"
+msgstr "Түнде қозымыз қашып кетті. Оны үйге әкелші, {rider}!"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "near"
+msgid "the birch grove"
+msgstr "қайың тоғайының жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "of"
+msgid "the birch grove"
+msgstr "қайың тоғайының"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "and"
+msgid "the birch grove"
+msgstr "қайың тоғайы мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "between"
+msgid "the birch grove"
+msgstr "қайың тоғайының"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "near"
+msgid "the bushes"
+msgstr "қараған бұталарының жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "of"
+msgid "the bushes"
+msgstr "қараған бұталарының"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "and"
+msgid "the bushes"
+msgstr "қараған бұталары мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "between"
+msgid "the bushes"
+msgstr "қараған бұталарының"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "near"
+msgid "the old kurgan"
+msgstr "ескі қорғанның жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "of"
+msgid "the old kurgan"
+msgstr "ескі қорғанның"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "and"
+msgid "the old kurgan"
+msgstr "ескі қорған бен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "between"
+msgid "the old kurgan"
+msgstr "ескі қорғанның"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "near"
+msgid "the lake"
+msgstr "көлдің жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "of"
+msgid "the lake"
+msgstr "көлдің"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "and"
+msgid "the lake"
+msgstr "көл мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "between"
+msgid "the lake"
+msgstr "көлдің"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "near"
+msgid "the big rock"
+msgstr "үлкен тастың жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "of"
+msgid "the big rock"
+msgstr "үлкен тастың"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "and"
+msgid "the big rock"
+msgstr "үлкен тас пен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "between"
+msgid "the big rock"
+msgstr "үлкен тастың"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "near"
+msgid "the spring"
+msgstr "бұлақтың жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "of"
+msgid "the spring"
+msgstr "бұлақтың"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "and"
+msgid "the spring"
+msgstr "бұлақ пен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "between"
+msgid "the spring"
+msgstr "бұлақтың"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "near"
+msgid "the well"
+msgstr "құдықтың жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "of"
+msgid "the well"
+msgstr "құдықтың"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "and"
+msgid "the well"
+msgstr "құдық пен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "between"
+msgid "the well"
+msgstr "құдықтың"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "near"
+msgid "the yurt"
+msgstr "киіз үйдің жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "of"
+msgid "the yurt"
+msgstr "киіз үйдің"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "and"
+msgid "the yurt"
+msgstr "киіз үй мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "between"
+msgid "the yurt"
+msgstr "киіз үйдің"

@@ -12,7 +12,7 @@ config_version=5
 
 config/name="The Steppe Rescue"
 config/version="0.1.0"
-run/main_scene="res://scenes/movement_test/movement_test.tscn"
+run/main_scene="res://scenes/level/level.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
@@ -23,8 +23,8 @@ Vision="*res://scenes/vision/vision.tscn"
 
 [display]
 
-window/size/viewport_width=640
-window/size/viewport_height=360
+window/size/viewport_width=960
+window/size/viewport_height=540
 window/size/window_width_override=1920
 window/size/window_height_override=1080
 window/size/mode=3

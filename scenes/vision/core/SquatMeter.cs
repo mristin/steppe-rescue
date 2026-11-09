@@ -63,11 +63,29 @@ namespace SteppeRescue.Vision
         /// <summary>After this long without a squat (in seconds), the horse stops.</summary>
         public double MaxPause = 4.5;
 
-        /// <summary>How fast the horse speeds up, in the full speed per second.</summary>
-        public float Acceleration = 0.6f;
+        /// <summary>
+        /// A squat may come this late (in seconds) before the horse slows down, so
+        /// that it keeps its momentum between the squats.
+        /// </summary>
+        public double Grace = 0.75;
+
+        /// <summary>How fast the horse speeds up to a walk, in the full speed per second.</summary>
+        public float Acceleration = 0.35f;
+
+        /// <summary>
+        /// How fast the horse speeds up beyond the walk, in the full speed per second,
+        /// so that it takes a few brisk squats, not two, to gallop.
+        /// </summary>
+        public float FastAcceleration = 0.18f;
 
         /// <summary>How fast the horse slows down, in the full speed per second.</summary>
-        public float Deceleration = 0.35f;
+        public float Deceleration = 0.6f;
+
+        /// <summary>
+        /// How fast a galloping horse slows down, in the full speed per second: it
+        /// keeps its momentum for a moment, and then stops at <see cref="Deceleration"/>.
+        /// </summary>
+        public float GallopDeceleration = 0.25f;
 
         /// <summary>A shallow squat (at <see cref="CountDepth"/>) counts this much.</summary>
         public float ShallowFactor = 0.6f;
@@ -248,13 +266,15 @@ namespace SteppeRescue.Vision
                 double since = t - _lastSquat;
 
                 // NOTE (mristin):
-                // While no new squat comes, the period effectively grows, so the
-                // horse slows down gradually instead of keeping its pace.
-                double period = Math.Max(Period, since);
+                // While no new squat comes, the period effectively grows (after the
+                // grace), so the horse slows down gradually instead of keeping its pace.
+                double period = Math.Max(Period, since - Grace);
                 TargetSpeed = since > MaxPause ? 0f : SpeedOfPeriod(period) * _lastFactor;
             }
 
-            float rate = TargetSpeed > Speed ? Acceleration : Deceleration;
+            float rate = TargetSpeed > Speed
+                ? Speed < WalkFrom + 0.1f ? Acceleration : FastAcceleration
+                : Speed > GallopFrom ? GallopDeceleration : Deceleration;
             float step = rate * (float)dt;
             Speed = TargetSpeed > Speed
                 ? Math.Min(TargetSpeed, Speed + step)

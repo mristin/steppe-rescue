@@ -35,6 +35,7 @@ The landmarks are what the people talk about, so each one must be easy to recogn
 * **the well** with a wooden sweep (the long pole for lifting the bucket),
 * **the winter camp**, an empty stone enclosure (*қыстау*),
 * **the power line** or **the road**, which cross a level as a long, straight line,
+* **the pastures**, patches of green grass where the horse can graze (section 4, "Water and grass for the horse"),
 * **the yurts** of the people you meet.
 
 ### The seasons
@@ -67,7 +68,7 @@ The levels move through the year, which changes the colours and the landmarks a 
 ### The map
 
 * The map of the level shows the landmarks, the yurts, the home aul and the rider, painted like a hand-drawn map on felt or paper. **It never shows the animals.**
-* A small map sits in a corner of the screen. When the rider stands still for a moment, the map opens large, and closes again when she rides on.
+* A small map sits in a corner of the screen. The player opens it large and closes it again with a key (C for now). Open question: a gesture to open it without the keyboard.
 * **The clues are drawn on the map.** When someone tells the rider where they saw an animal, a small sketch of the animal and a dotted area appear on the map in that place ("between the spring and the bushes"). The area is only approximate. The sketch is crossed out when the animal is found.
 
 ### The clues
@@ -98,9 +99,22 @@ When the rider is near an animal, but the animal is still off the screen, she he
 ### Gathering and herding
 
 * **An animal joins** when the rider comes within about a horse's length of it, and stays near for a moment (about 1 s). The animal looks up, a small heart or musical note rises above it, and it starts to follow.
+* **The rings show it:** a lost animal on the screen has a dashed white ring around it, turning slowly, which marks how close the rider must come. While she stays inside, a red arc fills the ring, and when it is full, the animal joins. An animal which follows the rider has a soft green ring which pulses, so the player sees at a glance who follows her.
 * **Horses are shy:** they join only if the rider comes slowly (the horse walking, not galloping). If she gallops at them, they trot away a little, and she can try again.
 * **The followers** walk behind the rider in a loose line or herd. They keep up with a walk and a trot, but at a gallop the slow animals (sheep, camels) fall behind and call out; they never get lost, and they catch up when the rider slows down.
 * **The pen.** At home, the animals run into the pen by themselves when the rider rides through the gate.
+
+### Water and grass for the horse (later)
+
+The horse gets thirsty and hungry while it runs, so a ride is also about caring for it.
+
+* **Two bars:** water and food, next to the speed bar, each with its picture (a drop of water and a tuft of grass). They empty slowly while the horse moves, faster at a gallop.
+* **Too thirsty or too hungry:** when a bar is empty, the horse can only walk slowly, however fast the player squats. It never stops, so a child is never stuck.
+* **Drinking:** the horse drinks by itself when the rider stands at fresh water: a river, a lake or a spring, but **not a salt lake**. The water bar fills while it drinks.
+* **Eating:** the horse grazes by itself when the rider stands on a pasture, where the grass is green enough. The steppe elsewhere is too dry. The food bar fills while it eats.
+* **Showing, not telling:** when a bar runs low, it blinks, and the horse shows it: a small bubble with a drop or a tuft of grass rises above it, it lowers its head and snorts. While it drinks or eats, the bar fills visibly and the horse dips its head.
+* **On the map:** the water is blue already; the pastures are marked in green, so the player can plan where to rest.
+* The levels place the water and the pastures so that a careful rider never runs dry; the later levels space them out more.
 
 ### The levels
 
@@ -229,6 +243,7 @@ The camera picture in the corner of the screen shows the player, mirrored, **dre
 * **On the screen:**
   * the slots of the missing animals at the top (empty, following, home),
   * **the speed bar**: a horizontal bar with three horse icons along it, a horse walking at the left, a horse trotting in the middle and a horse galloping at the right. The bar fills from the left with the horse's speed, and the icon the fill has reached lights up and moves. This is how the player sees that squatting faster makes the horse go faster,
+  * the water and food bars of the horse, next to the speed bar (later, section 4),
   * the small map in a corner,
   * the camera picture with the face overlay and the small figure in the other corner,
   * the edge icons of the animals the rider hears.
@@ -300,7 +315,7 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 ### Art
 
 * **Pixel art.** The whole game is pixel art: the steppe, the landmarks, the rider, the horse, the animals, the people, the portraits, the icons, the speed bar, the map and the interface.
-  * The game renders at 640 × 360 and is scaled up by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp on any screen: 3× on a 1080p screen, and 2× on the 1366 × 768 screens of many school laptops. (A lower resolution, such as 480 × 270, would leave too little room for the 16-pixel font.)
+  * The game renders at 960 × 540 and is scaled up by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp: 2× on a 1080p screen. (We started at 640 × 360, but the map was unreadable and the view too cramped. On the 1366 × 768 screens of many school laptops, 960 × 540 is shown at 1×, with a border.)
   * One limited palette for the whole game, taken from the colours of the intro picture and the steppe: golden grass, sky blue, crimson, emerald, ochre, white felt and dark outlines.
   * **Top-down sprites:** the rider and the horse have sprites in 8 directions with walk, trot and gallop cycles; the animals in 8 directions with a walk and an idle (grazing) cycle. The pieces of finery (section 8) and the looks from the creator are separate sprite layers drawn over the base sprites, so that every combination works without drawing each one.
   * **The portraits** in the conversations and the preview in the creator are larger pixel-art pictures, in the same palette.
@@ -346,7 +361,8 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
   * `reward` and `wardrobe`,
   * `calibration`.
 * **The data:**
-  * `data/levels/<nn>_<id>/`: each level's map, landmarks, people, animals and clues, as typed Godot resources,
+  * `data/levels/<nn>_<id>.tscn`: each level as a scene of data nodes (the landmarks, the people with their clues, the herds of lost animals, the pen at home and the start), so that it can be edited in the Godot editor,
+  * `data/landmarks/` and `data/animals/`: the kinds of the landmarks and the animals, with their names; the names of the landmarks carry their grammatical forms in the translations (section 10),
   * `data/finery/`: the pieces for the rider and the horse, with their steps,
   * `translations/`: `messages.pot`, `ru.po`, `kk.po`.
 * **The tests:**
@@ -361,13 +377,19 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 Before the game, a test scene with only the camera, the two detectors and the measurements on the screen: the head's height over time, the counted squats, the speed of a horse, the turn from the hands, and the face overlay with a single hat. We record players of seven to ten, and tune the thresholds on those recordings.
 
-**Built** (`scenes/movement_test/`, the main scene for now): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
+**Built** (`scenes/movement_test/`): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
 
 * a squat counts when the head goes down by at least half the width of the shoulders, and fully at the whole width,
-* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the horse stops 4.5 s after the last squat,
+* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the first squat starts a walk right away, but it takes 4 to 5 brisk squats to gallop; a squat may come 0.75 s late before the horse slows down; a galloping horse slows down gently out of the gallop, and then, like a walking or trotting horse, stops quickly; the horse stops at the latest 4.5 s after the last squat,
 * a hand starts to turn at 0.1 of the width of the shoulders across the axis of the head, and turns fully at 0.6.
 
-## 14. Open questions
+## 14. The second thing we build: the first level
+
+The tutorial level, "The lamb by the spring" (section 4), to test the whole loop of the game with the camera.
+
+**Built** (`scenes/level/`, the main scene for now, with the level in `data/levels/01_the_lamb_by_the_spring.tscn`): Grandmother sends the rider out and gives the clue; the steppe scrolls under the rider, who rides with the squats and the hands; the lamb grazes near the spring, is heard at the edge of the screen when it is off the screen, joins the rider who stays next to it for a second, follows her, and runs into the pen when she rides up to the gate; Grandmother thanks her with one to three stars. The slots of the animals are at the top, the speed bar and the camera picture at the bottom, the small map in a corner opens large with C, and the clue is drawn on it. Escape quits on the second press. The creatures and the landmarks are drawn in code as placeholders. Not yet: the sounds, the water and food of the horse, the rewards, and the screens before the level.
+
+## 15. Open questions
 
 1. **Only a girl?** The story is about a girl. Should the player also be able to choose a boy rider?
 2. **Two players?** One player for now. A second player on a split screen (as a second rider) could come later.

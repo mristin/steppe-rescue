@@ -33,6 +33,70 @@ namespace SteppeRescue.Tests
             return meter;
         }
 
+        /// <summary>Stand still from <paramref name="start"/> on, and return the time when the horse stopped.</summary>
+        private static double TimeToStop(SquatMeter meter, double start, Action<double>? at = null)
+        {
+            for (double t = start; t < start + 20.0; t += 1.0 / Fps)
+            {
+                meter.Observe(t, StandingY, Unit);
+                meter.Update(t);
+                at?.Invoke(t - start);
+                if (meter.Speed == 0f)
+                {
+                    return t - start;
+                }
+            }
+
+            return double.PositiveInfinity;
+        }
+
+        [Fact]
+        public void A_walking_horse_stops_soon_after_the_squats()
+        {
+            var meter = Squat(period: 3.0, depth: 1.2f, duration: 15.0);
+            Assert.Equal(Gait.Walk, meter.Gait);
+
+            // NOTE (mristin):
+            // The last squat ended at the end of the period, so the horse may walk
+            // on until the next squat would be due, but no longer than the pause.
+            Assert.InRange(TimeToStop(meter, 15.0), 0.5, meter.MaxPause);
+        }
+
+        [Fact]
+        public void A_galloping_horse_eases_out_of_the_gallop_and_then_stops()
+        {
+            var meter = Squat(period: 1.3, depth: 1.2f, duration: 15.0);
+            Assert.Equal(Gait.Gallop, meter.Gait);
+
+            float speedAfterOneSecond = float.NaN;
+            double stopped = TimeToStop(meter, 15.0, since =>
+            {
+                if (double.IsNaN(speedAfterOneSecond) && since >= 1.0)
+                {
+                    speedAfterOneSecond = meter.Speed;
+                }
+            });
+
+            Assert.InRange(speedAfterOneSecond, SquatMeter.TrotFrom, 1f);
+            Assert.InRange(stopped, 2.0, meter.MaxPause + 1.0);
+        }
+
+        [Fact]
+        public void It_takes_a_few_squats_to_gallop()
+        {
+            var meter = new SquatMeter();
+            for (int squats = 1; squats <= 8; squats++)
+            {
+                Squat(period: 1.2, depth: 1.2f, duration: 1.2, start: (squats - 1) * 1.2, meter: meter);
+                if (squats <= 3)
+                {
+                    Assert.NotEqual(Gait.Gallop, meter.Gait);
+                }
+            }
+
+            Assert.Equal(Gait.Gallop, meter.Gait);
+        }
+
         [Fact]
         public void Standing_still_does_not_move_the_horse()
         {

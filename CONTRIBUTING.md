@@ -14,12 +14,17 @@ The game is made with [Godot] 4.6 (.NET), written in GDScript and C#:
   It also turns the pose into the riding: `SquatMeter` counts the squats and gives the speed of the horse, `Reins` gives the turn from the hands, and `FaceAnchor` says where to draw the looks over the face.
   The node `VisionService` runs it all in the game and offers plain getters to GDScript; the autoload `Vision` keeps it running across the scenes.
 * The game itself is in GDScript (`scenes/`).
+  The level (`scenes/level/`) plays a level of `data/levels/`.
+  A level is a scene of data nodes (`scenes/level_map/`): the landmarks, the people with their clues, the herds of the lost animals, the pen at home and the start; edit it in the Godot editor.
+  The test `tests/godot/test_level.gd` checks every level, e.g., that a clue points to every herd.
 * The development tools live in `dev/`.
 
 The game is pixel art.
-It renders at 640x360 and scales up by whole numbers (3x on a 1080p screen, 2x on a 1366x768 school laptop) with the nearest-neighbor filter.
+It renders at 960x540 and scales up by whole numbers (2x on a 1080p screen) with the nearest-neighbor filter.
 Draw with the colors of `Palette` (`scenes/pixel/palette.gd`) only.
-Until the drawn sprites arrive, the sprites are small pictures in characters in `scenes/pixel/sprites.gd`, which `PixelSprite` turns into textures.
+Until the drawn sprites arrive, the sprites are small pictures in characters in `scenes/pixel/sprites.gd` and `scenes/pixel/icons.gd`, which `PixelSprite` turns into textures, and the creatures seen from above are drawn from ellipses by `TopDown` (`scenes/pixel/top_down.gd`).
+The portraits of the people are pixelized from old photographs in the public domain: put the photo in `assets/pictures/sources/`, add it with its crop and its source to `sources.json` there and to [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and run `venv/bin/python dev/pictures/pixelize.py`.
+Use only pictures in the public domain or under CC0.
 The text is set in GNU Unifont at 16 pixels, imported without anti-aliasing.
 
 [Godot]: https://godotengine.org
@@ -98,6 +103,10 @@ venv/bin/python dev/translations/extract.py
 It updates the files and keeps the existing translations.
 Put a comment starting with `# TRANSLATORS:` right above a `tr()` to explain the text to the translators, e.g., what a placeholder like `{count}` stands for.
 `dev/translations/check.py` reports what is still to translate or to review, and fails on broken placeholders.
+
+The texts of the data (the levels, the animals) are collected from their fields, listed in `DATA_FIELDS` of `extract.py`.
+The names of the landmarks are translated in several grammatical forms, one per context ("near": "у родника", "of": "родника", "and": "родником", "between": "родником").
+A clue like `I saw {animals} near {landmark@near}.` takes the form "near" of the landmark's name; see `scenes/languages/grammar.gd`.
 
 A translation marked as fuzzy has not been reviewed by a native speaker yet.
 The game still shows it; remove the mark once a native speaker has checked it.

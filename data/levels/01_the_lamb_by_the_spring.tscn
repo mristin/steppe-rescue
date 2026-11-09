@@ -1,0 +1,78 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level_map/level_map.gd" id="1_map"]
+[ext_resource type="Script" path="res://scenes/level_map/landmark.gd" id="2_landmark"]
+[ext_resource type="Script" path="res://scenes/level_map/person.gd" id="3_person"]
+[ext_resource type="Script" path="res://scenes/level_map/herd.gd" id="4_herd"]
+[ext_resource type="Script" path="res://scenes/level_map/home.gd" id="5_home"]
+[ext_resource type="Script" path="res://scenes/level_map/clue.gd" id="6_clue"]
+[ext_resource type="Resource" path="res://data/landmarks/spring.tres" id="7_spring"]
+[ext_resource type="Resource" path="res://data/landmarks/rock.tres" id="8_rock"]
+[ext_resource type="Resource" path="res://data/landmarks/bushes.tres" id="9_bushes"]
+[ext_resource type="Resource" path="res://data/landmarks/birches.tres" id="10_birches"]
+[ext_resource type="Resource" path="res://data/landmarks/yurt.tres" id="11_yurt"]
+[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="12_sheep"]
+
+[sub_resource type="Resource" id="Clue_lamb"]
+script = ExtResource("6_clue")
+form = "near"
+animal = ExtResource("12_sheep")
+landmark = "Spring"
+
+[node name="TheLambByTheSpring" type="Node2D"]
+script = ExtResource("1_map")
+title = "The lamb by the spring"
+thanks = "Thank you, {rider}! The lamb is home again."
+size = Vector2(1920, 1440)
+par_seconds = 90.0
+
+[node name="Spring" type="Node2D" parent="."]
+position = Vector2(1050, 705)
+script = ExtResource("2_landmark")
+kind = ExtResource("7_spring")
+
+[node name="Birches" type="Node2D" parent="."]
+position = Vector2(390, 390)
+script = ExtResource("2_landmark")
+kind = ExtResource("10_birches")
+radius = 90.0
+
+[node name="Bushes" type="Node2D" parent="."]
+position = Vector2(1500, 450)
+script = ExtResource("2_landmark")
+kind = ExtResource("9_bushes")
+
+[node name="BigRock" type="Node2D" parent="."]
+position = Vector2(1590, 1080)
+script = ExtResource("2_landmark")
+kind = ExtResource("8_rock")
+
+[node name="HomeYurtWest" type="Node2D" parent="."]
+position = Vector2(780, 960)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="HomeYurtEast" type="Node2D" parent="."]
+position = Vector2(1140, 960)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="Home" type="Node2D" parent="."]
+position = Vector2(960, 1140)
+script = ExtResource("5_home")
+
+[node name="Start" type="Marker2D" parent="."]
+position = Vector2(960, 990)
+
+[node name="Grandmother" type="Node2D" parent="."]
+position = Vector2(935, 972)
+script = ExtResource("3_person")
+speaker = "Grandmother"
+portrait = "grandmother"
+greeting = "Our lamb ran off in the night. Please bring it home, {rider}!"
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_lamb")])
+
+[node name="Lamb" type="Node2D" parent="."]
+position = Vector2(1110, 750)
+script = ExtResource("4_herd")
+animal = ExtResource("12_sheep")

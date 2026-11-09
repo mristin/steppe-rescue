@@ -71,7 +71,18 @@ We distribute the model unmodified.
 * Source: https://unifoundry.com/pub/unifont/unifont-16.0.04/font-builds/unifont-16.0.04.otf (SHA-256 `0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d`)
 * License text: [assets/fonts/unifont/OFL-1.1.txt](assets/fonts/unifont/OFL-1.1.txt)
 
+### The portraits of the people
+
+* Files: `assets/pictures/sources/grandmother.jpg`, `shepherd.jpg` and `beekeeper.jpg`, pixelized into `assets/pictures/portraits/` by `dev/pictures/pixelize.py`
+* License: Public domain (photographs from about 1865–1872; Wikimedia Commons: PD-old-100-1923)
+* Source: the Turkestan Album, "Tipy narodnostei turkestanskago kraia" (Types of the peoples of the Turkestan region), Library of Congress, Prints and Photographs Division, via Wikimedia Commons:
+  * Grandmother: "Kirgiz-Kazachki. Tunuk-ai", LCCN 2007682007, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazachki._Tunuk-ai_LCCN2007682007.jpg
+  * The shepherd: "Kirgiz-Kazaki. Utkul'-bai", LCCN 2007681449, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazaki-_Utkul%27-bai_LCCN2007681449.jpg
+  * The beekeeper: "Cholak-Kazachki. Ai-kara", LCCN 2007682050, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Cholak-Kazachki._Ai-kara_LCCN2007682050.jpg
+
+**Altered:** cropped to the head, shrunk to 32x32 pixels and painted in the sepia colors of the game's palette; the sources keep the 960-pixel-wide copies from Wikimedia Commons, as downloaded. The crops are listed in `assets/pictures/sources/sources.json`.
+
 ## Used only for the development
 
 * The test photo `tests/SteppeRescue.Tests/data/astronaut_640x480.png` is a public-domain NASA photo of Eileen Collins (the scikit-image "astronaut"), fitted into a 640x480 frame.
-* xUnit (Apache-2.0), StbImageSharp (public domain), gdtoolkit (MIT), black (MIT) and polib (MIT).
+* xUnit (Apache-2.0), StbImageSharp (public domain), gdtoolkit (MIT), black (MIT), polib (MIT) and Pillow (MIT-CMU).

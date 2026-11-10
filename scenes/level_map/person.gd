@@ -29,6 +29,6 @@ func _draw() -> void:
     # NOTE (mristin):
     # Keep the painting: a texture which nothing holds would draw white.
     _painting = Icons.person_above(portrait)
-    var shown := _painting.get_size() * 0.5
+    var shown := _painting.get_size() * 0.5 * PaintedTopDown.PERSON_SCALE
     draw_circle(Vector2(2, 3), shown.x * 0.25, Palette.SHADOW)
     draw_texture_rect(_painting, Rect2((-shown * 0.5).round(), shown), false)

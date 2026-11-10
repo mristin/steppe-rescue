@@ -15,6 +15,19 @@ extends RefCounted
 ## The frames of the run of each painted horse from above.
 const HORSE_FRAMES := 13
 
+## The girl from above is drawn this much smaller than painted: the paintings
+## make her as wide as the horse, while a girl of ten is about half as wide as
+## the barrel of a horse (about 0.45 m with her arms, against 0.65 m; a horse
+## is about 2.4 m from the nose to the croup). Her finery shrinks with her.
+const GIRL_SCALE := 0.65
+
+## The horse from above is drawn this much wider than painted, so that, with
+## the girl on it, it reads as the sturdy steppe horse it is, not as a stick.
+const HORSE_WIDTH := 1.15
+
+## The people of the steppe from above, to the scale of the girl.
+const PERSON_SCALE := 0.65
+
 static var _cache: Dictionary = {}
 
 
@@ -41,10 +54,12 @@ static func draw_rider(
     var steed: String = looks.get("steed", "1")
     var index := 0 if gait <= 0 else posmod(frame, HORSE_FRAMES)
     var horse := _load("horses/%s/%s%d" % [steed, prefix, index])
-    draw(item, horse, center, heading)
-    _dress(item, looks, "horse", horse, center, heading)
-    draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), center, heading)
-    _dress(item, looks, "rider", horse, center, heading)
+    var wide := Vector2(HORSE_WIDTH, 1.0)
+    draw(item, horse, center, heading, wide)
+    _dress(item, looks, "horse", horse, center, heading, wide)
+    var girl := Vector2.ONE * GIRL_SCALE
+    draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), center, heading, girl)
+    _dress(item, looks, "rider", horse, center, heading, girl)
 
 
 ## Lay the finery which she wears, seen from above, over the horse (or the
@@ -58,7 +73,8 @@ static func _dress(
     who: String,
     horse: Texture2D,
     center: Vector2,
-    heading: float
+    heading: float,
+    scale := Vector2.ONE
 ) -> void:
     for piece in Finery.PIECES:
         if Finery.PIECES[piece]["for"] != who:
@@ -73,7 +89,7 @@ static func _dress(
             if ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % name):
                 var shown := horse.get_size() * 0.5
                 var picture := _load(name)
-                item.draw_set_transform(center, heading, Vector2.ONE)
+                item.draw_set_transform(center, heading, scale)
                 item.draw_texture_rect(picture, Rect2(-shown * 0.5, shown), false)
                 item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
                 break
@@ -86,10 +102,12 @@ static func animal(kind: String, frame: int, grazing: bool) -> Texture2D:
 
 
 ## Draw the picture on the item, its middle at [param center], turned to the
-## heading (0 is north, clockwise).
-static func draw(item: CanvasItem, picture: Texture2D, center: Vector2, heading: float) -> void:
+## heading (0 is north, clockwise), scaled across and along its heading.
+static func draw(
+    item: CanvasItem, picture: Texture2D, center: Vector2, heading: float, scale := Vector2.ONE
+) -> void:
     var shown := picture.get_size() * 0.5
-    item.draw_set_transform(center, heading, Vector2.ONE)
+    item.draw_set_transform(center, heading, scale)
     item.draw_texture_rect(picture, Rect2(-shown * 0.5, shown), false)
     item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

@@ -29,6 +29,8 @@ const _COLORS := {
     "well": Palette.STONE,
     "yurt": Palette.CRIMSON,
     "pasture": Palette.EMERALD_LIGHT,
+    "salt_lake": Color("#e8efe9"),
+    "river": Palette.SKY,
 }
 
 static var _parchment: Texture2D = null
@@ -92,6 +94,9 @@ func _draw() -> void:
         draw_rect(Rect2(corner, pen_size), Palette.OCHRE, false, 1.0)
 
     for landmark in map.landmarks():
+        if landmark is River:
+            _draw_river(landmark as River, to_map, scale)
+            continue
         var at: Vector2 = to_map.call(landmark.position)
         var color: Color = _COLORS.get(landmark.kind_id(), Palette.STONE)
         draw_circle(at, maxf(1.5, landmark.size() * scale), color)
@@ -112,6 +117,18 @@ func _draw() -> void:
 
     if large:
         _draw_compass(Vector2(size.x - 16, 18))
+
+
+## The river as a band across the map, broken by its fords.
+func _draw_river(river: River, to_map: Callable, scale: float) -> void:
+    var left: Vector2 = to_map.call(Vector2(0, river.position.y))
+    var right: Vector2 = to_map.call(Vector2(map.size.x, river.position.y))
+    var width := maxf(2.0, river.size() * 2.0 * scale)
+    draw_line(left, right, Palette.SKY, width)
+    for ford in river.fords:
+        var at: Vector2 = to_map.call(Vector2(ford, river.position.y))
+        var half := river.ford_width() * 0.5 * scale
+        draw_line(at - Vector2(half, 0), at + Vector2(half, 0), Palette.OCHRE, width)
 
 
 func _draw_clue(clue: Clue, to_map: Callable, scale: float) -> void:

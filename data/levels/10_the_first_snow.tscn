@@ -15,29 +15,28 @@
 [ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
 [ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
 [ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
-[ext_resource type="Resource" path="res://data/landmarks/salt_lake.tres" id="16_salt_lake"]
-[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="17_sheep"]
-[ext_resource type="Resource" path="res://data/animals/camel.tres" id="18_camel"]
-[ext_resource type="Resource" path="res://data/animals/horse.tres" id="19_horse"]
+[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="18_sheep"]
+[ext_resource type="Resource" path="res://data/animals/camel.tres" id="19_camel"]
+[ext_resource type="Resource" path="res://data/animals/horse.tres" id="20_horse"]
 
 [sub_resource type="Resource" id="Clue_Grandmother_0"]
 script = ExtResource("6_clue")
 form = "near"
-animal = ExtResource("18_camel")
+animal = ExtResource("19_camel")
 count = 2
 landmark = "Kurgan"
 
 [sub_resource type="Resource" id="Clue_Shepherd_0"]
 script = ExtResource("6_clue")
 form = "near"
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")
 count = 2
 landmark = "Lake"
 
 [sub_resource type="Resource" id="Clue_Shepherd_1"]
 script = ExtResource("6_clue")
 form = "between"
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")
 count = 3
 landmark = "Spring"
 other = "Bushes"
@@ -45,7 +44,7 @@ other = "Bushes"
 [sub_resource type="Resource" id="Clue_Beekeeper_0"]
 script = ExtResource("6_clue")
 form = "south"
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")
 landmark = "Birches"
 
 [node name="TheFirstSnow" type="Node2D"]
@@ -142,22 +141,22 @@ clues = Array[ExtResource("6_clue")]([SubResource("Clue_Beekeeper_0")])
 [node name="Camels" type="Node2D" parent="."]
 position = Vector2(700, 600)
 script = ExtResource("4_herd")
-animal = ExtResource("18_camel")
+animal = ExtResource("19_camel")
 count = 2
 
 [node name="Horses" type="Node2D" parent="."]
 position = Vector2(2800, 850)
 script = ExtResource("4_herd")
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")
 count = 2
 
 [node name="Flock" type="Node2D" parent="."]
 position = Vector2(1700, 1360)
 script = ExtResource("4_herd")
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")
 count = 3
 
 [node name="Lamb" type="Node2D" parent="."]
 position = Vector2(3000, 1925)
 script = ExtResource("4_herd")
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")

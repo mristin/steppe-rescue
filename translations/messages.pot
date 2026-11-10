@@ -1097,6 +1097,34 @@ msgstr ""
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
 #. родника', 'бұлақтың жанында'
+#: data/landmarks/river.tres
+msgctxt "near"
+msgid "the Esil"
+msgstr ""
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/river.tres
+msgctxt "of"
+msgid "the Esil"
+msgstr ""
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/river.tres
+msgctxt "and"
+msgid "the Esil"
+msgstr ""
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/river.tres
+msgctxt "between"
+msgid "the Esil"
+msgstr ""
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
 #: data/landmarks/rock.tres
 msgctxt "near"
 msgid "the big rock"

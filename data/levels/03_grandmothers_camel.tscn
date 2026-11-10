@@ -9,27 +9,24 @@
 [ext_resource type="Resource" path="res://data/landmarks/spring.tres" id="7_spring"]
 [ext_resource type="Resource" path="res://data/landmarks/rock.tres" id="8_rock"]
 [ext_resource type="Resource" path="res://data/landmarks/bushes.tres" id="9_bushes"]
-[ext_resource type="Resource" path="res://data/landmarks/birches.tres" id="10_birches"]
 [ext_resource type="Resource" path="res://data/landmarks/yurt.tres" id="11_yurt"]
 [ext_resource type="Resource" path="res://data/landmarks/pasture.tres" id="12_pasture"]
 [ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
 [ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
 [ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
-[ext_resource type="Resource" path="res://data/landmarks/salt_lake.tres" id="16_salt_lake"]
-[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="17_sheep"]
-[ext_resource type="Resource" path="res://data/animals/camel.tres" id="18_camel"]
-[ext_resource type="Resource" path="res://data/animals/horse.tres" id="19_horse"]
+[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="18_sheep"]
+[ext_resource type="Resource" path="res://data/animals/camel.tres" id="19_camel"]
 
 [sub_resource type="Resource" id="Clue_Grandmother_0"]
 script = ExtResource("6_clue")
 form = "north"
-animal = ExtResource("18_camel")
+animal = ExtResource("19_camel")
 landmark = "Kurgan"
 
 [sub_resource type="Resource" id="Clue_Shepherd_0"]
 script = ExtResource("6_clue")
 form = "near"
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")
 count = 2
 landmark = "Well"
 
@@ -112,10 +109,10 @@ clues = Array[ExtResource("6_clue")]([SubResource("Clue_Shepherd_0")])
 [node name="Camel" type="Node2D" parent="."]
 position = Vector2(1890, 340)
 script = ExtResource("4_herd")
-animal = ExtResource("18_camel")
+animal = ExtResource("19_camel")
 
 [node name="SheepByTheWell" type="Node2D" parent="."]
 position = Vector2(560, 1200)
 script = ExtResource("4_herd")
-animal = ExtResource("17_sheep")
+animal = ExtResource("18_sheep")
 count = 2

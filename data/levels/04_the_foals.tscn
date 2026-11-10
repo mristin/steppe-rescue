@@ -14,23 +14,19 @@
 [ext_resource type="Resource" path="res://data/landmarks/pasture.tres" id="12_pasture"]
 [ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
 [ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
-[ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
-[ext_resource type="Resource" path="res://data/landmarks/salt_lake.tres" id="16_salt_lake"]
-[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="17_sheep"]
-[ext_resource type="Resource" path="res://data/animals/camel.tres" id="18_camel"]
-[ext_resource type="Resource" path="res://data/animals/horse.tres" id="19_horse"]
+[ext_resource type="Resource" path="res://data/animals/horse.tres" id="20_horse"]
 
 [sub_resource type="Resource" id="Clue_Grandmother_0"]
 script = ExtResource("6_clue")
 form = "near"
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")
 count = 2
 landmark = "Pasture"
 
 [sub_resource type="Resource" id="Clue_Beekeeper_0"]
 script = ExtResource("6_clue")
 form = "between"
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")
 landmark = "Birches"
 other = "Lake"
 
@@ -115,10 +111,10 @@ clues = Array[ExtResource("6_clue")]([SubResource("Clue_Beekeeper_0")])
 [node name="Foals" type="Node2D" parent="."]
 position = Vector2(620, 520)
 script = ExtResource("4_herd")
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")
 count = 2
 
 [node name="YoungHorse" type="Node2D" parent="."]
 position = Vector2(1820, 800)
 script = ExtResource("4_herd")
-animal = ExtResource("19_horse")
+animal = ExtResource("20_horse")

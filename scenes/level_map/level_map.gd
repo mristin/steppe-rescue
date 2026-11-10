@@ -108,13 +108,18 @@ func solids() -> Array[Vector3]:
         var radius := each.solid_radius()
         if radius > 0.0:
             result.append(Vector3(each.position.x, each.position.y, radius))
+        if each is River:
+            result.append_array((each as River).solids())
     return result
 
 
 ## The horse at this point stands at fresh water, close enough to drink.
 func at_fresh_water(at: Vector2) -> bool:
     for each in landmarks():
-        if each.kind != null and each.kind.fresh_water:
+        if each is River:
+            if (each as River).at_water(at, _SHORE):
+                return true
+        elif each.kind != null and each.kind.fresh_water:
             if at.distance_to(each.position) <= each.size() + _SHORE:
                 return true
     return false

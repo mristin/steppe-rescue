@@ -23,16 +23,16 @@ msgid "Ready!"
 msgstr ""
 
 #: scenes/instruction/instruction.gd
-msgid "Stand in front of the camera, like your rider."
-msgstr ""
-
-#: scenes/instruction/instruction.gd
 msgid "Squat to make your horse run: the faster you squat, the faster it runs!"
 msgstr ""
 
 #. How to squat safely, after "Squat to make your horse run".
 #: scenes/instruction/instruction.gd
 msgid "Feet apart, back straight."
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Stand in front of the camera, like your rider."
 msgstr ""
 
 #: scenes/instruction/instruction.gd
@@ -45,6 +45,16 @@ msgstr ""
 
 #: scenes/instruction/instruction.gd
 msgid "Both hands to the right, and your horse turns right."
+msgstr ""
+
+#. In How to Play, before the brake is shown.
+#: scenes/instruction/instruction.gd
+msgid "Squat briskly, and your horse gallops again."
+msgstr ""
+
+#. In How to Play: raising both hands above the head is the brake.
+#: scenes/instruction/instruction.gd
+msgid "Both hands up above your head: your horse rears up and stops at once!"
 msgstr ""
 
 #. The button which starts the game.

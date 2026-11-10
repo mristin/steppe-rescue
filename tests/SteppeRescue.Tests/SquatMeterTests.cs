@@ -53,13 +53,13 @@ namespace SteppeRescue.Tests
         [Fact]
         public void A_walking_horse_stops_soon_after_the_squats()
         {
-            var meter = Squat(period: 3.0, depth: 1.2f, duration: 15.0);
+            var meter = Squat(period: 4.0, depth: 1.2f, duration: 16.0);
             Assert.Equal(Gait.Walk, meter.Gait);
 
             // NOTE (mristin):
             // The last squat ended at the end of the period, so the horse may walk
             // on until the next squat would be due, but no longer than the pause.
-            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.0);
+            Assert.InRange(TimeToStop(meter, 16.0), 0.2, 1.5);
         }
 
         [Fact]
@@ -69,27 +69,34 @@ namespace SteppeRescue.Tests
             Assert.Equal(Gait.Gallop, meter.Gait);
 
             double stopped = TimeToStop(meter, 15.0);
-            Assert.InRange(stopped, 0.2, 1.0);
+            Assert.InRange(stopped, 0.2, 1.5);
         }
 
         [Fact]
         public void A_trotting_horse_stops_soon_after_the_squats()
         {
-            var meter = Squat(period: 2.0, depth: 1.2f, duration: 15.0);
+            var meter = Squat(period: 2.5, depth: 1.2f, duration: 15.0);
             Assert.Equal(Gait.Trot, meter.Gait);
-            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.0);
+            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.5);
         }
 
         [Fact]
-        public void It_takes_a_few_squats_to_gallop()
+        public void Two_or_three_brisk_squats_gallop()
         {
             var meter = new SquatMeter();
             for (int squats = 1; squats <= 8; squats++)
             {
                 Squat(period: 1.2, depth: 1.2f, duration: 1.2, start: (squats - 1) * 1.2, meter: meter);
-                if (squats <= 3)
+                if (squats <= 1)
                 {
                     Assert.NotEqual(Gait.Gallop, meter.Gait);
+                }
+
+                if (squats == 3)
+                {
+                    // NOTE (mristin):
+                    // Children manage two or three brisk squats, not more.
+                    Assert.Equal(Gait.Gallop, meter.Gait);
                 }
             }
 
@@ -114,9 +121,9 @@ namespace SteppeRescue.Tests
         }
 
         [Theory]
-        [InlineData(3.0, Gait.Walk)]
-        [InlineData(2.0, Gait.Trot)]
-        [InlineData(1.3, Gait.Gallop)]
+        [InlineData(4.0, Gait.Walk)]
+        [InlineData(2.5, Gait.Trot)]
+        [InlineData(1.8, Gait.Gallop)]
         public void Faster_squats_make_a_faster_gait(double period, Gait expected)
         {
             var meter = Squat(period, depth: 1.2f, duration: 20.0);

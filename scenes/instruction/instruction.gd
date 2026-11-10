@@ -7,7 +7,9 @@ extends Control
 ## briskly, and the horse walks, trots and gallops, as the speed bar below it
 ## shows. Then she pulls the reins with both hands to the left, and the
 ## horse, seen from above, turns left; then to the right, and it turns right.
-## A short line at the top says what she does. The animation repeats until
+## Last, she gallops off again and raises both hands above her head: the
+## brake, and the horse rears up and stops at once. A short line at the top
+## says what she does. The animation repeats until
 ## the player presses Ready!.
 ##
 ## The squats are good ones: the feet apart, the knees over the toes, the back
@@ -31,11 +33,19 @@ const SQUAT := 3.5
 const STOP := 15.0
 const REACH := 17.0
 const REACH_RIGHT := 22.5
-const LOOP := 28.0
+const GALLOP_AGAIN := 28.0
+const BRAKE := 31.0
+const LOOP := 36.0
 
 ## The squats in the slow, steady and brisk part: [start, seconds per squat,
 ## the speed of the horse].
 const _SQUATS := [[SQUAT, 2.6, 0.3], [7.5, 1.6, 0.62], [11.5, 0.9, 0.95]]
+
+## The brisk squats before the brake.
+const _BRISK := [GALLOP_AGAIN, 0.9, 0.95]
+
+## How long the horse rears, in seconds.
+const _REAR_SECONDS := 1.4
 
 const _FRAME := Rect2(36, 96, 248, 352)
 const _EYES := 12.0
@@ -119,11 +129,13 @@ func _process(delta: float) -> void:
     if time < delta:
         heading = 0.0
     var target: float = pose(time)["speed"]
-    speed = move_toward(speed, target, delta * 0.5)
+    # NOTE (mristin):
+    # The brake stops the horse at once; else it speeds up and slows gently.
+    speed = move_toward(speed, target, delta * (5.0 if pose(time)["hands_up"] > 0.0 else 0.5))
     _speed_bar.speed = speed
     _scroll += speed * delta * 160.0
     _stride += delta / _FRAME_SECONDS[_speed_bar.gait()]
-    if time >= REACH:
+    if time >= REACH and time < GALLOP_AGAIN:
         heading -= pose(time)["reach"] * delta * 0.9
     var line := caption(time)
     if _caption.text != line:
@@ -139,23 +151,39 @@ func finish() -> void:
 
 ## What the rider does at the time of the animation: how deep she squats, in
 ## [0, 1], how far she pulls the reins, in [-1, 1] (positive to the left),
-## whether she sits on the horse, and the speed which the horse goes to.
+## how far her hands are up above her head (the brake), in [0, 1], how far the
+## horse rears, in [0, 1], whether she sits on the horse, and the speed which
+## the horse goes to.
 static func pose(at: float) -> Dictionary:
-    var result := {"squat": 0.0, "phase": 0.0, "reach": 0.0, "riding": at < DISMOUNT, "speed": 0.0}
-    if at >= SQUAT and at < STOP:
-        var part: Array = _SQUATS[0]
-        for squats in _SQUATS:
-            if at >= squats[0]:
-                part = squats
+    var result := {
+        "squat": 0.0,
+        "phase": 0.0,
+        "reach": 0.0,
+        "hands_up": 0.0,
+        "rear": 0.0,
+        "riding": at < DISMOUNT,
+        "speed": 0.0,
+    }
+    if at >= BRAKE:
+        result["hands_up"] = minf(1.0, (at - BRAKE) / 0.4)
+        if at < BRAKE + _REAR_SECONDS:
+            result["rear"] = sin((at - BRAKE) / _REAR_SECONDS * PI)
+        return result
+    if (at >= SQUAT and at < STOP) or at >= GALLOP_AGAIN:
+        var part: Array = _BRISK if at >= GALLOP_AGAIN else _SQUATS[0]
+        if at < STOP:
+            for squats in _SQUATS:
+                if at >= squats[0]:
+                    part = squats
         var phase: float = (at - part[0]) / part[1]
         result["squat"] = 0.5 - 0.5 * cos(TAU * phase)
         result["phase"] = fposmod(phase, 1.0)
         result["speed"] = part[2]
     elif at >= STOP:
         result["speed"] = 0.3
-    if at >= REACH:
+    if at >= REACH and at < GALLOP_AGAIN:
         var start := REACH if at < REACH_RIGHT else REACH_RIGHT
-        var end := REACH_RIGHT if at < REACH_RIGHT else LOOP
+        var end := REACH_RIGHT if at < REACH_RIGHT else GALLOP_AGAIN
         var into := minf(1.0, (at - start) / 0.6)
         var out := clampf((end - 0.8 - at) / 0.6, 0.0, 1.0)
         result["reach"] = minf(into, out) * (1.0 if at < REACH_RIGHT else -1.0)
@@ -169,60 +197,38 @@ func _update_texts() -> void:
 
 ## What the line at the top says at the time of the animation.
 func caption(at: float) -> String:
-    if at < SQUAT:
-        return tr("Stand in front of the camera, like your rider.")
-    if at < STOP:
-        var squat := tr("Squat to make your horse run: the faster you squat, the faster it runs!")
-        # TRANSLATORS: How to squat safely, after "Squat to make your horse run".
-        return squat + " " + tr("Feet apart, back straight.")
-    if at < REACH:
-        return tr("Stop squatting, and your horse slows down and stops.")
-    if at < REACH_RIGHT:
-        return tr("Pull the reins: both hands to the left, and your horse turns left.")
-    return tr("Both hands to the right, and your horse turns right.")
+    var squat := tr("Squat to make your horse run: the faster you squat, the faster it runs!")
+    # TRANSLATORS: How to squat safely, after "Squat to make your horse run".
+    squat += " " + tr("Feet apart, back straight.")
+    var lines := [
+        [SQUAT, tr("Stand in front of the camera, like your rider.")],
+        [STOP, squat],
+        [REACH, tr("Stop squatting, and your horse slows down and stops.")],
+        [REACH_RIGHT, tr("Pull the reins: both hands to the left, and your horse turns left.")],
+        [GALLOP_AGAIN, tr("Both hands to the right, and your horse turns right.")],
+        # TRANSLATORS: In How to Play, before the brake is shown.
+        [BRAKE, tr("Squat briskly, and your horse gallops again.")],
+    ]
+    for line in lines:
+        if at < line[0]:
+            return line[1]
+    # TRANSLATORS: In How to Play: raising both hands above the head is the brake.
+    return tr("Both hands up above your head: your horse rears up and stops at once!")
 
 
-func _draw() -> void:
-    draw_texture_rect(_background, Rect2(Vector2.ZERO, Vector2(960, 540)), false)
-    draw_texture(Ornaments.panel(Vector2(888, 66)), Vector2(36, 15))
-    draw_texture(
-        Ornaments.panel(_speed_bar.size + Vector2(28, 16)), _speed_bar.position - Vector2(14, 8)
-    )
-    var now := pose(time)
-
-    # NOTE (mristin):
-    # The frame of the camera picture, where the rider stands as the player
-    # does, seen in the mirror.
-    draw_texture(Ornaments.panel(_FRAME.size), _FRAME.position)
-    var inside := _FRAME.grow(-12)
-    draw_rect(inside, Palette.SKY_LIGHT)
-    draw_rect(Rect2(inside.position.x, inside.end.y - 40, inside.size.x, 40), Palette.GRASS_LIGHT)
-    var feet := Vector2(inside.get_center().x, inside.end.y - 18)
-
-    if time >= REACH:
-        _draw_turning(now)
-    else:
-        _draw_running(now)
-
-    # NOTE (mristin):
-    # She rides in, then jumps off the saddle into the frame, getting bigger as
-    # she comes.
-    if now["riding"]:
-        return
-    var hop := clampf((time - DISMOUNT) / 0.8, 0.0, 1.0)
-    var from := _HORSE_GROUND + Vector2(10, -80)
-    var at := from.lerp(feet, hop) + Vector2(0, -sin(hop * PI) * 40.0)
-    var painted := PaintedGirl.squat(0)
-    var reach: float = now["reach"]
-    if reach != 0.0:
-        painted = PaintedGirl.reins(PaintedGirl.reins_frame(reach))
-    elif now["squat"] > 0.0 or now["phase"] > 0.0:
-        painted = PaintedGirl.squat(PaintedGirl.squat_frame(now["phase"]))
-    # NOTE (mristin):
-    # A frame has two pixels of the screen per logical pixel, like the pixel
-    # art; it grows from small as she jumps off the horse.
-    var size := painted.get_size() * 0.5 * lerpf(0.3, 1.0, hop)
-    draw_texture_rect(painted, Rect2((at - Vector2(size.x * 0.5, size.y)).round(), size), false)
+## Until the girl with her hands up is painted, two golden arrows rise over
+## her head, [param amount] of the way up.
+func _draw_hands_up(feet: Vector2, amount: float) -> void:
+    for side in [-1.0, 1.0]:
+        var bottom := feet + Vector2(side * 80.0, -200.0)
+        var top := bottom + Vector2(0, -60.0 * amount)
+        draw_line(bottom, top, Palette.OUTLINE, 9.0)
+        draw_line(bottom, top, Palette.GOLD, 5.0)
+        var head := PackedVector2Array(
+            [top + Vector2(0, -12), top + Vector2(-10, 4), top + Vector2(10, 4)]
+        )
+        draw_colored_polygon(head, Palette.GOLD)
+        draw_polyline(head + PackedVector2Array([head[0]]), Palette.OUTLINE, 2.0)
 
 
 ## The painted horse from the side in the steppe, in its gait.
@@ -231,6 +237,10 @@ func _draw_running(_now: Dictionary) -> void:
         var shown := _rider_on_horse.get_size() * 0.5
         var at := _HORSE_GROUND - Vector2(shown.x * 0.5, shown.y)
         draw_texture_rect(_rider_on_horse, Rect2(at.round(), shown), false)
+        return
+    var rear: float = _now["rear"]
+    if rear > 0.0:
+        PaintedHorse.draw_rear(self, rear, _HORSE_GROUND)
         return
     var gait := _speed_bar.gait()
     PaintedHorse.draw(self, gait, PaintedHorse.frame_at(gait, time), _HORSE_GROUND)

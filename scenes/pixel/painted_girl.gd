@@ -38,6 +38,17 @@ static func squat(frame: int, small := false) -> Texture2D:
     return _load("squat", posmod(frame, FRAMES), small)
 
 
+## The picture of the girl with both hands up above her head (the brake),
+## [param amount] of the way up, in [0, 1]; null while it is not painted yet
+## (assets/pictures/girl/hands_up_<frame>.png, three frames).
+static func hands_up(amount: float, small := false) -> Texture2D:
+    var frame := clampi(roundi(amount * 2.0), 0, 2)
+    var path := "res://assets/pictures/girl/%shands_up_%d.png" % ["small/" if small else "", frame]
+    if not ResourceLoader.exists(path):
+        return null
+    return _load("hands_up", frame, small)
+
+
 ## The picture of the reins in the frame.
 static func reins(frame: int, small := false) -> Texture2D:
     return _load("reins", posmod(frame, FRAMES), small)

@@ -20,6 +20,14 @@ const ANCHOR := Vector2(0.502, 0.97)
 ## How long a cycle of the seven frames lasts, by the gait, in seconds.
 const CYCLE_SECONDS := [1.0, 1.0, 0.7, 0.5]
 
+## The painted frames of the horse rearing up, from the side (see
+## [method draw_rear]); without them, the standing horse is tipped back.
+const REAR_FRAMES := 5
+
+## Where the hind hooves stand in a frame, as a fraction of the frame: the
+## horse rears up around them.
+const _HIND := Vector2(0.3, 0.97)
+
 static var _cache: Dictionary = {}
 
 
@@ -54,3 +62,26 @@ static func draw(
     var picture := texture(gait, frame, small)
     var shown := picture.get_size() * 0.5
     item.draw_texture_rect(picture, Rect2((ground - shown * ANCHOR).round(), shown), false, tint)
+
+
+## Draw the horse rearing up on its hind legs, [param amount] of the way up
+## (0 stands, 1 is the highest), so that it stands at [param ground]: the
+## painted frame of the rearing if there is one (assets/pictures/horse/
+## rear_<frame>.png), else the standing horse tipped back around its hind
+## hooves.
+static func draw_rear(item: CanvasItem, amount: float, ground: Vector2, small := false) -> void:
+    var frame := clampi(roundi(amount * (REAR_FRAMES - 1)), 0, REAR_FRAMES - 1)
+    var path := "res://assets/pictures/horse/%srear_%d.png" % ["small/" if small else "", frame]
+    if ResourceLoader.exists(path):
+        if not _cache.has(path):
+            _cache[path] = load(path)
+        var painted: Texture2D = _cache[path]
+        var shown := painted.get_size() * 0.5
+        item.draw_texture_rect(painted, Rect2((ground - shown * ANCHOR).round(), shown), false)
+        return
+    var picture := texture(0, 0, small)
+    var size := picture.get_size() * 0.5
+    var hind := ground + (_HIND - ANCHOR) * size
+    item.draw_set_transform(hind, -0.55 * amount, Vector2.ONE)
+    item.draw_texture_rect(picture, Rect2(-_HIND * size, size), false)
+    item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

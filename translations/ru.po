@@ -29,11 +29,6 @@ msgstr "Поехали!"
 
 #: scenes/instruction/instruction.gd
 #, fuzzy
-msgid "Stand in front of the camera, like your rider."
-msgstr "Встань перед камерой, как твоя наездница."
-
-#: scenes/instruction/instruction.gd
-#, fuzzy
 msgid "Squat to make your horse run: the faster you squat, the faster it runs!"
 msgstr "Приседай, и конь побежит: чем быстрее приседаешь, тем быстрее он бежит!"
 
@@ -42,6 +37,11 @@ msgstr "Приседай, и конь побежит: чем быстрее пр
 #, fuzzy
 msgid "Feet apart, back straight."
 msgstr "Ноги на ширине плеч, спина прямая."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Stand in front of the camera, like your rider."
+msgstr "Встань перед камерой, как твоя наездница."
 
 #: scenes/instruction/instruction.gd
 #, fuzzy
@@ -57,6 +57,18 @@ msgstr "Тяни поводья: обе руки влево, и конь пов�
 #, fuzzy
 msgid "Both hands to the right, and your horse turns right."
 msgstr "Обе руки вправо, и конь повернёт направо."
+
+#. In How to Play, before the brake is shown.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Squat briskly, and your horse gallops again."
+msgstr "Приседай быстро, и твоя лошадь снова поскачет галопом."
+
+#. In How to Play: raising both hands above the head is the brake.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Both hands up above your head: your horse rears up and stops at once!"
+msgstr "Обе руки вверх над головой: лошадь встаёт на дыбы и сразу останавливается!"
 
 #. The button which starts the game.
 #: scenes/intro/intro.gd

@@ -26,6 +26,10 @@ const IMPATIENT_SECONDS := 3.0
 const _STAMP_EVERY := 2.2
 const _STAMP_SECONDS := 0.5
 
+## The horse rears up on its hind legs for this long, in seconds, when the
+## rider brakes (both hands above her head).
+const REAR_SECONDS := 1.4
+
 ## The horse makes a stride every this many pixels.
 const _STRIDE := 14.0
 
@@ -51,6 +55,10 @@ var looks: Dictionary = Looks.DEFAULT:
         looks = Looks.complete(value)
         queue_redraw()
 
+## How long ago the horse started to rear, in seconds; negative while it
+## does not rear.
+var rear_time := -1.0
+
 var _solids: Array[Vector3] = []
 var _bounds := Rect2()
 var _stride := 0.0
@@ -66,8 +74,33 @@ func set_obstacles(solids: Array[Vector3], size: Vector2) -> void:
     _bounds = Rect2(Vector2.ZERO, size).grow(-EDGE)
 
 
+## Rear up on the hind legs: the rider braked.
+func rear() -> void:
+    if rearing() > 0.0:
+        return
+    rear_time = 0.0
+    _sound("stamp", 0.7, 0.0)
+
+
+## How far the horse rears up now, in [0, 1]; 0 when it does not.
+func rearing() -> float:
+    if rear_time < 0.0 or rear_time >= REAR_SECONDS:
+        return 0.0
+    return sin(rear_time / REAR_SECONDS * PI)
+
+
 ## Ride for [param delta] seconds at the speed in [0, 1] and the turn in [-1, 1].
 func ride(delta: float, speed_fraction: float, turn: float) -> void:
+    if rear_time >= 0.0:
+        rear_time += delta
+        if rear_time >= REAR_SECONDS:
+            rear_time = -1.0
+            _sound("stamp", 0.8, -2.0)
+        else:
+            # NOTE (mristin):
+            # A rearing horse stands on its hind legs and does not go on.
+            speed_fraction = 0.0
+            turn = 0.0
     speed = clampf(speed_fraction, 0.0, 1.0) * MAX_SPEED
 
     # NOTE (mristin):
@@ -142,8 +175,9 @@ func _draw() -> void:
         t = fposmod(still_time - IMPATIENT_SECONDS, _STAMP_EVERY) / _STAMP_SECONDS
         look = sin(t * PI) * 0.35
         jolt = Vector2(0, -1.5 * absf(sin(t * TAU * 2.0))).rotated(heading)
+    var rear := rearing()
     draw_circle(Vector2(3, 4), 10.0, Palette.SHADOW)
-    PaintedTopDown.draw_rider(self, looks, gait, frame, jolt, heading + look)
+    PaintedTopDown.draw_rider(self, looks, gait, frame, jolt, heading + look, false, rear)
     if t >= 0.0:
         var hoof := Vector2(7, -24).rotated(heading)
         for k in range(7):

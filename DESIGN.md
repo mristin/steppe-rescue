@@ -151,15 +151,24 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 
   | Squatting | The horse |
   |---|---|
-  | none (standing still) | stops after a few seconds |
-  | slow (a squat every 3 s or more) | walks |
-  | steady (about a squat every 2 s) | trots |
-  | brisk (a squat every 1.5 s or faster) | gallops |
+  | none (standing still) | stops within a second or so |
+  | slow (a squat every 4 s or more) | walks |
+  | steady (about a squat every 2.5 s) | trots |
+  | brisk (a squat every 2 s or faster) | gallops |
+
+  Children squat slower than adults and pause between the squats, so these rates are generous: two or three brisk squats gallop.
 
 * **Deep squats count more** than shallow bobs: the depth is measured relative to the size of the head, so the game works whether the player stands close or far. A tiny nod of the head does nothing.
 * **Gentle changes.** The horse speeds up and slows down over a second or two, so the speed doesn't flicker between squats. When the player stops, the horse slows down to a walk and then stops, but never instantly.
 * The horse never goes backwards, and a child is never stuck.
 * **Calibration** at the start of each level (3 s, while Grandmother talks): we take the standing height and the size of the head.
+
+### The brake: both hands above the head
+
+* **Both hands up above the head** stop the horse at once: it rears up on its hind legs, its front legs in the air, for about 1.4 s, and then stands until the next squat, which starts a walk again.
+* Both wrists must be clearly above the head (0.4 of the width of the shoulders above the eyes and ears) for 0.15 s, so that a hand brushing the hair does not brake; one hand up does nothing.
+* It is the way to stop quickly, e.g., next to a person or a lost animal; the horse also stops by itself when the player stands still.
+* Down on the keyboard brakes, too.
 
 ### Turning: reaching across the head
 
@@ -176,7 +185,7 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 
 In the level, the game never writes "do squats" or "pull the reins". It shows the movement and lets the player discover the rest; only the instruction says it in one short line under the animation.
 
-* **The instruction** (section 6) is an animation with one short line of text for each part: the rider gets off the horse, does squats next to it, and the horse starts walking, then trotting, then galloping. Then she pulls the reins with both hands to the left, and the horse turns left; then to the right, and it turns right. Both hands to one side is the natural way to turn: the hand which crosses the axis of the head turns the horse, the other stays on its own side.
+* **The instruction** (section 6) is an animation with one short line of text for each part: the rider gets off the horse, does squats next to it, and the horse starts walking, then trotting, then galloping. Then she pulls the reins with both hands to the left, and the horse turns left; then to the right, and it turns right. Last, she gallops off again and raises both hands above her head: the horse rears up and stops at once. Both hands to one side is the natural way to turn: the hand which crosses the axis of the head turns the horse, the other stays on its own side.
 * **The camera picture** in a corner of the screen shows the player herself, with her chosen hat and braids drawn over her face (section 6). Next to it, a small figure of the rider does the movement the game is waiting for.
 * **When the horse stands still** for a few seconds, the figure squats slowly and invitingly, and the horse looks back at the player and stamps a hoof.
 * **The speed bar** (section 6) fills with each squat and empties when the player stops, so the link between squatting and speed is visible at a glance.
@@ -193,7 +202,7 @@ In the level, the game never writes "do squats" or "pull the reins". It shows th
 
 ### Fallbacks
 
-* **Keyboard** for development and testing: Space or ↑ is one squat (tapping faster makes the horse faster), ← and → turn.
+* **Keyboard** for development and testing: Space or ↑ is one squat (tapping faster makes the horse faster), ← and → turn, ↓ brakes.
 * **Mouse** in the menus.
 * Without a camera, the game offers the keyboard mode.
 
@@ -388,7 +397,7 @@ Before the game, a test scene with only the camera, the two detectors and the me
 **Built** (`scenes/movement_test/`): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
 
 * a squat counts when the head goes down by at least half the width of the shoulders, and fully at the whole width,
-* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the first squat starts a walk right away, but it takes 4 to 5 brisk squats to gallop; the horse stops within about a second once the player stands still: a squat counts when she is up again, the horse coasts 0.3 s plus a fifth of her rhythm, and stops at once unless her head already goes down into the next squat (from the keyboard, it stops when the next squat is 0.35 s overdue); it stops at the latest 4.5 s after the last squat,
+* a squat every 4 s walks, every 2.5 s trots, and every 2 s or faster gallops; the first squat starts a walk right away, and two or three brisk squats gallop; the horse stops within about a second and a half once the player stands still: a squat counts when she is up again, the horse coasts 0.5 s plus 0.3 of her rhythm (at most 0.6 s more), and stops at once unless her head already goes down into the next squat (from the keyboard, it stops when the next squat is 0.6 s overdue); it stops at the latest 4.5 s after the last squat; both hands above the head brake, and the horse rears up (`Brake`, `Rider.rear`),
 * a hand starts to turn at 0.1 of the width of the shoulders across the axis of the head, and turns fully at 0.6.
 
 ## 14. The second thing we build: the first level

@@ -58,7 +58,7 @@ namespace SteppeRescue.Vision
         public float ReturnDepth = 0.2f;
 
         /// <summary>The period which we assume before the first squat, in seconds.</summary>
-        public double FirstPeriod = 3.0;
+        public double FirstPeriod = 4.0;
 
         /// <summary>After this long without a squat (in seconds), the horse stops.</summary>
         public double MaxPause = 4.5;
@@ -67,7 +67,7 @@ namespace SteppeRescue.Vision
         /// A squat may come this late (in seconds) after the rhythm of the player
         /// expects it; then the horse stops briskly.
         /// </summary>
-        public double Grace = 0.35;
+        public double Grace = 0.6;
 
         /// <summary>
         /// The horse keeps going this long (in seconds) after a squat, which counts
@@ -75,21 +75,27 @@ namespace SteppeRescue.Vision
         /// rhythm; then it stops, unless the head already goes down into the next
         /// squat (by <see cref="StartDepth"/>).
         /// </summary>
-        public double Coast = 0.3;
+        public double Coast = 0.5;
 
-        public double CoastShare = 0.2;
+        public double CoastShare = 0.3;
+
+        /// <summary>The share of the rhythm adds at most this much to the coasting, in seconds.</summary>
+        public double MaxCoastShare = 0.6;
 
         /// <summary>The head this deep (in units) goes down into the next squat.</summary>
         public float StartDepth = 0.1f;
 
         /// <summary>How fast the horse speeds up to a walk, in the full speed per second.</summary>
-        public float Acceleration = 0.35f;
+        public float Acceleration = 0.6f;
 
         /// <summary>
-        /// How fast the horse speeds up beyond the walk, in the full speed per second,
-        /// so that it takes a few brisk squats, not two, to gallop.
+        /// How fast the horse speeds up beyond the walk, in the full speed per second:
+        /// two or three brisk squats gallop, which children manage.
         /// </summary>
-        public float FastAcceleration = 0.18f;
+        public float FastAcceleration = 0.4f;
+
+        /// <summary>How fast the brake stops the horse, in the full speed per second.</summary>
+        public float BrakeDeceleration = 5.0f;
 
         /// <summary>How fast the horse slows down, in the full speed per second.</summary>
         public float Deceleration = 4.0f;
@@ -162,17 +168,17 @@ namespace SteppeRescue.Vision
 
         private static readonly (double Period, float Speed)[] _speedTable =
         {
-            (1.2, 1.0f),
-            (1.5, 0.85f),
-            (2.0, 0.62f),
-            (3.0, 0.35f),
-            (4.0, 0.2f),
+            (1.5, 1.0f),
+            (1.9, 0.85f),
+            (2.5, 0.62f),
+            (3.4, 0.35f),
+            (4.5, 0.2f),
         };
 
         /// <summary>
         /// Map the time between two squats (in seconds) to the speed of a full,
-        /// deep squatting: a squat every 3 s walks, every 2 s trots, and every
-        /// 1.5 s or faster gallops.
+        /// deep squatting: a squat every 4 s walks, every 2.5 s trots, and every
+        /// 2 s or faster gallops.
         /// </summary>
         public static float SpeedOfPeriod(double period)
         {
@@ -285,7 +291,8 @@ namespace SteppeRescue.Vision
                 // Without the camera (squats from the keyboard), we cannot see her
                 // stand, and wait for the rhythm only.
                 bool seen = !double.IsNaN(_lastObserved) && t - _lastObserved < 0.5;
-                bool standing = seen && since > Coast + CoastShare * Period && RawDepth < StartDepth;
+                double coast = Coast + Math.Min(CoastShare * Period, MaxCoastShare);
+                bool standing = seen && since > coast && RawDepth < StartDepth;
                 bool overdue = standing || since > Period + Grace || since > MaxPause;
                 TargetSpeed = overdue ? 0f : SpeedOfPeriod(Period) * _lastFactor;
             }
@@ -297,6 +304,19 @@ namespace SteppeRescue.Vision
             Speed = TargetSpeed > Speed
                 ? Math.Min(TargetSpeed, Speed + step)
                 : Math.Max(TargetSpeed, Speed - step);
+        }
+
+        /// <summary>
+        /// Brake (see <see cref="Brake"/>) for <paramref name="dt"/> seconds: the
+        /// horse stops at once and forgets the rhythm, so that it stands until the
+        /// next squat; the squats made so far still count.
+        /// </summary>
+        public void Halt(double dt)
+        {
+            Speed = Math.Max(0f, Speed - BrakeDeceleration * (float)dt);
+            TargetSpeed = 0f;
+            _lastSquat = double.NaN;
+            Period = double.NaN;
         }
 
         /// <summary>Forget everything, e.g., at the start of a level.</summary>

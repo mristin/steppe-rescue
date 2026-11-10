@@ -33,11 +33,11 @@ func _run() -> void:
     var service: Node = root.get_node("Vision").service
     _check(service.GetGait() == 0, "the horse stands at the start")
 
-    await _squat(service, 3.0, 15.0)
-    _check(service.GetGait() == 1, "a squat every 3 s walks, got the gait %d" % service.GetGait())
+    await _squat(service, 4.0, 16.0)
+    _check(service.GetGait() == 1, "a squat every 4 s walks, got the gait %d" % service.GetGait())
 
-    await _squat(service, 2.0, 12.0)
-    _check(service.GetGait() == 2, "a squat every 2 s trots, got the gait %d" % service.GetGait())
+    await _squat(service, 2.5, 12.5)
+    _check(service.GetGait() == 2, "a squat every 2.5 s trots, got the gait %d" % service.GetGait())
 
     await _squat(service, 1.3, 10.0)
     _check(

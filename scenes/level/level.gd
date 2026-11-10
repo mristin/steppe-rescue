@@ -59,6 +59,8 @@ var elapsed := 0.0
 ## The water and the food of the horse.
 var needs := HorseNeeds.new()
 
+## How many times the rider braked, to see when she brakes again.
+var _brakes := 0
 var _service: Node = null
 var _people: Array[Person] = []
 var _grandmother: Person = null
@@ -105,6 +107,7 @@ var _talk_squats := 0
 func _ready() -> void:
     _service = get_node("/root/Vision").service
     _service.ResetRiding()
+    _brakes = _service.GetBrakeCount()
     get_node("/root/Sounds").wind(true)
 
     if Flow.level != "":
@@ -186,6 +189,10 @@ func _process(delta: float) -> void:
     var gait: int = mini(_service.GetGait(), _rider.gait())
     _update_conversation(delta, gait)
 
+    var brakes: int = _service.GetBrakeCount()
+    if brakes > _brakes:
+        _brakes = brakes
+        _rider.rear()
     var standing := _talking != null or finished
     var speed: float = 0.0 if standing else needs.cap(_service.GetSpeed())
     _rider.ride(delta, speed, 0.0 if standing else _service.GetTurn())

@@ -48,18 +48,36 @@ static func draw_rider(
     frame: int,
     center: Vector2,
     heading: float,
-    big := false
+    big := false,
+    rear := 0.0
 ) -> void:
     var prefix := "big/" if big else ""
     var steed: String = looks.get("steed", "1")
     var index := 0 if gait <= 0 else posmod(frame, HORSE_FRAMES)
     var horse := _load("horses/%s/%s%d" % [steed, prefix, index])
     var wide := Vector2(HORSE_WIDTH, 1.0)
+    var girl := Vector2.ONE * GIRL_SCALE
+    var seat := center
+    if rear > 0.0:
+        # NOTE (mristin):
+        # A painted horse rearing up, seen from above, if there is one
+        # (assets/pictures/top_down/horses/<steed>/rear.png); else the horse
+        # foreshortens: its front rises towards us, so it looks shorter and a
+        # bit wider, its hind legs stay, and the girl leans back and comes
+        # nearer to us.
+        var painted := "horses/%s/%srear" % [steed, prefix]
+        if rear > 0.3 and ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
+            horse = _load(painted)
+        else:
+            wide = Vector2(HORSE_WIDTH * (1.0 + 0.15 * rear), 1.0 - 0.25 * rear)
+        var back := Vector2.DOWN.rotated(heading) * horse.get_size().y * 0.5 * 0.12 * rear
+        center += back
+        seat = center + back * 0.6
+        girl *= 1.0 + 0.12 * rear
     draw(item, horse, center, heading, wide)
     _dress(item, looks, "horse", horse, center, heading, wide)
-    var girl := Vector2.ONE * GIRL_SCALE
-    draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), center, heading, girl)
-    _dress(item, looks, "rider", horse, center, heading, girl)
+    draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), seat, heading, girl)
+    _dress(item, looks, "rider", horse, seat, heading, girl)
 
 
 ## Lay the finery which she wears, seen from above, over the horse (or the

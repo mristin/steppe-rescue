@@ -81,6 +81,7 @@ public partial class VisionService : Node
 
     public readonly SquatMeter Squats = new();
     public readonly Reins Reins = new();
+    public readonly Brake Brake = new();
     public readonly FaceAnchorFilter Face = new();
 
     private readonly Stopwatch _clock = Stopwatch.StartNew();
@@ -149,6 +150,7 @@ public partial class VisionService : Node
     private readonly FrameSlot _faceSlot = new();
 
     private float _keyboardTurn;
+    private bool _keyboardBraking;
     private bool _keyboardTurning;
 
     public override void _Ready()
@@ -212,7 +214,26 @@ public partial class VisionService : Node
             _keyboardTurning = true;
         }
 
+        // NOTE (mristin):
+        // Down (or the tests) brakes like both hands above the head.
+        if (Input.IsKeyPressed(Key.Down))
+        {
+            Brake.Hold(now);
+        }
+        else if (_keyboardBraking)
+        {
+            Brake.LetGo();
+        }
+
+        _keyboardBraking = Input.IsKeyPressed(Key.Down);
+
         Squats.Update(now);
+        Brake.Update(now);
+        if (Brake.Pulled)
+        {
+            Squats.Halt(delta);
+        }
+
         Reins.Update(now);
         Face.Update(now);
     }
@@ -248,6 +269,10 @@ public partial class VisionService : Node
         float? leftWrist = player.Has(BodyPart.LeftWrist, threshold) ? player[BodyPart.LeftWrist].X : null;
         float? rightWrist = player.Has(BodyPart.RightWrist, threshold) ? player[BodyPart.RightWrist].X : null;
         Reins.Observe(t, head.Value.X, unit.Value, leftWrist, rightWrist);
+
+        float? leftWristY = player.Has(BodyPart.LeftWrist, threshold) ? player[BodyPart.LeftWrist].Y : null;
+        float? rightWristY = player.Has(BodyPart.RightWrist, threshold) ? player[BodyPart.RightWrist].Y : null;
+        Brake.Observe(t, head.Value.Y, unit.Value, leftWristY, rightWristY);
     }
 
     // NOTE (mristin):
@@ -281,6 +306,15 @@ public partial class VisionService : Node
     {
         return _keyboardTurning ? _keyboardTurn : Reins.Turn;
     }
+
+    /// <summary>Whether the player brakes now, both hands above her head.</summary>
+    public bool IsBraking() => Brake.Pulled;
+
+    /// <summary>How many times the player braked.</summary>
+    public int GetBrakeCount() => Brake.Count;
+
+    /// <summary>Brake from the tests, as if both hands were up for a moment.</summary>
+    public void BrakeByKeyboard() => Brake.Hold(Now);
 
     /// <summary>How far each hand reaches across, in [0, 1]: (left, right).</summary>
     public Vector2 GetHandsAcross() => new(Reins.LeftAcross, Reins.RightAcross);
@@ -390,6 +424,7 @@ public partial class VisionService : Node
     {
         Squats.Reset();
         Reins.Reset();
+        Brake.Reset();
     }
 
     private void SearchCamera(double now)

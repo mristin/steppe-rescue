@@ -270,6 +270,16 @@ namespace SteppeRescue.Vision
         public float NmsIouThreshold = 0.45f;
         public int MaxHeads = 8;
 
+        /// <summary>The hands count from this score on; they are smaller and vaguer than the heads.</summary>
+        public float HandScoreThreshold = 0.35f;
+
+        public int MaxHands = 6;
+
+        /// <summary>The hands which the last <see cref="Detect"/> found in the same run, in frame pixels.</summary>
+        public readonly List<Detection> Hands = new();
+
+        private readonly List<Detection> _handCandidates = new();
+
         public readonly int InputWidth;
         public readonly int InputHeight;
 
@@ -354,7 +364,10 @@ namespace SteppeRescue.Vision
             }
         }
 
-        /// <summary>Detect the heads, after the non-maximum suppression, in frame pixels.</summary>
+        /// <summary>
+        /// Detect the heads, after the non-maximum suppression, in frame pixels;
+        /// the hands of the same run go into <see cref="Hands"/>.
+        /// </summary>
         public void Detect(Frame frame, List<Detection> heads)
         {
             float scale = Yolox.Preprocess(frame, InputWidth, InputHeight, _input);
@@ -374,6 +387,20 @@ namespace SteppeRescue.Vision
                 _candidates
             );
             NonMaximumSuppression.Apply(_candidates, NmsIouThreshold, MaxHeads, heads);
+
+            _handCandidates.Clear();
+            Yolox.Decode(
+                outputs[0].GetTensorDataAsSpan<float>(),
+                InputWidth,
+                InputHeight,
+                scale,
+                frame.Width,
+                frame.Height,
+                Yolox.ClassHand,
+                HandScoreThreshold,
+                _handCandidates
+            );
+            NonMaximumSuppression.Apply(_handCandidates, NmsIouThreshold, MaxHands, Hands);
         }
 
         public void Dispose()

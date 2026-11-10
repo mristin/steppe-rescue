@@ -1,9 +1,11 @@
 class_name HandCursor
 extends Control
 
-## Move the cursor of the menus, a small bird, with the player's raised hand
-## (see section 5 of DESIGN.md, "Menus: the hand cursor"), or with the mouse
-## when no hand is seen.
+## Move the cursor of the menus, a bird, with the player's raised hand (see
+## section 5 of DESIGN.md, "Menus: the hand cursor"), or with the mouse when
+## no hand is seen. The hands come from the hand detector (YOLOX), which runs
+## on every frame while the bird shows; the pose only tells where the
+## shoulders are, below which a hand rests and does not count.
 ##
 ## The [DwellButton]s ask where the bird is with [member at] and whether a
 ## hand moves it with [member by_hand]: a hand clicks by holding the bird still
@@ -26,6 +28,10 @@ const _REACH := Rect2(0.15, 0.1, 0.7, 0.6)
 ## The bottom of the screen lies this far below the shoulders, in the
 ## normalized picture: just within a raised hand.
 const _BELOW_SHOULDERS := 0.04
+
+## A hand lower than this below the bottom of the reach rests at the side of
+## the player and does not count.
+const _BELOW_REACH := 0.08
 
 ## How fast the reach follows the shoulders (they move as the player does).
 const _REACH_FOLLOW := 2.0
@@ -52,11 +58,9 @@ const _GLIDE_SECONDS := 0.08
 const MIRROR_ALPHA := 0.6
 const MIRROR_DIM := 0.35
 
-## A wrist counts when the pose model is this sure of it.
+## A shoulder counts when the pose model is this sure of it.
 const _THRESHOLD := 0.5
 
-const _LEFT_WRIST := 9
-const _RIGHT_WRIST := 10
 const _LEFT_SHOULDER := 5
 const _RIGHT_SHOULDER := 6
 
@@ -75,6 +79,9 @@ static var reach := _REACH
 
 var _service: Node = null
 var _stuck: DwellButton = null
+var _followed := Vector2(-1, -1)
+var _smooth_x := OneEuro.new()
+var _smooth_y := OneEuro.new()
 var _mirror: Control = null
 
 
@@ -84,6 +91,8 @@ func _ready() -> void:
     z_index = 100
     var vision := get_node_or_null("/root/Vision")
     _service = vision.service if vision != null else null
+    if _service != null:
+        _service.SetWantHands(true)
     by_hand = false
     at = get_viewport().get_mouse_position()
     _add_mirror.call_deferred()
@@ -181,6 +190,11 @@ func _draw_mirror() -> void:
     _mirror.draw_set_transform(Vector2.ZERO, 0, Vector2.ONE)
 
 
+func _exit_tree() -> void:
+    if _service != null:
+        _service.SetWantHands(false)
+
+
 func _input(event: InputEvent) -> void:
     if event is InputEventMouseMotion and not held:
         by_hand = false
@@ -203,27 +217,41 @@ func _follow_shoulders(points: Array, scores: Array) -> void:
     reach.size.y = lerpf(reach.size.y, height, step)
 
 
-## The raised hand in the mirrored camera picture, normalized; negative if no
-## hand is raised: the higher wrist, if it is above its shoulder's height.
+## The raised hand in the mirrored camera picture, normalized and smoothed;
+## negative if no hand is raised. Of the hands which the detector found, the
+## ones resting below the shoulders do not count; we keep to the hand we
+## followed, else take the highest.
 func _hand() -> Vector2:
     if _service == null or not _service.IsRunning():
         return Vector2(-1, -1)
     var points: Array = _service.GetKeypoints()
     var scores: Array = _service.GetKeypointScores()
-    if points.size() <= _RIGHT_WRIST:
-        return Vector2(-1, -1)
-    _follow_shoulders(points, scores)
+    if points.size() > _RIGHT_SHOULDER:
+        _follow_shoulders(points, scores)
+    var lowest := reach.end.y + _BELOW_REACH
     var best := Vector2(-1, -1)
-    for pair in [[_LEFT_WRIST, _LEFT_SHOULDER], [_RIGHT_WRIST, _RIGHT_SHOULDER]]:
-        if scores[pair[0]] < _THRESHOLD:
+    var followed := _followed if _followed.x >= 0.0 else Vector2(-1, -1)
+    for hand in _service.GetHands():
+        if hand.y > lowest:
             continue
-        var wrist: Vector2 = points[pair[0]]
-        var shoulder: Vector2 = points[pair[1]]
-        if scores[pair[1]] >= _THRESHOLD and wrist.y > shoulder.y + 0.05:
-            continue
-        if best.x < 0.0 or wrist.y < best.y:
-            best = wrist
-    return best
+        if best.x < 0.0:
+            best = hand
+        elif followed.x >= 0.0:
+            if hand.distance_to(followed) < best.distance_to(followed):
+                best = hand
+        elif hand.y < best.y:
+            best = hand
+    if best.x < 0.0:
+        _followed = Vector2(-1, -1)
+        return best
+    # NOTE (mristin):
+    # A jump to another hand far away starts the smoothing afresh.
+    if followed.x < 0.0 or best.distance_to(followed) > 0.25:
+        _smooth_x.reset(best.x)
+        _smooth_y.reset(best.y)
+    _followed = best
+    var now := Time.get_ticks_msec() / 1000.0
+    return Vector2(_smooth_x.filter(best.x, now), _smooth_y.filter(best.y, now))
 
 
 func _draw() -> void:
@@ -233,3 +261,39 @@ func _draw() -> void:
         return
     var bird := Icons.bird(BIRD_SCALE)
     draw_texture(bird, (at - bird.get_size() * 0.5).round())
+
+
+## Smooth a noisy signal with little lag: the faster it moves, the less we
+## smooth (Casiez, Roussel and Vogel, "1€ Filter", CHI 2012), as in Bird Dog.
+class OneEuro:
+    extends RefCounted
+    var min_cutoff := 1.2
+    var beta := 4.0
+    var derivative_cutoff := 1.0
+    var _value := 0.0
+    var _derivative := 0.0
+    var _last := -1.0
+
+    func reset(value: float) -> void:
+        _value = value
+        _derivative = 0.0
+        _last = -1.0
+
+    func filter(value: float, time: float) -> float:
+        if _last < 0.0:
+            _value = value
+            _last = time
+            return value
+        var dt := time - _last
+        if dt <= 0.000001:
+            return _value
+        _last = time
+        var derivative := (value - _value) / dt
+        _derivative += _alpha(derivative_cutoff, dt) * (derivative - _derivative)
+        var cutoff := min_cutoff + beta * absf(_derivative)
+        _value += _alpha(cutoff, dt) * (value - _value)
+        return _value
+
+    func _alpha(cutoff: float, dt: float) -> float:
+        var tau := 1.0 / (TAU * cutoff)
+        return 1.0 / (1.0 + tau / dt)

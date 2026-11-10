@@ -26,6 +26,12 @@ namespace SteppeRescue.Vision
         /// <summary>How many heads the detector found; -1 when we only followed the face.</summary>
         public int HeadCount { get; init; }
 
+        /// <summary>
+        /// The hands the head detector found in this frame, in frame pixels; null
+        /// when the detector did not run (we only followed the face).
+        /// </summary>
+        public IReadOnlyList<BoundingBox>? Hands { get; init; }
+
         /// <summary>How long the heads and the face took, in milliseconds.</summary>
         public double InferenceMs { get; init; }
     }
@@ -62,6 +68,12 @@ namespace SteppeRescue.Vision
         /// <summary>Run the head detector at least this often while following the face, in seconds.</summary>
         public double RecheckEvery = 0.25;
 
+        /// <summary>
+        /// Run the head detector on every frame, for its hands (e.g., for the
+        /// cursor of the menus), instead of following the face with YuNet alone.
+        /// </summary>
+        public volatile bool WantHands;
+
         /// <summary>Follow the face in a square of this many face sizes around it.</summary>
         public float FollowScale = 1.6f;
 
@@ -97,7 +109,7 @@ namespace SteppeRescue.Vision
         {
             var stopwatch = Stopwatch.StartNew();
 
-            if (_following != null && frame.Timestamp - _detectedAt < RecheckEvery)
+            if (!WantHands && _following != null && frame.Timestamp - _detectedAt < RecheckEvery)
             {
                 var followed = _faces.DetectOne(frame, _following.Value);
                 if (followed != null)
@@ -106,7 +118,7 @@ namespace SteppeRescue.Vision
                     _following = square;
                     _previous = square;
                     _previousAt = frame.Timestamp;
-                    return Snapshot(frame, square, followed, -1, stopwatch);
+                    return Snapshot(frame, square, followed, -1, null, stopwatch);
                 }
             }
 
@@ -133,11 +145,21 @@ namespace SteppeRescue.Vision
             }
 
             _following = face?.Box.ExpandToSquare(FollowScale);
-            return Snapshot(frame, head, face, _headCount, stopwatch);
+            var hands = new List<BoundingBox>(_heads.Hands.Count);
+            foreach (var hand in _heads.Hands)
+            {
+                hands.Add(hand.Box);
+            }
+            return Snapshot(frame, head, face, _headCount, hands, stopwatch);
         }
 
         private static FaceSnapshot Snapshot(
-            Frame frame, BoundingBox? head, FaceLandmarks? face, int headCount, Stopwatch stopwatch
+            Frame frame,
+            BoundingBox? head,
+            FaceLandmarks? face,
+            int headCount,
+            IReadOnlyList<BoundingBox>? hands,
+            Stopwatch stopwatch
         )
         {
             return new FaceSnapshot
@@ -148,6 +170,7 @@ namespace SteppeRescue.Vision
                 Head = head,
                 Face = face,
                 HeadCount = headCount,
+                Hands = hands,
                 InferenceMs = stopwatch.Elapsed.TotalMilliseconds,
             };
         }

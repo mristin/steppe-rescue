@@ -96,6 +96,11 @@ public partial class VisionService : Node
     private VisionSnapshot? _latest;
     private VisionSnapshot? _consumed;
     private FaceSnapshot? _latestFace;
+
+    /// <summary>The latest face snapshot in which the head detector ran, with its hands.</summary>
+    private FaceSnapshot? _latestHands;
+
+    private volatile bool _wantHands;
     private FaceSnapshot? _consumedFace;
 
     /// <summary>The latest pose, or null before the first one.</summary>
@@ -304,6 +309,34 @@ public partial class VisionService : Node
         }
 
         return points;
+    }
+
+    /// <summary>
+    /// Ask the face thread to run the hand detector on every frame (true while a
+    /// menu shows the cursor of the hand), or only now and then.
+    /// </summary>
+    public void SetWantHands(bool want) => _wantHands = want;
+
+    /// <summary>
+    /// The hands which YOLOX found lately, as their centers in the mirrored
+    /// picture, normalized; empty if none were found in the last 0.3 s.
+    /// </summary>
+    public Vector2[] GetHands()
+    {
+        var snapshot = Volatile.Read(ref _latestHands);
+        if (snapshot?.Hands == null || Now - snapshot.Timestamp > 0.3)
+        {
+            return Array.Empty<Vector2>();
+        }
+
+        var hands = new Vector2[snapshot.Hands.Count];
+        for (int i = 0; i < hands.Length; i++)
+        {
+            var box = snapshot.Hands[i];
+            hands[i] = new Vector2(1f - box.CenterX / snapshot.Width, box.CenterY / snapshot.Height);
+        }
+
+        return hands;
     }
 
     /// <summary>The scores of the key points of <see cref="GetKeypoints"/>.</summary>
@@ -555,6 +588,7 @@ public partial class VisionService : Node
             tracker = new FaceTracker(headModel, faceModel);
             while (_running)
             {
+                tracker.WantHands = _wantHands;
                 var frame = NextFrame(_faceSlot);
                 if (frame == null)
                 {
@@ -565,7 +599,12 @@ public partial class VisionService : Node
                 // The pose tells which head is the player's; it may be a few frames
                 // old, which is close enough to tell the heads apart.
                 var head = Latest?.Player?.Head(0.5f);
-                Volatile.Write(ref _latestFace, tracker.Track(frame, head?.X, head?.Y));
+                var found = tracker.Track(frame, head?.X, head?.Y);
+                Volatile.Write(ref _latestFace, found);
+                if (found.Hands != null)
+                {
+                    Volatile.Write(ref _latestHands, found);
+                }
             }
         }
         catch (Exception exception)

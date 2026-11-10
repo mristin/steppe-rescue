@@ -130,8 +130,12 @@ func _process(delta: float) -> void:
         heading = 0.0
     var target: float = pose(time)["speed"]
     # NOTE (mristin):
-    # The brake stops the horse at once; else it speeds up and slows gently.
-    speed = move_toward(speed, target, delta * (5.0 if pose(time)["hands_up"] > 0.0 else 0.5))
+    # The brake stops the horse at once; else it speeds up gently, and slows
+    # down within a second, as in the level.
+    var rate := 0.5 if target > speed else 1.0
+    if pose(time)["hands_up"] > 0.0:
+        rate = 5.0
+    speed = move_toward(speed, target, delta * rate)
     _speed_bar.speed = speed
     _scroll += speed * delta * 160.0
     _stride += delta / _FRAME_SECONDS[_speed_bar.gait()]
@@ -179,7 +183,9 @@ static func pose(at: float) -> Dictionary:
         result["squat"] = 0.5 - 0.5 * cos(TAU * phase)
         result["phase"] = fposmod(phase, 1.0)
         result["speed"] = part[2]
-    elif at >= STOP:
+    elif at >= REACH:
+        # NOTE (mristin):
+        # She walks the horse while she pulls the reins; before, it stopped.
         result["speed"] = 0.3
     if at >= REACH and at < GALLOP_AGAIN:
         var start := REACH if at < REACH_RIGHT else REACH_RIGHT

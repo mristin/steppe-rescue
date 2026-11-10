@@ -123,6 +123,7 @@ func _run() -> void:
         Instruction.pose(13.0)["speed"] > Instruction.pose(5.0)["speed"],
         "the faster squats make the horse faster"
     )
+    _check(Instruction.pose(16.0)["speed"] == 0.0, "when she stops squatting, the horse stops")
     _check(Instruction.pose(20.0)["reach"] == 1.0, "then she pulls the reins to the left")
     _check(Instruction.pose(25.0)["reach"] == -1.0, "and to the right")
     _check(instruction.has_method("_draw"), "the instruction draws its animation")

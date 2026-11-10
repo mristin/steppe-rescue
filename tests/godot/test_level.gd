@@ -83,13 +83,23 @@ func _run() -> void:
     _check(rider.position.y < start.y - 100.0, "the squats ride north, got %s" % rider.position)
 
     # NOTE (mristin):
-    # Both hands above the head brake: the horse rears up and stops at once.
+    # Both hands above the head brake: a walking or trotting horse halts, a
+    # galloping one rears up and stops at once.
     service.SquatByKeyboard()
     await _wait(0.3)
     _check(service.GetSpeed() > 0.0, "the horse runs before the brake")
+    _check(rider.gait() < 3, "it does not gallop yet")
     service.BrakeByKeyboard()
     await _wait(0.3)
     _check(service.GetSpeed() == 0.0, "the brake stops the horse at once")
+    _check(rider.rearing() == 0.0, "a horse which does not gallop halts without rearing")
+    for i in range(8):
+        service.SquatByKeyboard()
+        await _wait(1.2)
+    _check(rider.gait() == 3, "brisk squats gallop, got the gait %d" % rider.gait())
+    service.BrakeByKeyboard()
+    await _wait(0.3)
+    _check(service.GetSpeed() == 0.0, "the brake stops the galloping horse at once")
     _check(rider.rearing() > 0.0, "and it rears up")
     var reared_at := rider.position
     await _wait(0.5)

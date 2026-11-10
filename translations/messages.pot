@@ -54,7 +54,7 @@ msgstr ""
 
 #. In How to Play: raising both hands above the head is the brake.
 #: scenes/instruction/instruction.gd
-msgid "Both hands up above your head: your horse rears up and stops at once!"
+msgid "Both hands up above your head: your horse stops at once. From a gallop, it rears up!"
 msgstr ""
 
 #. The button which starts the game.

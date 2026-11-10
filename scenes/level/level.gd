@@ -192,7 +192,12 @@ func _process(delta: float) -> void:
     var brakes: int = _service.GetBrakeCount()
     if brakes > _brakes:
         _brakes = brakes
-        _rider.rear()
+        # NOTE (mristin):
+        # A walking or trotting horse halts within a stride; only a galloping
+        # one, stopped hard, rears up (the rider's gait is still the one
+        # before the brake).
+        if _rider.gait() == 3:
+            _rider.rear()
     var standing := _talking != null or finished
     var speed: float = 0.0 if standing else needs.cap(_service.GetSpeed())
     _rider.ride(delta, speed, 0.0 if standing else _service.GetTurn())

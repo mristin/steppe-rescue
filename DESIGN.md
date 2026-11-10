@@ -165,7 +165,7 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 
 ### The brake: both hands above the head
 
-* **Both hands up above the head** stop the horse at once: it rears up on its hind legs, its front legs in the air, for about 1.4 s, and then stands until the next squat, which starts a walk again.
+* **Both hands up above the head** stop the horse at once, and it stands until the next squat, which starts a walk again. A walking or trotting horse simply halts, as a real horse does within a stride or two; only a galloping horse, stopped hard, rears up on its hind legs, its front legs in the air, for about 1.4 s. (A real horse stops from a gallop over a few strides and does not rear to stop; it rears from fear or excitement, which a hard stop at speed can provoke. The rearing is the game's dramatic sign of the hard stop.)
 * Both wrists must be clearly above the head (0.4 of the width of the shoulders above the eyes and ears) for 0.15 s, so that a hand brushing the hair does not brake; one hand up does nothing.
 * It is the way to stop quickly, e.g., next to a person or a lost animal; the horse also stops by itself when the player stands still.
 * Down on the keyboard brakes, too.

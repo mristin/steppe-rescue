@@ -219,7 +219,9 @@ func caption(at: float) -> String:
         if at < line[0]:
             return line[1]
     # TRANSLATORS: In How to Play: raising both hands above the head is the brake.
-    return tr("Both hands up above your head: your horse rears up and stops at once!")
+    return tr(
+        "Both hands up above your head: your horse stops at once. From a gallop, it rears up!"
+    )
 
 
 func _draw() -> void:

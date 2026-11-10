@@ -67,8 +67,8 @@ msgstr "Приседай быстро, и твоя лошадь снова по�
 #. In How to Play: raising both hands above the head is the brake.
 #: scenes/instruction/instruction.gd
 #, fuzzy
-msgid "Both hands up above your head: your horse rears up and stops at once!"
-msgstr "Обе руки вверх над головой: лошадь встаёт на дыбы и сразу останавливается!"
+msgid "Both hands up above your head: your horse stops at once. From a gallop, it rears up!"
+msgstr "Обе руки вверх над головой: лошадь сразу остановится. А с галопа встанет на дыбы!"
 
 #. The button which starts the game.
 #: scenes/intro/intro.gd
@@ -1520,6 +1520,10 @@ msgstr "юртой"
 msgctxt "between"
 msgid "the yurt"
 msgstr "юртой"
+
+#, fuzzy
+#~ msgid "Both hands up above your head: your horse rears up and stops at once!"
+#~ msgstr "Обе руки вверх над головой: лошадь встаёт на дыбы и сразу останавливается!"
 
 #, fuzzy
 #~ msgid "Who rides today?"

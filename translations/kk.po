@@ -67,8 +67,8 @@ msgstr "Жылдам отырып-тұр, сонда атың қайтадан �
 #. In How to Play: raising both hands above the head is the brake.
 #: scenes/instruction/instruction.gd
 #, fuzzy
-msgid "Both hands up above your head: your horse rears up and stops at once!"
-msgstr "Екі қолыңды басыңнан жоғары көтер: атың шоқиып, бірден тоқтайды!"
+msgid "Both hands up above your head: your horse stops at once. From a gallop, it rears up!"
+msgstr "Екі қолыңды басыңнан жоғары көтер: атың бірден тоқтайды. Шауып келе жатса, шоқиып кетеді!"
 
 #. The button which starts the game.
 #: scenes/intro/intro.gd
@@ -1520,6 +1520,10 @@ msgstr "киіз үй мен"
 msgctxt "between"
 msgid "the yurt"
 msgstr "киіз үйдің"
+
+#, fuzzy
+#~ msgid "Both hands up above your head: your horse rears up and stops at once!"
+#~ msgstr "Екі қолыңды басыңнан жоғары көтер: атың шоқиып, бірден тоқтайды!"
 
 #, fuzzy
 #~ msgid "Who rides today?"

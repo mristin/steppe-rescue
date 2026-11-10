@@ -80,7 +80,7 @@ We distribute the model unmodified.
   * The shepherd: "Kirgiz-Kazaki. Utkul'-bai", LCCN 2007681449, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazaki-_Utkul%27-bai_LCCN2007681449.jpg
   * The beekeeper: "Cholak-Kazachki. Ai-kara", LCCN 2007682050, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Cholak-Kazachki._Ai-kara_LCCN2007682050.jpg
 
-**Altered:** cropped to the head, shrunk to 32x32 pixels and painted in the sepia colors of the game's palette; the sources keep the 960-pixel-wide copies from Wikimedia Commons, as downloaded. The crops are listed in `assets/pictures/sources/sources.json`.
+**Altered:** cropped to the head, shrunk to 128x128 pixels and painted in the sepia colors of the game's palette; Grandmother's photograph is also cut out along her outline and retouched with a smooth warp, which lifts the corners of her mouth into a gentle smile, and its shadows are lightened. The sources keep the 960-pixel-wide copies from Wikimedia Commons, as downloaded; the crops, the outline and the retouching are listed in `assets/pictures/sources/sources.json`.
 
 ## Used only for the development
 

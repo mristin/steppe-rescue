@@ -10,6 +10,7 @@
 [ext_resource type="Script" path="res://scenes/camera_panel/camera_panel.gd" id="8_camera_panel"]
 [ext_resource type="Script" path="res://scenes/level/conversation.gd" id="9_conversation"]
 [ext_resource type="Script" path="res://scenes/quit_hint/quit_hint.gd" id="10_quit_hint"]
+[ext_resource type="Script" path="res://scenes/needs_bars/needs_bars.gd" id="11_needs_bars"]
 
 [node name="Level" type="Node2D"]
 script = ExtResource("1_level")
@@ -65,6 +66,16 @@ offset_right = 308.0
 offset_bottom = 532.0
 mouse_filter = 2
 script = ExtResource("7_speed_bar")
+
+[node name="NeedsBars" type="Control" parent="Hud"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 324.0
+offset_top = 484.0
+offset_right = 484.0
+offset_bottom = 532.0
+mouse_filter = 2
+script = ExtResource("11_needs_bars")
 
 [node name="CameraPanel" type="Control" parent="Hud"]
 layout_mode = 3

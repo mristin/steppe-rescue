@@ -18,6 +18,7 @@ const EMERALD := Color("#2e7d4f")
 const EMERALD_LIGHT := Color("#5fae6e")
 const CRIMSON := Color("#b3263a")
 const CRIMSON_DARK := Color("#7a1626")
+const CRIMSON_LIGHT := Color("#d95466")
 const OCHRE := Color("#c9822b")
 const GOLD := Color("#f2c14e")
 const FELT := Color("#f4ead5")
@@ -28,31 +29,46 @@ const HORSE_BAY_LIGHT := Color("#a35a2c")
 const HOOF := Color("#3b2a20")
 const SKIN := Color("#e0a878")
 const SKIN_DARK := Color("#b97a52")
+const SKIN_FAIR := Color("#f2cfae")
+const SKIN_TAN := Color("#cf9162")
+const SKIN_DEEP := Color("#8a5634")
+const INDIGO := Color("#33417e")
+const INDIGO_LIGHT := Color("#5b6db0")
+const HAIR_BLACK := Color("#1f1a1c")
+const CHESTNUT := Color("#9c4a22")
+const DUN := Color("#cdb07a")
 const SHADOW := Color(0.0, 0.0, 0.0, 0.35)
 
-## The legend of the characters in the sprites of [PixelSprite], shared by
-## all the sprites, so that a sprite reads like a little picture.
-const LEGEND := {
-    ".": Color(0, 0, 0, 0),
-    "k": OUTLINE,
-    "b": HORSE_BAY,
-    "l": HORSE_BAY_LIGHT,
-    "h": HOOF,
-    "r": CRIMSON,
-    "d": CRIMSON_DARK,
-    "y": GOLD,
-    "o": OCHRE,
-    "e": EMERALD,
-    "f": FELT,
-    "g": GRASS,
-    "s": SKIN,
-    "z": SKIN_DARK,
-    "a": STONE,
-    "w": STONE_LIGHT,
-    "u": SKY,
-    "i": SKY_LIGHT,
-    "m": EMERALD_LIGHT,
-    "n": NIGHT,
-    "c": GRASS_DARK,
-    "t": GRASS_LIGHT,
-}
+## All the opaque colors of the palette, for [Pixelate].
+const COLORS := [
+    OUTLINE,
+    NIGHT,
+    SKY,
+    SKY_LIGHT,
+    GRASS,
+    GRASS_DARK,
+    GRASS_LIGHT,
+    EMERALD,
+    EMERALD_LIGHT,
+    CRIMSON,
+    CRIMSON_DARK,
+    CRIMSON_LIGHT,
+    OCHRE,
+    GOLD,
+    FELT,
+    STONE,
+    STONE_LIGHT,
+    HORSE_BAY,
+    HORSE_BAY_LIGHT,
+    HOOF,
+    SKIN,
+    SKIN_DARK,
+    SKIN_FAIR,
+    SKIN_TAN,
+    SKIN_DEEP,
+    INDIGO,
+    INDIGO_LIGHT,
+    HAIR_BLACK,
+    CHESTNUT,
+    DUN,
+]

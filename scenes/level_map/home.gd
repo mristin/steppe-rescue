@@ -4,9 +4,15 @@ extends Node2D
 
 ## Place the pen of the home aul in a level. When the rider rides up to its
 ## gate (in the middle of the north side), the animals which follow her run
-## into it.
+## into it. The pen is a painting of a woven fence (see [constant PAINTING]),
+## a little wider than the pen, filtered smoothly at any size.
 
 const _GATE_WIDTH := 24.0
+
+## The painting of the pen, seen from above, its gate open at the top.
+const PAINTING := "res://assets/pictures/home/pen.png"
+
+static var _painting: Texture2D = null
 
 ## The size of the pen in pixels.
 @export var pen_size := Vector2(112, 72):
@@ -25,30 +31,14 @@ func gate() -> Vector2:
     return position + Vector2(0, -pen_size.y * 0.5)
 
 
+func _ready() -> void:
+    texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+
+
 func _draw() -> void:
-    var rect := Rect2(-pen_size * 0.5, pen_size).abs()
-    draw_rect(rect, Palette.GRASS_LIGHT)
-    var top_left := rect.position
-    var bottom_right := rect.end
-    var gate_left := -_GATE_WIDTH * 0.5
-    var gate_right := _GATE_WIDTH * 0.5
-    var segments := [
-        [top_left, Vector2(gate_left, top_left.y)],
-        [Vector2(gate_right, top_left.y), Vector2(bottom_right.x, top_left.y)],
-        [Vector2(bottom_right.x, top_left.y), bottom_right],
-        [bottom_right, Vector2(top_left.x, bottom_right.y)],
-        [Vector2(top_left.x, bottom_right.y), top_left],
-    ]
-    for segment in segments:
-        _fence(segment[0], segment[1])
-
-
-## A wooden fence with posts.
-func _fence(from: Vector2, to: Vector2) -> void:
-    draw_line(from + Vector2(1, 1), to + Vector2(1, 1), Palette.SHADOW, 2.0)
-    draw_line(from, to, Palette.OCHRE, 2.0)
-    var length := from.distance_to(to)
-    var count := maxi(1, int(length / 12.0))
-    for i in range(count + 1):
-        var at := from.lerp(to, float(i) / count).round()
-        draw_rect(Rect2(at - Vector2(1, 1), Vector2(3, 3)), Palette.HORSE_BAY)
+    if _painting == null:
+        _painting = load(PAINTING)
+    var width := absf(pen_size.x) * 1.25
+    var height := width * _painting.get_height() / _painting.get_width()
+    height = maxf(height, absf(pen_size.y) * 1.1)
+    draw_texture_rect(_painting, Rect2(-width * 0.5, -height * 0.5, width, height), false)

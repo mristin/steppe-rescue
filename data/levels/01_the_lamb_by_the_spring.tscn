@@ -12,6 +12,7 @@
 [ext_resource type="Resource" path="res://data/landmarks/birches.tres" id="10_birches"]
 [ext_resource type="Resource" path="res://data/landmarks/yurt.tres" id="11_yurt"]
 [ext_resource type="Resource" path="res://data/animals/sheep.tres" id="12_sheep"]
+[ext_resource type="Resource" path="res://data/landmarks/pasture.tres" id="13_pasture"]
 
 [sub_resource type="Resource" id="Clue_lamb"]
 script = ExtResource("6_clue")
@@ -46,6 +47,12 @@ kind = ExtResource("9_bushes")
 position = Vector2(1590, 1080)
 script = ExtResource("2_landmark")
 kind = ExtResource("8_rock")
+
+[node name="Pasture" type="Node2D" parent="."]
+position = Vector2(600, 780)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_pasture")
+radius = 64.0
 
 [node name="HomeYurtWest" type="Node2D" parent="."]
 position = Vector2(780, 960)

@@ -1,8 +1,9 @@
 class_name CameraPanel
 extends Control
 
-## Show the player in the camera picture, mirrored, dressed as her rider: the
-## chosen hat is drawn over her head, following the landmarks of her face.
+## Show the player in the camera picture, mirrored, dressed as her rider: her
+## hat, her hair and her finery (see [method FrontView.overlay]) are drawn over
+## her head, following the landmarks of her face.
 ##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
@@ -27,14 +28,12 @@ const _LEFT_WRIST := 9
 const _RIGHT_WRIST := 10
 const _KEYPOINT_THRESHOLD := 0.5
 
-## The hat is this many eye distances wide.
-const _HAT_WIDTH_IN_EYES := 2.9
-
-## The band of the hat sits this many eye distances above the eyes.
-const _HAT_BAND_IN_EYES := 0.75
-
 ## Draw the key points, the axis of the head and the reaching hands.
 @export var show_skeleton := false
+
+## The looks to dress the player in; empty for those of the profile, in her
+## finery (e.g., the creator shows the looks while they are chosen).
+var looks: Dictionary = {}
 
 var _service: Node = null
 
@@ -63,7 +62,7 @@ func _draw() -> void:
     if show_skeleton:
         _draw_skeleton()
 
-    _draw_hat()
+    _draw_overlay()
 
     draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE, false, 2.0)
 
@@ -107,30 +106,31 @@ func _draw_skeleton() -> void:
             draw_rect(Rect2(center.round() - Vector2(1, 1), Vector2(2, 2)), Palette.GOLD)
 
 
-func _draw_hat() -> void:
+func _draw_overlay() -> void:
     var anchor: Dictionary = _service.GetFaceAnchor()
     var alpha: float = anchor["alpha"]
     if alpha <= 0.0:
         return
 
-    var texture := PixelSprite.texture(Sprites.TAKIYA)
     var eyes: float = anchor["eye_distance"] * size.x
     if eyes < 2.0:
         return
 
     # NOTE (mristin):
-    # We scale the hat by whole pixels of the game, so that it stays pixel art.
-    var scale := maxf(1.0, roundf(eyes * _HAT_WIDTH_IN_EYES / texture.get_width()))
-    var hat_size := texture.get_size() * scale
+    # The overlay is pixelated anew at the distance of the eyes (in whole
+    # pixels, so that only a few sizes are cached), so it stays pixel art,
+    # close or far.
+    var unit := maxf(3.0, roundf(eyes))
+    var texture := FrontView.overlay(
+        looks if not looks.is_empty() else get_node("/root/Profile").dressed(), unit
+    )
     var center: Vector2 = anchor["center"] * size
     var angle: float = anchor["angle"]
-    var up := Vector2(sin(angle), -cos(angle))
-    var band := center + up * eyes * _HAT_BAND_IN_EYES
 
-    draw_set_transform(band, angle, Vector2.ONE)
+    draw_set_transform(center, angle, Vector2.ONE)
     draw_texture_rect(
         texture,
-        Rect2(Vector2(-hat_size.x * 0.5, -hat_size.y), hat_size),
+        Rect2((FrontView.OVERLAY_BOX.position * unit).round(), texture.get_size()),
         false,
         Color(1, 1, 1, alpha)
     )

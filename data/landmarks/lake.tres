@@ -8,3 +8,4 @@ id = "lake"
 name = "the lake"
 radius = 90.0
 solid = 0.95
+fresh_water = true

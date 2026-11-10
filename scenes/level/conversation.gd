@@ -7,7 +7,6 @@ extends Control
 
 ## The portrait is drawn this big, in pixels.
 const _PORTRAIT_SIDE := 64.0
-const _ICON_SCALE := 2
 const _MARGIN := 8.0
 
 var _portrait: Texture2D = null
@@ -24,7 +23,8 @@ func _ready() -> void:
 
 
 ## Show the person and the lines: each line a dictionary with "text" and
-## optionally "icons" (an array of [code][texture, modulate][/code]).
+## optionally "icons" (an array of [code][texture, modulate][/code]), drawn at
+## the size of their texture.
 func open(portrait: Texture2D, speaker: String, lines: Array[Dictionary]) -> void:
     _portrait = portrait
     for child in _rows.get_children():
@@ -47,7 +47,7 @@ func open(portrait: Texture2D, speaker: String, lines: Array[Dictionary]) -> voi
                 picture.texture = icon[0]
                 picture.modulate = icon[1]
                 picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-                picture.custom_minimum_size = (icon[0] as Texture2D).get_size() * _ICON_SCALE
+                picture.custom_minimum_size = (icon[0] as Texture2D).get_size()
                 row.add_child(picture)
             _rows.add_child(row)
         var text: String = line.get("text", "")

@@ -65,6 +65,8 @@ func _run() -> void:
     var rider := level.rider()
     _check(level.talking_to() != null, "Grandmother talks to the rider at the start")
     _check(level.revealed().size() == 1, "Grandmother gives the clue")
+    await _wait(Level.TALK_SECONDS + 0.2)
+    _check(level.coach_mode() == Coach.Mode.SQUAT, "the small figure squats to close the talk")
     _check(level.animals.size() == 1, "one lamb is lost")
 
     var blocked := rider.slide(Vector2(-50.0, 500.0))
@@ -84,6 +86,12 @@ func _run() -> void:
     # Let the horse stop, then stand next to the lamb.
     await _wait(14.0)
     _check(service.GetGait() == 0, "the horse stops")
+    _check(level.coach_mode() == Coach.Mode.SQUAT, "the small figure invites a squat")
+    var before := rider.position
+    rider.position = Vector2(2.0, rider.position.y)
+    await _wait(0.2)
+    _check(level.coach_mode() == Coach.Mode.REACH, "at the edge, the figure reaches across")
+    rider.position = before
     var lamb: Animal = level.animals[0]
     rider.position = lamb.position + Vector2(0, 14)
     await _wait(1.5)
@@ -95,6 +103,13 @@ func _run() -> void:
     _check(level.finished, "the level ends when all the animals are home")
     _check(level.talking_to() != null, "Grandmother thanks the rider")
     _check(level.stars() == 3, "a quick ride earns three stars, got %d" % level.stars())
+    var profile := root.get_node("Profile")
+    _check(profile.stars.get(level.level_id(), 0) == 3, "the stars are kept")
+
+    await _wait(Level.THANKS_SECONDS)
+    service.SquatByKeyboard()
+    await _wait(1.0)
+    _check(current_scene is Reward, "a squat after the thanks goes to the reward")
 
     if _failures.is_empty():
         print("RESULT: OK")

@@ -13,6 +13,12 @@ const SMALL := Rect2(792, 8, 160, 120)
 ## The large map, in the coordinates of the screen.
 const LARGE := Rect2(80, 40, 800, 460)
 
+## The painting of the parchment behind the map.
+const PARCHMENT := "res://assets/pictures/maps/minimap.png"
+
+## The border of the parchment, as a fraction of its size.
+const _BORDER := Vector2(0.065, 0.09)
+
 const _COLORS := {
     "spring": Palette.SKY,
     "lake": Palette.SKY,
@@ -22,7 +28,10 @@ const _COLORS := {
     "kurgan": Palette.GRASS_DARK,
     "well": Palette.STONE,
     "yurt": Palette.CRIMSON,
+    "pasture": Palette.EMERALD_LIGHT,
 }
+
+static var _parchment: Texture2D = null
 
 var map: LevelMap
 
@@ -61,17 +70,20 @@ func _place() -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE)
-    draw_rect(Rect2(Vector2.ONE * 2.0, size - Vector2.ONE * 4.0), Palette.FELT)
+    # NOTE (mristin):
+    # The painted parchment with its ornamented border, stretched to the map;
+    # the steppe is drawn inside the border.
+    if _parchment == null:
+        _parchment = load(PARCHMENT)
+    draw_texture_rect(_parchment, Rect2(Vector2.ZERO, size), false)
     if map == null:
         return
 
-    var inner := Rect2(Vector2.ONE * 4.0, size - Vector2.ONE * 8.0)
+    var border := (size * _BORDER).round()
+    var inner := Rect2(border, size - 2.0 * border)
     var scale := minf(inner.size.x / map.size.x, inner.size.y / map.size.y)
     var origin := inner.position + (inner.size - map.size * scale) * 0.5
     var to_map := func(at: Vector2) -> Vector2: return (origin + at * scale).round()
-
-    draw_rect(Rect2(origin, map.size * scale), Palette.GRASS_LIGHT)
 
     var pen := map.home().pen() if map.home() != null else Rect2()
     if pen.has_area():

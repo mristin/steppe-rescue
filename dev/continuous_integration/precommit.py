@@ -207,9 +207,12 @@ def run_godot_tests(godot: str, jobs: int, only: Optional[Sequence[str]], verbos
                 "--script",
                 str(test),
                 # NOTE (mristin):
-                # The tests never open the camera.
+                # The tests never open the camera, and keep their settings to
+                # themselves, so that they neither change the settings of the
+                # developer nor of each other.
                 "--",
                 "--no-camera",
+                f"--settings=user://tests/{test.stem}.cfg",
             ],
             timeout=300.0,
         )
@@ -246,6 +249,14 @@ def smoke_scenes(godot: str, jobs: int) -> int:
     the scenes which do not even start.
     """
     scenes = [
+        REPO_ROOT / "scenes" / "intro" / "intro.tscn",
+        REPO_ROOT / "scenes" / "language_select" / "language_select.tscn",
+        REPO_ROOT / "scenes" / "rider_creator" / "rider_creator.tscn",
+        REPO_ROOT / "scenes" / "instruction" / "instruction.tscn",
+        REPO_ROOT / "scenes" / "level_select" / "level_select.tscn",
+        REPO_ROOT / "scenes" / "settings" / "settings.tscn",
+        REPO_ROOT / "scenes" / "reward" / "reward.tscn",
+        REPO_ROOT / "scenes" / "free_space" / "free_space.tscn",
         REPO_ROOT / "scenes" / "level" / "level.tscn",
         REPO_ROOT / "scenes" / "movement_test" / "movement_test.tscn",
     ]
@@ -264,6 +275,7 @@ def smoke_scenes(godot: str, jobs: int) -> int:
                 "120",
                 "--",
                 "--no-camera",
+                f"--settings=user://tests/smoke_{scene.stem}.cfg",
             ],
             timeout=120.0,
         )

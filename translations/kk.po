@@ -8,15 +8,83 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+#. Asked before riding; the player squats and swings her arms.
+#: scenes/free_space/free_space.gd
+#, fuzzy
+msgid "Make room! Nothing within 1 m around you: about 2 × 2 m free."
+msgstr "Орын босат! Айналаңда 1 м ішінде ештеңе болмасын: шамамен 2 × 2 м."
+
+#. Two metres, the side of the free square on the floor.
+#: scenes/free_space/free_space.gd
+#, fuzzy
+msgid "2 m"
+msgstr "2 м"
+
+#. The button which keeps the rider and starts the game.
+#: scenes/free_space/free_space.gd scenes/instruction/instruction.gd
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Ready!"
+msgstr "Жолға!"
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Stand in front of the camera, like your rider."
+msgstr "Шабандозың сияқты камераның алдында тұр."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Squat to make your horse run: the faster you squat, the faster it runs!"
+msgstr "Отырып-тұр, сонда атың шабады: неғұрлым жылдам отырсаң, соғұрлым жылдам шабады!"
+
+#. How to squat safely, after "Squat to make your horse run".
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Feet apart, back straight."
+msgstr "Аяқтарың иық деңгейінде, арқаң тік."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Stop squatting, and your horse slows down and stops."
+msgstr "Отыруды тоқтатсаң, атың баяулап, тоқтайды."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Pull the reins: both hands to the left, and your horse turns left."
+msgstr "Тізгінді тарт: екі қолың солға, сонда атың солға бұрылады."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Both hands to the right, and your horse turns right."
+msgstr "Екі қолың оңға, сонда атың оңға бұрылады."
+
+#. The button which starts the game.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "Play"
+msgstr "Ойнау"
+
+#. The button which opens the map with all the levels.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "Levels"
+msgstr "Деңгейлер"
+
+#. The button which shows how to ride by squatting and pulling the reins.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "How to Play"
+msgstr "Қалай ойнау керек"
+
+#: scenes/intro/intro.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Settings"
+msgstr "Баптаулар"
+
 #: scenes/level/level.gd
 #, fuzzy
 msgid "Don't ride too far away!"
 msgstr "Тым алысқа кетпе!"
-
-#: scenes/level/level.gd
-#, fuzzy
-msgid "Aigerim"
-msgstr "Айгерім"
 
 #: scenes/level/level.gd
 #, fuzzy
@@ -58,6 +126,12 @@ msgstr "{landmark@of} шығыс жағында {animals} көрдім."
 #, fuzzy
 msgid "I saw {animals} west of {landmark@of}."
 msgstr "{landmark@of} батыс жағында {animals} көрдім."
+
+#. The button which goes back to the previous screen.
+#: scenes/level_select/level_select.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Back"
+msgstr "Артқа"
 
 #: scenes/movement_test/movement_test.gd
 #, fuzzy
@@ -115,15 +189,496 @@ msgstr "Оңға бұрылу"
 msgid "Straight ahead"
 msgstr "Тура алға"
 
+#. The default name of the rider, a girl, in your alphabet.
+#: scenes/profile/profile.gd
+#, fuzzy
+msgid "Aigerim"
+msgstr "Айгерім"
+
+#. The default name of the horse, Тұлпар, in your alphabet.
+#: scenes/profile/profile.gd
+#, fuzzy
+msgid "Tulpar"
+msgstr "Тұлпар"
+
 #: scenes/quit_hint/quit_hint.gd
 #, fuzzy
 msgid "Press Esc again to quit."
 msgstr "Шығу үшін Esc пернесін тағы бір рет бас."
 
-#: scenes/vision/vision_status.gd
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "{rider}, you have won all the finery!"
+msgstr "{rider}, сен барлық әшекейді жинадың!"
+
+#. {rider} is the rider's name; she chooses one of three gifts.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Well done, {rider}! Choose a gift."
+msgstr "Жарайсың, {rider}! Сыйлық таңда."
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "How beautiful!"
+msgstr "Қандай әдемі!"
+
+#. The button which goes on from the gift to the map of the levels.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Go on"
+msgstr "Әрі қарай"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver studs"
+msgstr "Күміс шегелер"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Painted saddle"
+msgstr "Нақышты ер"
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered cloth"
+msgstr "Кестелі тоқым"
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Tassels"
+msgstr "Шашақтар"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver bridle"
+msgstr "Күміс жүген"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Bridle tassels"
+msgstr "Жүген шашағы"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Breastplate"
+msgstr "Өмілдірік"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver stirrups"
+msgstr "Күміс үзеңгі"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Braided mane"
+msgstr "Өрілген жал"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Mane ribbons"
+msgstr "Жалдағы таспалар"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Owl-feather tassel"
+msgstr "Жалдағы үкі"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Owl feathers"
+msgstr "Үкі"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered coat"
+msgstr "Кестелі шапан"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Ram's horn pattern"
+msgstr "Қошқар мүйіз өрнегі"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Earrings"
+msgstr "Сырға"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Bracelets"
+msgstr "Білезік"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver belt"
+msgstr "Күміс белбеу"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered boots"
+msgstr "Кестелі етік"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Rider: {name}"
+msgstr "Шабандоз: {name}"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Horse: {name}"
+msgstr "Ат: {name}"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Write the name of your rider"
+msgstr "Шабандозыңның есімін жаз"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Write the name of your horse"
+msgstr "Атыңның есімін жаз"
+
+#. The button which closes the keys after writing a name.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Done"
+msgstr "Дайын"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Random"
+msgstr "Кездейсоқ"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Skin"
+msgstr "Терісі"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hair"
+msgstr "Шашы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hair color"
+msgstr "Шаш түсі"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hat"
+msgstr "Бас киімі"
+
+#. The coat of the rider, a шапан.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Coat"
+msgstr "Шапаны"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Dress"
+msgstr "Көйлегі"
+
+#. The color of the coat of the horse.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Horse"
+msgstr "Ат түсі"
+
+#. The white marking on the face of the horse.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Marking"
+msgstr "Маңдайы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Mane"
+msgstr "Жалы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "very light"
+msgstr "өте ақшыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "light"
+msgstr "ақшыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "tanned"
+msgstr "қараторы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "dark"
+msgstr "қоңыр"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "very dark"
+msgstr "қара қоңыр"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "two braids"
+msgstr "екі бұрым"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "one braid"
+msgstr "бір бұрым"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "a bun"
+msgstr "түйілген"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "short"
+msgstr "қысқа"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "loose"
+msgstr "жайылған"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "black"
+msgstr "қара"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "dark brown"
+msgstr "қара қоңыр"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "brown"
+msgstr "қоңыр"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "auburn"
+msgstr "жирен"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "тақия"
+msgstr "тақия"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "бөрік"
+msgstr "бөрік"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "headscarf"
+msgstr "орамал"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "felt hat"
+msgstr "киіз қалпақ"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "no hat"
+msgstr "бас киімсіз"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "crimson"
+msgstr "қызыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "indigo"
+msgstr "көк"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "emerald"
+msgstr "жасыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "ochre"
+msgstr "сары"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "white"
+msgstr "ақ"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "black"
+msgstr "қара"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "crimson"
+msgstr "қызыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "indigo"
+msgstr "көк"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "emerald"
+msgstr "жасыл"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "ochre"
+msgstr "сары"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "white"
+msgstr "ақ"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "black"
+msgstr "қара"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "bay"
+msgstr "торы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "chestnut"
+msgstr "жирен"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "grey"
+msgstr "боз"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "black"
+msgstr "қара"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "dun"
+msgstr "құла"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "piebald"
+msgstr "ала"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "none"
+msgstr "жоқ"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "a star"
+msgstr "жұлдыз"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "a blaze"
+msgstr "қасқа"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "black"
+msgstr "қара"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "dark brown"
+msgstr "қара қоңыр"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "flaxen"
+msgstr "сары"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "grey"
+msgstr "сұр"
+
+#: scenes/settings/settings.gd scenes/vision/vision_status.gd
 #, fuzzy
 msgid "Step in front of the camera."
 msgstr "Камераның алдына тұр."
+
+#. The label of the row with the language of the game.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Language"
+msgstr "Тіл"
+
+#. The label of the row with the name of the rider, which opens the creator.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Rider"
+msgstr "Шабандоз"
 
 #. {pose} and {face} are the milliseconds to find the body and the face.
 #: scenes/vision/vision_status.gd
@@ -351,6 +906,38 @@ msgstr "көлдің"
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
 #. родника', 'бұлақтың жанында'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "near"
+msgid "the pasture"
+msgstr "жайылымның жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "of"
+msgid "the pasture"
+msgstr "жайылымның"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "and"
+msgid "the pasture"
+msgstr "жайылым мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "between"
+msgid "the pasture"
+msgstr "жайылымның"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
 #: data/landmarks/rock.tres
 #, fuzzy
 msgctxt "near"
@@ -476,3 +1063,11 @@ msgstr "киіз үй мен"
 msgctxt "between"
 msgid "the yurt"
 msgstr "киіз үйдің"
+
+#, fuzzy
+#~ msgid "The Steppe Rescue"
+#~ msgstr "Дала құтқарушысы"
+
+#, fuzzy
+#~ msgid "Find the lost animals and bring them home!"
+#~ msgstr "Адасқан малды тауып, үйге әкел!"

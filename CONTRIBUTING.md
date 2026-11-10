@@ -22,8 +22,21 @@ The game is made with [Godot] 4.6 (.NET), written in GDScript and C#:
 The game is pixel art.
 It renders at 960x540 and scales up by whole numbers (2x on a 1080p screen) with the nearest-neighbor filter.
 Draw with the colors of `Palette` (`scenes/pixel/palette.gd`) only.
-Until the drawn sprites arrive, the sprites are small pictures in characters in `scenes/pixel/sprites.gd` and `scenes/pixel/icons.gd`, which `PixelSprite` turns into textures, and the creatures seen from above are drawn from ellipses by `TopDown` (`scenes/pixel/top_down.gd`).
-The portraits of the people are pixelized from old photographs in the public domain: put the photo in `assets/pictures/sources/`, add it with its crop and its source to `sources.json` there and to [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and run `venv/bin/python dev/pictures/pixelize.py`.
+The screens are laid out in 960x540 logical pixels and drawn at 1920x1080, two pixels of the screen per logical pixel (`Pixelate.DENSITY`).
+
+**Draw vectors first, then pixelate.**
+Every picture is drawn as SVG in logical pixels, with the colors of the palette named in braces (e.g., `fill="{crimson}"`), and pixelated by `Pixelate` (`scenes/pixel/pixelate.gd`) at the size it is shown: Godot renders the SVG, and `PixelQuantizer` (C#) gives each pixel the palette color of most of its 3x3 samples and adds the outline.
+Ask for a picture at the scale you draw it, instead of scaling a texture up: a texture reports its logical size, so `draw_texture` puts each of its pixels on a pixel of the screen.
+The icons are in `scenes/pixel/icons.gd`, the rider and her horse from the side in `side_view.gd`, the rider from the front (the face overlay and the figure) in `front_view.gd`, the finery in steps in both (see `scenes/profile/finery.gd`), the creatures from above in `top_down.gd` (the wild ones in `scenes/level/wild_shapes.gd`), the landmarks in `scenes/level_map/landmark.gd`, the ornamented panels in `ornaments.gd`, the steppe behind the menus in `scenes/intro/intro_picture.gd` and the map of the level select in `scenes/level_select/steppe_map.gd`.
+The paintings are the exception: the intro (`assets/pictures/intro/painting.png`) and the steppe behind the instruction (`assets/pictures/instruction/background.png`), 1920 x 1080 each, the girl squatting and pulling the reins (`assets/pictures/girl/`), the rider and the lost animals from above (`assets/pictures/top_down/`, see `PaintedTopDown`), the ground of the level (`assets/pictures/ground/steppe.png`, a seamless tile) and the horse in its gaits (`assets/pictures/horse/`, big and small), cut out of sprite sheets with transparency, shown as painted, at two screen pixels per logical pixel.
+To export every picture big, with a manifest of where and how the game uses it (e.g., to redraw them), run `$GODOT --headless --path . --script dev/pictures/export_art.gd -- <folder>`.
+To review them, render them all into one sheet with `$GODOT --headless --path . --script dev/pictures/contact_sheet.gd -- sheet.png`, or take a screenshot of a screen as it shows on a 1080p display with `$GODOT --path . --windowed --resolution 1920x1080 --script dev/pictures/screenshot.gd -- res://scenes/intro/intro.tscn shot.png 8 --no-camera`.
+
+The portraits of the people are photographs, and stay photographs: they are pixelized, never traced into vectors.
+They come from old photographs in the public domain: put the photo in `assets/pictures/sources/`, add it with its crop and its source to `sources.json` there and to [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and run `venv/bin/python dev/pictures/pixelize.py`, which makes them 128x128.
+A source may also outline the person (`figure`) when she is as pale as the paper behind, retouch the photo with a smooth warp (`retouch`, e.g., Grandmother's smile), and lift the shadows (`gamma`); see the docstring of `pixelize.py`.
+
+The tools for the development (like these) live in `dev/`, which Godot ignores, so that they are never released with the game.
 Use only pictures in the public domain or under CC0.
 The text is set in GNU Unifont at 16 pixels, imported without anti-aliasing.
 
@@ -89,7 +102,7 @@ Open the project in the Godot editor (Import, then select `project.godot`), and 
 The game needs a webcam which supports 640x480.
 Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn.
 
-Start the game with `-- --no-camera` to switch the camera off, and with `-- --lang=ru` (or `kk`, `en`) to choose the language.
+Start the game with `-- --no-camera` to switch the camera off, with `-- --lang=ru` (or `kk`, `en`) to choose the language, with `-- --new-rider` to create the rider again, and with `-- --settings=user://other.cfg` to keep the language and the rider in another file (the tests do so, to leave yours alone).
 
 ## Translations
 

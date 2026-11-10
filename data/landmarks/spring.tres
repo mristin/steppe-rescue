@@ -8,3 +8,4 @@ id = "spring"
 name = "the spring"
 radius = 14.0
 solid = 0.6
+fresh_water = true

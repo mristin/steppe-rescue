@@ -104,7 +104,7 @@ When the rider is near an animal, but the animal is still off the screen, she he
 * **The followers** walk behind the rider in a loose line or herd. They keep up with a walk and a trot, but at a gallop the slow animals (sheep, camels) fall behind and call out; they never get lost, and they catch up when the rider slows down.
 * **The pen.** At home, the animals run into the pen by themselves when the rider rides through the gate.
 
-### Water and grass for the horse (later)
+### Water and grass for the horse
 
 The horse gets thirsty and hungry while it runs, so a ride is also about caring for it.
 
@@ -172,9 +172,9 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 
 ### Showing instead of telling
 
-The game never writes "do squats" or "cross your arm". It shows the movement and lets the player discover the rest.
+In the level, the game never writes "do squats" or "pull the reins". It shows the movement and lets the player discover the rest; only the instruction says it in one short line under the animation.
 
-* **The instruction** (section 6) is an animation without words: the rider gets off the horse, does squats next to it, and the horse starts walking, then trotting, then galloping. Then she reaches across with her right hand, and the horse turns left.
+* **The instruction** (section 6) is an animation with one short line of text for each part: the rider gets off the horse, does squats next to it, and the horse starts walking, then trotting, then galloping. Then she pulls the reins with both hands to the left, and the horse turns left; then to the right, and it turns right. Both hands to one side is the natural way to turn: the hand which crosses the axis of the head turns the horse, the other stays on its own side.
 * **The camera picture** in a corner of the screen shows the player herself, with her chosen hat and braids drawn over her face (section 6). Next to it, a small figure of the rider does the movement the game is waiting for.
 * **When the horse stands still** for a few seconds, the figure squats slowly and invitingly, and the horse looks back at the player and stamps a hoof.
 * **The speed bar** (section 6) fills with each squat and empties when the player stops, so the link between squatting and speed is visible at a glance.
@@ -203,7 +203,7 @@ The game never writes "do squats" or "cross your arm". It shows the movement and
 
 ### The flow
 
-1. **The intro screen:** the painted picture of the rider and her horse, with the title "The Steppe Rescue" and "Find the lost animals and bring them home!", and the buttons Play, Levels, Settings and How to Play. The texts on the buttons and the title are drawn by the game (not part of the picture), so they can be translated.
+1. **The intro screen:** the painting of the rider and her horse, with the title "The Steppe Rescue" and "Find the lost animals and bring them home!" painted in, and the buttons Play, Levels, Settings and How to Play. The buttons are drawn by the game, so they can be translated; the painted title stays in English (open question 7).
 2. **Choose the language:** English, Русский, Қазақша, as three big cards with the name of each language in itself (no flags). The choice is remembered.
 3. **Create the rider and the horse** (the first time only).
 4. **The instruction** (the first time only, and from the menu "How to Play").
@@ -243,7 +243,7 @@ The camera picture in the corner of the screen shows the player, mirrored, **dre
 * **On the screen:**
   * the slots of the missing animals at the top (empty, following, home),
   * **the speed bar**: a horizontal bar with three horse icons along it, a horse walking at the left, a horse trotting in the middle and a horse galloping at the right. The bar fills from the left with the horse's speed, and the icon the fill has reached lights up and moves. This is how the player sees that squatting faster makes the horse go faster,
-  * the water and food bars of the horse, next to the speed bar (later, section 4),
+  * the water and food bars of the horse, next to the speed bar (section 4),
   * the small map in a corner,
   * the camera picture with the face overlay and the small figure in the other corner,
   * the edge icons of the animals the rider hears.
@@ -315,12 +315,13 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 ### Art
 
 * **Pixel art.** The whole game is pixel art: the steppe, the landmarks, the rider, the horse, the animals, the people, the portraits, the icons, the speed bar, the map and the interface.
-  * The game renders at 960 × 540 and is scaled up by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp: 2× on a 1080p screen. (We started at 640 × 360, but the map was unreadable and the view too cramped. On the 1366 × 768 screens of many school laptops, 960 × 540 is shown at 1×, with a border.)
+  * The game lays out its screens in 960 × 540 logical pixels and draws them at 1920 × 1080, two pixels of the screen per logical pixel, so the pixel art has the fine pixels of a 1080p screen: a portrait is 128 × 128 pixels. The picture is scaled by whole numbers with nearest-neighbour filtering, so that the pixels stay crisp. (We started at 640 × 360, then 960 × 540, but the pixels were too coarse to draw the people and the ornaments well. On the 1366 × 768 screens of many school laptops, the game is shown at 960 × 540, with a border.)
+  * **Vectors first, then pixels.** Every picture which the game draws (the rider and her horse, the animals, the people, the landmarks, the icons, the ornaments, the intro picture) is first drawn as vectors (SVG), with the shading in three shades of each color, and then pixelated at the size it is shown: each pixel takes the palette color of most of its 3 × 3 samples, and the dark outline goes around. So a picture shown bigger gets more pixels, not bigger ones, and only the colors of the palette appear. The photographs (the portraits) are the exception: they stay photographs, pixelized in the palette, and are never traced into vectors.
   * One limited palette for the whole game, taken from the colours of the intro picture and the steppe: golden grass, sky blue, crimson, emerald, ochre, white felt and dark outlines.
   * **Top-down sprites:** the rider and the horse have sprites in 8 directions with walk, trot and gallop cycles; the animals in 8 directions with a walk and an idle (grazing) cycle. The pieces of finery (section 8) and the looks from the creator are separate sprite layers drawn over the base sprites, so that every combination works without drawing each one.
   * **The portraits** in the conversations and the preview in the creator are larger pixel-art pictures, in the same palette.
   * **The face overlay** draws the hat, the braids and the finery as pixel-art sprites over the camera picture, which is itself shown pixelated (at a low resolution, in the palette), so that it fits the game.
-* **The intro screen** is the one exception: the painted intro picture stays painted, as the cover of the game, without its text (the title and the buttons are drawn by the game in a pixel font). Open question: should it be redrawn as pixel art, too?
+* **The intro screen** is a painting (`assets/pictures/intro/painting.png`): the rider on her bay horse in the steppe near Astana, with the city and the Bayterek on the horizon, the yurts and the swallows. It is the one picture which is not pixel art; it is shown as painted, at the resolution of the screen. The default looks of the rider are those of the painted girl. The buttons are drawn by the game in the pixel font, so that they can be translated.
 * **The font** is a pixel font with Latin, Cyrillic and the Kazakh letters (GNU Unifont, section 10).
 * **The ornaments** follow the traditional Kazakh patterns (*ою-өрнек*): the ram's horn, the wave, the four-pointed star. They frame the conversations, the reward cards and the map.
 * **No text in the pictures** that the player has to read, since the game is translated. The intro picture is used without its text, and the game writes the title and the buttons on top.
@@ -387,9 +388,52 @@ Before the game, a test scene with only the camera, the two detectors and the me
 
 The tutorial level, "The lamb by the spring" (section 4), to test the whole loop of the game with the camera.
 
-**Built** (`scenes/level/`, the main scene for now, with the level in `data/levels/01_the_lamb_by_the_spring.tscn`): Grandmother sends the rider out and gives the clue; the steppe scrolls under the rider, who rides with the squats and the hands; the lamb grazes near the spring, is heard at the edge of the screen when it is off the screen, joins the rider who stays next to it for a second, follows her, and runs into the pen when she rides up to the gate; Grandmother thanks her with one to three stars. The slots of the animals are at the top, the speed bar and the camera picture at the bottom, the small map in a corner opens large with C, and the clue is drawn on it. Escape quits on the second press. The creatures and the landmarks are drawn in code as placeholders. Not yet: the sounds, the water and food of the horse, the rewards, and the screens before the level.
+**Built** (`scenes/level/`, the main scene for now, with the level in `data/levels/01_the_lamb_by_the_spring.tscn`): Grandmother sends the rider out and gives the clue; the steppe scrolls under the rider, who rides with the squats and the hands; the lamb grazes near the spring, is heard at the edge of the screen when it is off the screen, joins the rider who stays next to it for a second, follows her, and runs into the pen when she rides up to the gate; Grandmother thanks her with one to three stars. The slots of the animals are at the top, the speed bar and the camera picture at the bottom, the small map in a corner opens large with C, and the clue is drawn on it. Escape quits on the second press. Not yet: the sounds and the rewards.
 
-## 15. Open questions
+## 15. The third thing we build: water and food, and the screens before the level
+
+**Built:**
+
+* **Water and food for the horse** (section 4, `scenes/level/horse_needs.gd`, `scenes/needs_bars/`): the two bars next to the speed bar empty while the horse runs, faster at a gallop; an empty bar makes the horse walk slowly, but never stop. The horse drinks while it stands at a spring or a lake (`fresh_water` of the landmark kind), and grazes while it stands on a pasture (`data/landmarks/pasture.tres`). A low bar blinks, and a bubble with a drop or a tuft of grass rises above the horse. The pastures are green on the map. Every level must have fresh water and a pasture (`LevelMap.problems()`).
+* **The screens before the level** (section 6): the intro (`scenes/intro/`, the main scene) with Play, Levels, How to Play and Settings; the choice of the language (`scenes/language_select/`), the first time; and the creator of the rider and her horse (`scenes/rider_creator/`), the first time, with the names written on the keyboard or on the big keys of the alphabet of the language, a row with arrows for each look, Random and Ready!. The language and the rider are saved (`scenes/profile/`); the level greets the rider by her name, and she rides in her looks.
+* **The instruction** (sections 5 and 6, `scenes/instruction/`), the first time on the way from Play, and from How to Play: without words, the rider gets off her horse into a frame like the camera picture, squats slowly, steadily and briskly with good form, and the horse walks, trots and gallops, with the speed bar under it; then she reaches across with her right hand, and the horse, seen from above, turns left under a curved arrow. It repeats until Ready!.
+* **The level select** (section 6, `scenes/level_select/`): the painted map of the steppe around the home aul, with the rider by the yurts and the path from the aul past the spots of the levels; each open level has a banner with its name and its stars, and its number on its spot; the next level is crimson; the levels not open yet show only their number on a stone. The levels are the scenes of `data/levels/` in the order of their names (`LevelList`); finishing a level keeps its best stars and opens the next one. Play goes to the next level not finished yet, or to the level select once all are; after Grandmother's thanks, a squat goes on to the level select (until the reward screen is built).
+* **The settings** (`scenes/settings/`): the language and the rider with her horse, next to the big camera picture with the face overlay, so that the player can check that the camera sees her (without a camera, her rider stands there).
+* **The face overlay** (section 6, `FrontView`): the hat, the hair (two braids, one braid, a bun, short, loose, in her hair colour) and the finery the rider wears from the start, the earrings (*сырға*) and the owl feathers (*үкі*) on the *тақия*, follow the head in the camera picture.
+* **The hand cursor** (section 5, `scenes/menu/`): the raised hand moves a bird; holding it still over a button for 1.5 s fills a ring around the button and clicks it. The mouse clicks, too.
+* **The art at 1920 × 1080, vectors first** (section 11, `scenes/pixel/`): the pictures are SVG, pixelated by `Pixelate` with the help of `PixelQuantizer` in C#; the rider and her horse are drawn from the side in all their looks (`SideView`), with the ornaments (`Ornaments`); the portraits are 128 × 128; Grandmother's portrait is retouched into a gentle smile.
+
+**Not yet:** see section 16.
+
+## 16. The fourth thing we build: the rewards and the living steppe
+
+**Built:**
+
+* **The finery** (section 8, `Finery` in `scenes/profile/finery.gd`): twelve pieces in steps, eighteen steps in all. For the horse: the saddle (silver studs, then carved and painted), the saddle cloth (embroidered, then with tassels), the bridle (silver plates, then coloured tassels), the breastplate, the silver stirrups, and the mane (braided, with ribbons, then the owl-feather tassel). For the rider: the owl feathers on her hat, the coat (gold trims, then the ram's horn), the earrings, the bracelets, the belt with silver plates and the embroidered boots. The rider starts plain (a plain leather saddle, a plain belt and boots, no earrings, no feathers) and grows more splendid level by level. The finery is drawn wherever she is: from the side (`SideView`), from the front (`FrontView`: the overlay and the figure), on the intro, in the creator, on the level select and in the speed bar. The profile keeps it.
+* **The reward** (section 8, `scenes/reward/`): after Grandmother's thanks, a squat leads home, where the rider stands next to her horse in front of the yurts, in all her finery. Three pieces are offered on big cards, each a close-up of the piece on her own horse or on her, with its name and the Kazakh word under it. Two or three stars offer the higher steps first, one star the first steps. The chosen piece joins the picture with a burst of golden stars, and Go on leads to the level select. Once everything is won, nothing more is offered.
+* **The face overlay big in the creator** (section 6): while the camera runs, the creator shows the player big in the camera picture, dressed in the looks as she chooses them.
+* **The small figure** (section 5, `scenes/level/coach.gd`) next to the camera picture in the level. It stands and echoes each squat of the player. It squats slowly and invitingly when the horse has stood still for 3 s, or when a conversation waits for a squat to close it. It reaches across her head under a curved arrow after the rider ran into the edge of the steppe.
+* **The free space** (section 5, `scenes/free_space/`): before the first level of each start, while the camera is on, the game asks for room. The rider squats and reaches across on a square of floor marked 2 m × 2 m, with one short line of text.
+* **The wild animals** (section 7, `scenes/level/wildlife.gd`, `wild_shapes.gd`), decoration, not animals to gather:
+  * herds of saigas (*ақбөкен*) and roe deer, hares (which run in zigzags), corsac foxes and swarms of locusts (*саранша*) graze and run or hop away from the rider who comes near, from farther the faster she rides;
+  * the marmots stand by their burrows, dive in as she passes and peek out again after she has left;
+  * the larks fly up from the grass and land farther on;
+  * the golden eagles and the saker falcons circle high above with their shadows on the ground, and a flock of swallows swoops around the horse.
+  * They are drawn from above in 16 headings, and only those on the screen.
+
+**Not yet:**
+
+* the wardrobe at home, to choose which won pieces to wear (now she wears all of them);
+* the celebration tune and all the other sounds;
+* the decorations of the home (the felt carpet, the door, the dombra);
+* the list of the riders who share a computer;
+* the horse which looks back and stamps a hoof when it stands still;
+* the turning hint for riding into the same obstacle twice (now only for the edge of the steppe);
+* drawn sprites for the wild animals (they are shapes from above, like the others).
+
+**Also built since:** the painting on the intro screen (section 11), the painting of the steppe at sunset behind the instruction (`assets/pictures/instruction/background.png`) the painted girl riding in on her horse (`rider_on_horse.png`) before she jumps off, the painted horse in its walk, trot and gallop, seven frames each (`assets/pictures/horse/`, see `PaintedHorse`), in the instruction and on the speed bar of the level (it does not take the colours of the player's horse yet), the rider on her horse and the lost animals (sheep, lamb, horse, camel; walking and grazing) from above in the level, the painted ground of the level, the painted landmarks (`assets/pictures/landmarks/`) and the painted wild animals (`assets/pictures/top_down/wild/`), the painted pen at home (`assets/pictures/home/pen.png`), the painted icons of the animals and the landmarks (`assets/pictures/icons/`), the minimap on painted parchment and the painted map of the level select with the levels along its path (`assets/pictures/maps/`), the reward at home in front of the painted yurt (`assets/pictures/home/reward.png`; the close-ups of the finery on its cards are still the old drawings), the creator with four painted riders and four painted horses to choose from (`assets/pictures/riders/`, `assets/pictures/horses/`, see `Looks.PRESETS` and `Looks.HORSE_PRESETS`: each sets the looks it shows, e.g., for the face overlay), the painted people, from above in the level and as portraits in the conversations (`assets/pictures/people/`; the photographs of `assets/pictures/portraits/` are no longer used), and the painted girl squatting in it, in six frames and pulling the reins to the left and to the right, six frames each (`assets/pictures/girl/`, see `PaintedGirl`; also the small figure in the level and the request for room), the default rider of the painting, and the instruction with one line of text for each part and the reins pulled with both hands to the left and to the right (section 5). `dev/pictures/export_art.gd` exports every picture of the game big, with a manifest of its use, for redrawing.
+
+## 17. Open questions
 
 1. **Only a girl?** The story is about a girl. Should the player also be able to choose a boy rider?
 2. **Two players?** One player for now. A second player on a split screen (as a second rider) could come later.
@@ -397,4 +441,5 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
 4. **The clues on the map:** should a clue be drawn automatically on the map (as described above), or should the child remember it?
 5. **Stars by time:** or no stars at all, so that there is no pressure?
 6. **Kazakh in Latin script** as well as Cyrillic?
-7. **The intro picture** has the text painted into it. We need a version without the text (and without the buttons), so that the game can write them in each language. And should it stay painted, or be redrawn as pixel art like the rest of the game?
+7. **The title of the intro painting** is painted in English. Should there be a version of the painting for each language, or the painting without its title, with the title written by the game?
+8. **The pixel art:** the painting sets a much richer style. Should the sprites (see `dev/pictures/export_art.gd`) be redrawn to match it, as pictures instead of the vectors in code?

@@ -12,6 +12,9 @@ const _GRAZE_SPEED := 10.0
 ## How far the animals wander while grazing, in pixels.
 const _GRAZE_RADIUS := 20.0
 
+## An animal which stood this long, in seconds, grazes.
+const _GRAZE_AFTER := 0.4
+
 ## The animal makes a stride every this many pixels.
 const _STRIDE := 8.0
 
@@ -48,7 +51,14 @@ var _rng := RandomNumberGenerator.new()
 var _target := Vector2.ZERO
 var _graze_radius := _GRAZE_RADIUS
 var _stride := 0.0
+
+## When the animal last took a step, to graze while it stands.
+var _moved_at := -1.0
 var _time := 0.0
+
+
+func _ready() -> void:
+    PaintedTopDown.prepare(self)
 
 
 func setup(a_kind: AnimalKind, a_herd: Herd, at: Vector2, seed_value: int) -> void:
@@ -94,6 +104,8 @@ func walk_to(target: Vector2, max_speed: float, delta: float) -> float:
         position += away / distance * step
         heading = lerp_angle(heading, Vector2.UP.angle_to(away), minf(1.0, delta * 8.0))
         _stride += step / _STRIDE
+        if step > 0.05:
+            _moved_at = _time
     heart_time = maxf(0.0, heart_time - delta)
     queue_redraw()
     return maxf(0.0, distance - (minf(distance, max_speed * delta)))
@@ -120,17 +132,15 @@ func _draw() -> void:
         State.FOLLOWING:
             _draw_follow_ring()
 
-    var frame := int(_stride) % 2
-    var texture := TopDown.texture(
-        "animal_%s_%d" % [kind.id, frame], TopDown.animal(kind.id, frame), heading
-    )
-    draw_circle(Vector2(1, 2), texture.get_width() * 0.25, Palette.SHADOW)
-    draw_texture(texture, (-texture.get_size() * 0.5).floor())
+    var grazing := _time - _moved_at > _GRAZE_AFTER
+    var texture := PaintedTopDown.animal(kind.id, int(_stride), grazing)
+    draw_circle(Vector2(1, 2), texture.get_width() * 0.1, Palette.SHADOW)
+    PaintedTopDown.draw(self, texture, Vector2.ZERO, heading)
 
     if heart_time > 0.0:
-        var heart := PixelSprite.texture(Icons.HEART)
+        var heart := Icons.heart(0.75)
         var rise := roundf((HEART_SECONDS - heart_time) * 10.0)
-        var at := Vector2(-heart.get_width() * 0.5, -texture.get_height() * 0.5 - 8.0 - rise)
+        var at := Vector2(-heart.get_width() * 0.5, -texture.get_height() * 0.25 - 8.0 - rise)
         draw_texture(heart, at.floor(), Color(1, 1, 1, minf(1.0, heart_time * 2.0)))
 
 

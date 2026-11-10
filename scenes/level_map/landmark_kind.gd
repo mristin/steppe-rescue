@@ -20,3 +20,11 @@ extends Resource
 
 ## How much of the radius blocks the horse (0 lets it ride over).
 @export_range(0.0, 1.0) var solid := 1.0
+
+## Whether the horse drinks here: a spring, a lake or a river, but not a salt
+## lake (see section 4 of DESIGN.md, "Water and grass for the horse").
+@export var fresh_water := false
+
+## Whether the horse grazes here: a pasture of green grass; the steppe
+## elsewhere is too dry.
+@export var pasture := false

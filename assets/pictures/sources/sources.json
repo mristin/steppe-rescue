@@ -2,12 +2,43 @@
   {
     "id": "grandmother",
     "source": "grandmother.jpg",
-    "crop": [335, 340, 635, 640],
+    "crop": [250, 290, 710, 750],
     "title": "Tipy narodnostei turkestanskago kraia. Kirgiz-Kazachki. Tunuk-ai LCCN2007682007.jpg",
     "page_url": "https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazachki._Tunuk-ai_LCCN2007682007.jpg",
     "author": "Turkestan Album (Library of Congress, Prints and Photographs Division)",
     "date": "about 1865-1872",
-    "license": "Public domain (PD-old-100-1923)"
+    "license": "Public domain (PD-old-100-1923)",
+    "figure": [
+      [400, 325],
+      [470, 300],
+      [560, 300],
+      [625, 330],
+      [640, 420],
+      [660, 560],
+      [690, 660],
+      [735, 760],
+      [750, 900],
+      [760, 1000],
+      [190, 1000],
+      [200, 760],
+      [240, 680],
+      [310, 650],
+      [330, 560],
+      [380, 450],
+      [385, 360]
+    ],
+    "retouch": [
+      [446, 553, -4, -11, 8],
+      [502, 553, 4, -11, 8],
+      [475, 557, 0, 1.5, 6],
+      [430, 530, -1, -5, 13],
+      [520, 530, 1, -5, 13],
+      [458, 444, -1, -4, 8],
+      [494, 444, 1, -4, 8],
+      [428, 465, 0, -3, 6],
+      [518, 465, 0, -3, 6]
+    ],
+    "gamma": 0.7
   },
   {
     "id": "shepherd",

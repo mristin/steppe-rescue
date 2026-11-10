@@ -30,18 +30,19 @@ var speed := 0.0
 ## Whether the edge of the steppe stopped the horse in the last ride.
 var at_edge := false
 
-## The looks of the rider and her horse (later from the creator).
-var looks := {
-    "coat": Palette.CRIMSON,
-    "hat": Palette.CRIMSON_DARK,
-    "hair": Palette.HOOF,
-    "horse": Palette.HORSE_BAY,
-    "mane": Palette.HOOF,
-}
+## The looks of the rider and her horse, from the creator (see [Looks]).
+var looks: Dictionary = Looks.DEFAULT:
+    set(value):
+        looks = Looks.complete(value)
+        queue_redraw()
 
 var _solids: Array[Vector3] = []
 var _bounds := Rect2()
 var _stride := 0.0
+
+
+func _ready() -> void:
+    PaintedTopDown.prepare(self)
 
 
 ## Set what blocks the horse: the circles (x, y, radius) and the edge of the steppe.
@@ -96,16 +97,7 @@ func gait() -> int:
 
 
 func _draw() -> void:
-    var frame := int(_stride) % 2
     var gait := gait()
-    var key := "rider_%d_%d_%d" % [hash(looks), frame, gait]
-    var shapes := TopDown.horse(
-        looks["horse"],
-        looks["mane"],
-        frame,
-        {"coat": looks["coat"], "hat": looks["hat"], "hair": looks["hair"]},
-        gait
-    )
-    var texture := TopDown.texture(key, shapes, heading)
-    draw_circle(Vector2(2, 3), 6.0, Palette.SHADOW)
-    draw_texture(texture, (-texture.get_size() * 0.5).floor())
+    var frame := int(_stride * 2.0)
+    draw_circle(Vector2(3, 4), 10.0, Palette.SHADOW)
+    PaintedTopDown.draw(self, PaintedTopDown.rider(gait, frame), Vector2.ZERO, heading)

@@ -11,8 +11,11 @@ extends Node2D
 ## be edited in the Godot editor; the tests check every level with
 ## [method problems].
 
-## The side of the tile of the ground in pixels.
-const _GROUND_TILE := 64
+## The painted ground, a seamless tile (see [method _ground_texture]).
+const _GROUND_PAINTING := "res://assets/pictures/ground/steppe.png"
+
+## The tile of the ground is this many logical pixels wide.
+const _GROUND_TILE := 400
 
 ## The animals are near a landmark if they are this much farther than its size.
 const _NEAR := 90.0
@@ -22,6 +25,11 @@ const _SIDE_DISTANCE := 130.0
 
 ## ... in a circle of this radius.
 const _SIDE_RADIUS := 110.0
+
+## The horse drinks within this distance from the edge of the water, in
+## pixels; the water blocks the horse (see [member LandmarkKind.solid]), so it
+## stands at the shore.
+const _SHORE := 12.0
 
 const _SIDES := {
     "north": Vector2.UP,
@@ -101,6 +109,24 @@ func solids() -> Array[Vector3]:
         if radius > 0.0:
             result.append(Vector3(each.position.x, each.position.y, radius))
     return result
+
+
+## The horse at this point stands at fresh water, close enough to drink.
+func at_fresh_water(at: Vector2) -> bool:
+    for each in landmarks():
+        if each.kind != null and each.kind.fresh_water:
+            if at.distance_to(each.position) <= each.size() + _SHORE:
+                return true
+    return false
+
+
+## The horse at this point stands on a pasture, where it can graze.
+func on_pasture(at: Vector2) -> bool:
+    for each in landmarks():
+        if each.kind != null and each.kind.pasture:
+            if at.distance_to(each.position) <= each.size():
+                return true
+    return false
 
 
 ## The area which the clue marks, as (x, y, radius); zero if its landmarks are
@@ -188,6 +214,10 @@ func problems() -> PackedStringArray:
         result.append("the level has no grandmother, who sends the rider out")
     if herds().is_empty():
         result.append("the level has no animals to find")
+    if not landmarks().any(func(l: Landmark) -> bool: return l.kind != null and l.kind.fresh_water):
+        result.append("the level has no fresh water, where the horse drinks")
+    if not landmarks().any(func(l: Landmark) -> bool: return l.kind != null and l.kind.pasture):
+        result.append("the level has no pasture, where the horse grazes")
 
     var bounds := Rect2(Vector2.ZERO, size).grow(-24.0)
     for herd in herds():
@@ -242,24 +272,6 @@ func _draw() -> void:
     draw_texture_rect(_ground_texture(), Rect2(Vector2.ZERO, size), true)
     _draw_edge()
 
-    # NOTE (mristin):
-    # The tufts of the feather grass and a few tulips; the same in every run.
-    var rng := RandomNumberGenerator.new()
-    rng.seed = hash(title)
-    for i in range(int(size.x * size.y / 1800.0)):
-        var at := Vector2(rng.randf() * size.x, rng.randf() * size.y).round()
-        var roll := rng.randf()
-        if roll < 0.04:
-            draw_rect(Rect2(at, Vector2(2, 2)), Palette.CRIMSON)
-            draw_rect(Rect2(at + Vector2(0, 2), Vector2(1, 2)), Palette.EMERALD)
-        elif roll < 0.55:
-            draw_rect(Rect2(at, Vector2(1, 3)), Palette.GRASS_LIGHT)
-            draw_rect(Rect2(at + Vector2(-1, 1), Vector2(1, 2)), Palette.GRASS_LIGHT)
-            draw_rect(Rect2(at + Vector2(1, 1), Vector2(1, 2)), Palette.GRASS_LIGHT)
-        else:
-            draw_rect(Rect2(at, Vector2(1, 2)), Palette.GRASS_DARK)
-            draw_rect(Rect2(at + Vector2(2, 1), Vector2(1, 2)), Palette.GRASS_DARK)
-
 
 ## The edge of the steppe, where the horse stops: a band of tall dark grass
 ## with stones (see Rider.EDGE).
@@ -289,22 +301,21 @@ func _draw_edge() -> void:
             at = Vector2(size.x - inward, along - 2.0 * size.x - size.y)
         if rng.randf() < 0.25:
             draw_circle(at.round(), 3.0, Palette.OUTLINE)
-            draw_circle(at.round(), 2.0, Palette.STONE)
+            draw_circle(at.round(), 2.5, Palette.STONE)
+            draw_circle(at.round() - Vector2(0.5, 0.5), 1.0, Palette.STONE_LIGHT)
         else:
-            draw_rect(Rect2(at.round(), Vector2(1, 4)), Palette.HORSE_BAY)
-            draw_rect(Rect2(at.round() + Vector2(2, 1), Vector2(1, 3)), Palette.OUTLINE)
+            draw_rect(Rect2(at.round(), Vector2(0.5, 4)), Palette.HORSE_BAY)
+            draw_rect(Rect2(at.round() + Vector2(1, 1), Vector2(0.5, 3)), Palette.OUTLINE)
+            draw_rect(Rect2(at.round() + Vector2(-1, 1.5), Vector2(0.5, 2.5)), Palette.HORSE_BAY)
 
 
+## The painted ground of the steppe, a seamless tile of feather grass and
+## wild flowers, [constant _GROUND_TILE] logical pixels wide, at two pixels of
+## the screen per logical pixel.
 static func _ground_texture() -> ImageTexture:
     if _ground != null:
         return _ground
-    var rng := RandomNumberGenerator.new()
-    rng.seed = 7
-    var image := Image.create_empty(_GROUND_TILE, _GROUND_TILE, false, Image.FORMAT_RGBA8)
-    image.fill(Palette.GRASS)
-    for i in range(_GROUND_TILE * _GROUND_TILE / 10):
-        var x := rng.randi_range(0, _GROUND_TILE - 1)
-        var y := rng.randi_range(0, _GROUND_TILE - 1)
-        image.set_pixel(x, y, Palette.GRASS_DARK if rng.randf() < 0.6 else Palette.GRASS_LIGHT)
-    _ground = ImageTexture.create_from_image(image)
+    var painted: Texture2D = load(_GROUND_PAINTING)
+    _ground = ImageTexture.create_from_image(painted.get_image())
+    _ground.set_size_override(Vector2i(_GROUND_TILE, _GROUND_TILE))
     return _ground

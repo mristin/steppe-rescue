@@ -12,7 +12,9 @@ extends Node
 ## dev/translations/ create and check the .po files from it.
 ##
 ## The language which the players chose is saved in `user://settings.cfg` and
-## used from then on. Start the game with `-- --lang=<code>` to override it.
+## used from then on. Start the game with `-- --lang=<code>` to override it,
+## and with `-- --settings=<path>` to keep the settings elsewhere (e.g., in the
+## tests, which must not change the settings of the player).
 ##
 ## The game always shows the whole translation of the chosen language. The
 ## fuzzy mark of a message in the .po files only tells the translators that a
@@ -47,7 +49,7 @@ func _ready() -> void:
             TranslationServer.add_translation(translation)
 
     var settings := ConfigFile.new()
-    if settings.load(_SETTINGS_PATH) == OK:
+    if settings.load(settings_path()) == OK:
         var saved: String = settings.get_value("general", "language", "")
         if saved in codes():
             TranslationServer.set_locale(saved)
@@ -100,9 +102,19 @@ func choose(code: String) -> void:
     has_chosen = true
 
     var settings := ConfigFile.new()
-    settings.load(_SETTINGS_PATH)
+    settings.load(settings_path())
     settings.set_value("general", "language", code)
-    settings.save(_SETTINGS_PATH)
+    DirAccess.make_dir_recursive_absolute(settings_path().get_base_dir())
+    settings.save(settings_path())
+
+
+## The file of the settings: `user://settings.cfg`, or the one given with
+## `-- --settings=<path>`.
+static func settings_path() -> String:
+    for arg in OS.get_cmdline_user_args():
+        if arg.begins_with("--settings="):
+            return arg.get_slice("=", 1)
+    return _SETTINGS_PATH
 
 
 ## Load the translation of the language with the fuzzy marks removed, so that

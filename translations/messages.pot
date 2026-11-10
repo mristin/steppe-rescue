@@ -6,12 +6,68 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: scenes/level/level.gd
-msgid "Don't ride too far away!"
+#. Asked before riding; the player squats and swings her arms.
+#: scenes/free_space/free_space.gd
+msgid "Make room! Nothing within 1 m around you: about 2 × 2 m free."
+msgstr ""
+
+#. Two metres, the side of the free square on the floor.
+#: scenes/free_space/free_space.gd
+msgid "2 m"
+msgstr ""
+
+#. The button which keeps the rider and starts the game.
+#: scenes/free_space/free_space.gd scenes/instruction/instruction.gd
+#: scenes/rider_creator/rider_creator.gd
+msgid "Ready!"
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Stand in front of the camera, like your rider."
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Squat to make your horse run: the faster you squat, the faster it runs!"
+msgstr ""
+
+#. How to squat safely, after "Squat to make your horse run".
+#: scenes/instruction/instruction.gd
+msgid "Feet apart, back straight."
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Stop squatting, and your horse slows down and stops."
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Pull the reins: both hands to the left, and your horse turns left."
+msgstr ""
+
+#: scenes/instruction/instruction.gd
+msgid "Both hands to the right, and your horse turns right."
+msgstr ""
+
+#. The button which starts the game.
+#: scenes/intro/intro.gd
+msgid "Play"
+msgstr ""
+
+#. The button which opens the map with all the levels.
+#: scenes/intro/intro.gd
+msgid "Levels"
+msgstr ""
+
+#. The button which shows how to ride by squatting and pulling the reins.
+#: scenes/intro/intro.gd
+msgid "How to Play"
+msgstr ""
+
+#: scenes/intro/intro.gd scenes/settings/settings.gd
+msgid "Settings"
 msgstr ""
 
 #: scenes/level/level.gd
-msgid "Aigerim"
+msgid "Don't ride too far away!"
 msgstr ""
 
 #: scenes/level/level.gd
@@ -46,6 +102,11 @@ msgstr ""
 #. {landmark@of} is a landmark in its form "of", e.g., "родника".
 #: scenes/level_map/level_map.gd
 msgid "I saw {animals} west of {landmark@of}."
+msgstr ""
+
+#. The button which goes back to the previous screen.
+#: scenes/level_select/level_select.gd scenes/settings/settings.gd
+msgid "Back"
 msgstr ""
 
 #: scenes/movement_test/movement_test.gd
@@ -93,12 +154,408 @@ msgstr ""
 msgid "Straight ahead"
 msgstr ""
 
+#. The default name of the rider, a girl, in your alphabet.
+#: scenes/profile/profile.gd
+msgid "Aigerim"
+msgstr ""
+
+#. The default name of the horse, Тұлпар, in your alphabet.
+#: scenes/profile/profile.gd
+msgid "Tulpar"
+msgstr ""
+
 #: scenes/quit_hint/quit_hint.gd
 msgid "Press Esc again to quit."
 msgstr ""
 
-#: scenes/vision/vision_status.gd
+#: scenes/reward/reward.gd
+msgid "{rider}, you have won all the finery!"
+msgstr ""
+
+#. {rider} is the rider's name; she chooses one of three gifts.
+#: scenes/reward/reward.gd
+msgid "Well done, {rider}! Choose a gift."
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "How beautiful!"
+msgstr ""
+
+#. The button which goes on from the gift to the map of the levels.
+#: scenes/reward/reward.gd
+msgid "Go on"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Silver studs"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Painted saddle"
+msgstr ""
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+msgid "Embroidered cloth"
+msgstr ""
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+msgid "Tassels"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Silver bridle"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Bridle tassels"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Breastplate"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Silver stirrups"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Braided mane"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Mane ribbons"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Owl-feather tassel"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Owl feathers"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Embroidered coat"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Ram's horn pattern"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Earrings"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Bracelets"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Silver belt"
+msgstr ""
+
+#: scenes/reward/reward.gd
+msgid "Embroidered boots"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Rider: {name}"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Horse: {name}"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Write the name of your rider"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Write the name of your horse"
+msgstr ""
+
+#. The button which closes the keys after writing a name.
+#: scenes/rider_creator/rider_creator.gd
+msgid "Done"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Random"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Skin"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Hair"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Hair color"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Hat"
+msgstr ""
+
+#. The coat of the rider, a шапан.
+#: scenes/rider_creator/rider_creator.gd
+msgid "Coat"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Dress"
+msgstr ""
+
+#. The color of the coat of the horse.
+#: scenes/rider_creator/rider_creator.gd
+msgid "Horse"
+msgstr ""
+
+#. The white marking on the face of the horse.
+#: scenes/rider_creator/rider_creator.gd
+msgid "Marking"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgid "Mane"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "skin"
+msgid "very light"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "skin"
+msgid "light"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "skin"
+msgid "tanned"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "skin"
+msgid "dark"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "skin"
+msgid "very dark"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "two braids"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "one braid"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "a bun"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "short"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "loose"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "black"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "dark brown"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "brown"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hair"
+msgid "auburn"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hat"
+msgid "тақия"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hat"
+msgid "бөрік"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hat"
+msgid "headscarf"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hat"
+msgid "felt hat"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "hat"
+msgid "no hat"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "crimson"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "indigo"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "emerald"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "ochre"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "white"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "coat"
+msgid "black"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "crimson"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "indigo"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "emerald"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "ochre"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "white"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "dress"
+msgid "black"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "bay"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "chestnut"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "grey"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "black"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "dun"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "horse"
+msgid "piebald"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "marking"
+msgid "none"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "marking"
+msgid "a star"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "marking"
+msgid "a blaze"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "mane"
+msgid "black"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "mane"
+msgid "dark brown"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "mane"
+msgid "flaxen"
+msgstr ""
+
+#: scenes/rider_creator/rider_creator.gd
+msgctxt "mane"
+msgid "grey"
+msgstr ""
+
+#: scenes/settings/settings.gd scenes/vision/vision_status.gd
 msgid "Step in front of the camera."
+msgstr ""
+
+#. The label of the row with the language of the game.
+#: scenes/settings/settings.gd
+msgid "Language"
+msgstr ""
+
+#. The label of the row with the name of the rider, which opens the creator.
+#: scenes/settings/settings.gd
+msgid "Rider"
 msgstr ""
 
 #. {pose} and {face} are the milliseconds to find the body and the face.
@@ -290,6 +747,34 @@ msgstr ""
 #: data/landmarks/lake.tres
 msgctxt "between"
 msgid "the lake"
+msgstr ""
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/pasture.tres
+msgctxt "near"
+msgid "the pasture"
+msgstr ""
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/pasture.tres
+msgctxt "of"
+msgid "the pasture"
+msgstr ""
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/pasture.tres
+msgctxt "and"
+msgid "the pasture"
+msgstr ""
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/pasture.tres
+msgctxt "between"
+msgid "the pasture"
 msgstr ""
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у

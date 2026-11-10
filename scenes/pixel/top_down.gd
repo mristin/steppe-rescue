@@ -6,9 +6,10 @@ extends RefCounted
 ##
 ## A creature is a list of ellipses in its own frame, facing north (up, -y),
 ## each [code][center_x, center_y, radius_x, radius_y, color][/code], the later
-## over the earlier. We rasterize it on the pixel grid for each heading and
-## add the dark outline, so it stays crisp pixel art in every direction,
-## instead of rotating a picture, which would blur or break the pixels.
+## over the earlier. For each heading we turn the ellipses as vectors (SVG)
+## and pixelate them with [Pixelate], so the creature stays crisp pixel art in
+## every direction, instead of rotating a picture, which would blur or break
+## the pixels.
 ##
 ## These are placeholders until the drawn sprites arrive.
 
@@ -33,50 +34,55 @@ static func texture(key: String, shapes: Array, heading: float) -> ImageTexture:
     if _cache.has(full_key):
         return _cache[full_key]
 
-    var result := ImageTexture.create_from_image(image_of(shapes, direction * TAU / DIRECTIONS))
+    var half := _half(shapes)
+    var view := Rect2(-half, -half, 2 * half, 2 * half)
+    var result := ImageTexture.create_from_image(
+        Pixelate.image_of(svg(shapes, direction * TAU / DIRECTIONS), view)
+    )
+    result.set_size_override(Vector2i(view.size))
     _cache[full_key] = result
     return result
 
 
+## The creature as vectors (SVG) turned to the heading, around its center.
+static func svg(shapes: Array, heading: float) -> String:
+    var parts := PackedStringArray()
+    parts.append('<g transform="rotate(%s)">' % String.num(rad_to_deg(heading), 3))
+    for shape in shapes:
+        (
+            parts
+            . append(
+                (
+                    '<ellipse cx="%s" cy="%s" rx="%s" ry="%s" fill="%s"/>'
+                    % [
+                        String.num(shape[0], 3),
+                        String.num(shape[1], 3),
+                        String.num(shape[2], 3),
+                        String.num(shape[3], 3),
+                        Pixelate.color(shape[4]),
+                    ]
+                )
+            )
+        )
+    parts.append("</g>")
+    return "".join(parts)
+
+
 ## Rasterize the creature at the heading, with the outline; the image is square
-## with the creature's center in the middle pixel.
+## with the creature's center in the middle.
 static func image_of(shapes: Array, heading: float) -> Image:
+    var half := _half(shapes)
+    return Pixelate.image_of(svg(shapes, heading), Rect2(-half, -half, 2 * half, 2 * half))
+
+
+## Half the side of the square which holds the creature in every heading, in
+## logical pixels, with room for the outline.
+static func _half(shapes: Array) -> int:
     var reach := 1.0
     for shape in shapes:
         var center := Vector2(shape[0], shape[1])
         reach = maxf(reach, center.length() + maxf(shape[2], shape[3]))
-    var half := ceili(reach) + 2
-    var side := 2 * half + 1
-
-    var image := Image.create_empty(side, side, false, Image.FORMAT_RGBA8)
-    for y in range(side):
-        for x in range(side):
-            var local := Vector2(x - half, y - half).rotated(-heading)
-            for i in range(shapes.size() - 1, -1, -1):
-                var shape: Array = shapes[i]
-                var dx: float = (local.x - shape[0]) / shape[2]
-                var dy: float = (local.y - shape[1]) / shape[3]
-                if dx * dx + dy * dy <= 1.0:
-                    image.set_pixel(x, y, shape[4])
-                    break
-
-    var outlined := image.duplicate() as Image
-    for y in range(side):
-        for x in range(side):
-            if image.get_pixel(x, y).a > 0.0:
-                continue
-            for offset in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-                var neighbor: Vector2i = Vector2i(x, y) + offset
-                if (
-                    neighbor.x >= 0
-                    and neighbor.y >= 0
-                    and neighbor.x < side
-                    and neighbor.y < side
-                    and image.get_pixelv(neighbor).a > 0.0
-                ):
-                    outlined.set_pixel(x, y, Palette.OUTLINE)
-                    break
-    return outlined
+    return ceili(reach) + 1
 
 
 ## The tail of the horse for the gait, swaying with the frame.

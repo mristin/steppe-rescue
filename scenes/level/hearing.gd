@@ -57,10 +57,10 @@ func _draw() -> void:
 
 func _draw_sound(at: Vector2, direction: Vector2, sound: Dictionary) -> void:
     var closeness: float = sound["closeness"]
-    var scale := 2 if closeness > 0.5 else 1
+    var scale := 2.0 if closeness > 0.5 else 1.0
     var alpha := 0.45 + 0.55 * closeness
-    var texture := Icons.animal(sound["id"])
-    var icon := texture.get_size() * scale
+    var texture := Icons.animal(sound["id"], scale)
+    var icon := texture.get_size()
 
     draw_circle(at, icon.x * 0.5 + 3.0, Color(Palette.OUTLINE, alpha))
     draw_circle(at, icon.x * 0.5 + 2.0, Color(Palette.FELT, alpha))

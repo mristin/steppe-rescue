@@ -82,7 +82,7 @@ func _draw() -> void:
 
     var rider := Painting.texture("res://assets/pictures/instruction/rider_on_horse.png")
     var shown := rider.get_size() * 0.32
-    var feet := SteppeMap.AUL + Vector2(150, 70)
+    var feet := SteppeMap.AUL + Vector2(220, 50)
     draw_texture_rect(rider, Rect2((feet - Vector2(shown.x * 0.5, shown.y)).round(), shown), false)
 
     var profile := get_node("/root/Profile")

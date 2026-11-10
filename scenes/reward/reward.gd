@@ -25,23 +25,6 @@ const _PICTURE := Vector2(128, 116)
 ## How long the sparkle lasts, in seconds.
 const SPARKLE_SECONDS := 1.6
 
-## The close-ups of the pieces: the box around the piece, in the units of
-## [SideView] for the horse and of [FrontView] for the rider.
-const _CLOSE_UPS := {
-    "saddle": Rect2(8, 3.6, 12, 9),
-    "saddle_cloth": Rect2(8, 5.6, 12, 10),
-    "bridle": Rect2(21.6, -0.6, 10, 10),
-    "breastplate": Rect2(16, 5.4, 9, 8),
-    "stirrups": Rect2(11.6, 8, 8, 8),
-    "mane": Rect2(17, -2.6, 11, 11),
-    "feathers": Rect2(-2.4, -3.4, 4.8, 4.4),
-    "coat": Rect2(-2.8, 2, 5.6, 8),
-    "earrings": Rect2(-2.2, -1.4, 4.4, 3.8),
-    "bracelets": Rect2(-3.4, 4.4, 6.8, 5),
-    "belt": Rect2(-2.4, 4.6, 4.8, 3.4),
-    "boots": Rect2(-2.8, 10.4, 5.6, 5.4),
-}
-
 ## The pieces on offer, as [piece, step] pairs.
 var offered: Array = []
 
@@ -159,24 +142,10 @@ func cards() -> Array[DwellButton]:
     return _cards
 
 
-## The close-up of the step of the piece on the rider or her horse in the
-## looks, as the card shows it.
-static func preview(piece: String, at: int, looks: Dictionary) -> ImageTexture:
-    var dressed := looks.duplicate()
-    var finery: Dictionary = dressed.get("finery", {}).duplicate()
-    finery[piece] = at
-    dressed["finery"] = finery
-    var box: Rect2 = _CLOSE_UPS.get(piece, Rect2(0, 0, 10, 10))
-    var scale := floorf(minf(_PICTURE.x / box.size.x, _PICTURE.y / box.size.y))
-    var body := ""
-    if Finery.PIECES[piece]["for"] == "horse":
-        body = SideView.svg(Looks.complete(dressed), 0, 0, false)
-    else:
-        body = FrontView.figure_svg(dressed, 0.0, 0.0)
-    return Pixelate.texture(
-        '<g transform="scale(%s)">%s</g>' % [scale, body],
-        Rect2((box.position * scale).round(), (box.size * scale).round())
-    )
+## The painting of the step of the piece (see assets/pictures/finery/), as
+## the card shows it.
+static func preview(piece: String, at: int, _looks := {}) -> ImageTexture:
+    return Painting.fitted("res://assets/pictures/finery/%s_%d.png" % [piece, at], _PICTURE)
 
 
 func _update_texts() -> void:

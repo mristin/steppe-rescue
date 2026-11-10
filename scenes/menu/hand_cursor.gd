@@ -93,5 +93,5 @@ func _hand() -> Vector2:
 func _draw() -> void:
     if not by_hand:
         return
-    var bird := Icons.of(Icons.BIRD, 2.0)
+    var bird := Icons.bird(2.0)
     draw_texture(bird, (at - bird.get_size() * 0.5).round())

@@ -12,21 +12,21 @@ extends RefCounted
 const SIZE := Vector2(960, 540)
 
 ## Where the home aul stands.
-const AUL := Vector2(465, 450)
+const AUL := Vector2(510, 470)
 
 ## The spots of the levels along the path from the aul, in their order; the
 ## banner of a level stands over its spot.
 const SPOTS := [
-    Vector2(563, 379),
-    Vector2(402, 321),
-    Vector2(517, 270),
-    Vector2(609, 247),
-    Vector2(459, 212),
-    Vector2(298, 195),
-    Vector2(207, 166),
-    Vector2(344, 132),
-    Vector2(505, 86),
-    Vector2(442, 49),
+    Vector2(450, 375),
+    Vector2(526, 325),
+    Vector2(580, 297),
+    Vector2(520, 260),
+    Vector2(560, 225),
+    Vector2(490, 182),
+    Vector2(407, 155),
+    Vector2(490, 125),
+    Vector2(605, 102),
+    Vector2(540, 75),
 ]
 
 ## The painting of the map (see [constant PAINTING]); its path winds from the

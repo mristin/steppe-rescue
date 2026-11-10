@@ -70,5 +70,5 @@ func _choose(code: String) -> void:
 func _draw() -> void:
     draw_texture(IntroPicture.background(), Vector2.ZERO)
     draw_texture(Ornaments.panel(Vector2(660, 44)), Vector2(150, 108))
-    var bird := Icons.of(Icons.BIRD, 4.0)
+    var bird := Icons.bird(4.0)
     draw_texture(bird, Vector2(456, 40))

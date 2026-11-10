@@ -233,8 +233,6 @@ const PORTRAITS := ["grandmother", "shepherd", "beekeeper"]
 
 const _PORTRAITS_DIR := "res://assets/pictures/people"
 
-static var _painted_cache: Dictionary = {}
-
 
 ## The icon of the picture at the scale (the box of [constant SIZE] times it).
 static func of(picture: String, scale := 1.0) -> ImageTexture:
@@ -256,19 +254,23 @@ static func landmark(id: String, scale := 1.0) -> ImageTexture:
 
 
 static func star(scale := 1.0) -> ImageTexture:
-    return of(STAR, scale)
+    var painted := _painted("star", scale)
+    return painted if painted != null else of(STAR, scale)
 
 
 static func heart(scale := 1.0) -> ImageTexture:
-    return of(HEART, scale)
+    var painted := _painted("heart", scale)
+    return painted if painted != null else of(HEART, scale)
 
 
 static func water(scale := 1.0) -> ImageTexture:
-    return of(WATER, scale)
+    var painted := _painted("water", scale)
+    return painted if painted != null else of(WATER, scale)
 
 
 static func grass(scale := 1.0) -> ImageTexture:
-    return of(GRASS, scale)
+    var painted := _painted("grass", scale)
+    return painted if painted != null else of(GRASS, scale)
 
 
 ## The portrait, painted, 128 x 128; it is drawn 64 logical pixels wide.
@@ -282,32 +284,17 @@ static func person_above(id: String) -> Texture2D:
     return load("%s/%s_above.png" % [_PORTRAITS_DIR, id if id in PORTRAITS else "shepherd"])
 
 
+## The bird of the hand cursor, painted.
+static func bird(scale := 1.0) -> ImageTexture:
+    var painted := _painted("bird", scale)
+    return painted if painted != null else of(BIRD, scale)
+
+
 ## The painted icon (see assets/pictures/icons/) fitted into the box of the
-## icons at the scale, at two pixels of the screen per logical pixel, like the
-## drawn icons, so that every icon takes the same place; null if there is no
-## painting.
+## icons at the scale, like the drawn icons, so that every icon takes the
+## same place; null if there is no painting.
 static func _painted(name: String, scale: float) -> ImageTexture:
-    var key := "%s|%s" % [name, scale]
-    if _painted_cache.has(key):
-        return _painted_cache[key]
-    var path := "res://assets/pictures/icons/%s.png" % name
-    if not ResourceLoader.exists(path):
-        return null
-    var source := (load(path) as Texture2D).get_image()
-    source.convert(Image.FORMAT_RGBA8)
-    var box := (SIZE * scale).round()
-    var pixels := Vector2i(box * Pixelate.DENSITY)
-    var fit := minf(float(pixels.x) / source.get_width(), float(pixels.y) / source.get_height())
-    var fitted := Vector2i(
-        maxi(1, roundi(source.get_width() * fit)), maxi(1, roundi(source.get_height() * fit))
-    )
-    source.resize(fitted.x, fitted.y, Image.INTERPOLATE_LANCZOS)
-    var canvas := Image.create_empty(pixels.x, pixels.y, false, Image.FORMAT_RGBA8)
-    canvas.blit_rect(source, Rect2i(Vector2i.ZERO, fitted), (pixels - fitted) / 2)
-    var result := ImageTexture.create_from_image(canvas)
-    result.set_size_override(Vector2i(box))
-    _painted_cache[key] = result
-    return result
+    return Painting.fitted("res://assets/pictures/icons/%s.png" % name, SIZE * scale)
 
 
 ## All the pictures by their names, for the tests.

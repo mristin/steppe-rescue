@@ -255,7 +255,10 @@ func _draw_turning(now: Dictionary) -> void:
 
     var gait := _speed_bar.gait()
     var center := field.get_center()
-    PaintedTopDown.draw(self, PaintedTopDown.rider(gait, int(_stride), true), center, heading)
+    # NOTE (mristin):
+    # The instruction always shows the same rider (see section 16 of
+    # DESIGN.md), here the first painted girl on the bay horse.
+    PaintedTopDown.draw_rider(self, Looks.DEFAULT, gait, int(_stride * 3.0), center, heading, true)
 
     # NOTE (mristin):
     # The curved arrow ahead of the horse, to the side it turns: drawn for a

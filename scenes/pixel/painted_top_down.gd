@@ -2,17 +2,18 @@ class_name PaintedTopDown
 extends RefCounted
 
 ## Draw the painted creatures seen from above, turned to their heading: the
-## rider on her horse (walk, trot and gallop, four frames each) and the lost
-## animals (two walking frames and a grazing one), cut out of painted sprite
-## sheets (see assets/pictures/top_down/).
+## rider on her horse (the horse of each preset in the 13 frames of its run,
+## and the girl of each preset seated on it) and the lost animals (two
+## walking frames and a grazing one), cut out of painted sprite sheets (see
+## assets/pictures/top_down/).
 ##
 ## Each picture faces north (up), with the middle of the creature in the
 ## middle of its square, two pixels of the screen per logical pixel. Unlike
 ## the pixel art, a painting turns smoothly to any heading, so the item which
 ## draws it filters its textures linearly (see [method prepare]).
 
-const RIDER_GAITS := ["walk", "walk", "trot", "gallop"]
-const RIDER_FRAMES := 4
+## The frames of the run of each painted horse from above.
+const HORSE_FRAMES := 13
 
 static var _cache: Dictionary = {}
 
@@ -22,11 +23,25 @@ static func prepare(item: CanvasItem) -> void:
     item.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
-## The rider on her horse in the gait (0 stands, 1 walks, 2 trots, 3 gallops)
-## and the frame; [param big] for the instruction.
-static func rider(gait: int, frame: int, big := false) -> Texture2D:
-    var index := 0 if gait <= 0 else posmod(frame, RIDER_FRAMES)
-    return _load("rider/%s%s_%d" % ["big/" if big else "", RIDER_GAITS[clampi(gait, 0, 3)], index])
+## Draw the rider on her horse from above on the item, the seat of the saddle
+## at [param center], turned to the heading: the painted horse of the looks
+## (see [constant Looks.HORSE_PRESETS]) in the frame of its run (the first
+## frame while it stands), and the painted girl of the looks seated on it,
+## her hat over the seat; [param big] for the instruction.
+static func draw_rider(
+    item: CanvasItem,
+    looks: Dictionary,
+    gait: int,
+    frame: int,
+    center: Vector2,
+    heading: float,
+    big := false
+) -> void:
+    var prefix := "big/" if big else ""
+    var steed: String = looks.get("steed", "1")
+    var index := 0 if gait <= 0 else posmod(frame, HORSE_FRAMES)
+    draw(item, _load("horses/%s/%s%d" % [steed, prefix, index]), center, heading)
+    draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), center, heading)
 
 
 ## The animal of the kind ("sheep", "lamb", "horse", "camel"), walking in the

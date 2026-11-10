@@ -130,7 +130,7 @@ func gait() -> int:
 
 func _draw() -> void:
     var gait := gait()
-    var frame := int(_stride * 2.0)
+    var frame := int(_stride * 3.0)
     var look := 0.0
     var jolt := Vector2.ZERO
     var t := -1.0
@@ -143,7 +143,7 @@ func _draw() -> void:
         look = sin(t * PI) * 0.35
         jolt = Vector2(0, -1.5 * absf(sin(t * TAU * 2.0))).rotated(heading)
     draw_circle(Vector2(3, 4), 10.0, Palette.SHADOW)
-    PaintedTopDown.draw(self, PaintedTopDown.rider(gait, frame), jolt, heading + look)
+    PaintedTopDown.draw_rider(self, looks, gait, frame, jolt, heading + look)
     if t >= 0.0:
         var hoof := Vector2(7, -24).rotated(heading)
         for k in range(7):

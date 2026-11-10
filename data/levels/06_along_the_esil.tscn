@@ -1,0 +1,221 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level_map/level_map.gd" id="1_map"]
+[ext_resource type="Script" path="res://scenes/level_map/landmark.gd" id="2_landmark"]
+[ext_resource type="Script" path="res://scenes/level_map/person.gd" id="3_person"]
+[ext_resource type="Script" path="res://scenes/level_map/herd.gd" id="4_herd"]
+[ext_resource type="Script" path="res://scenes/level_map/home.gd" id="5_home"]
+[ext_resource type="Script" path="res://scenes/level_map/clue.gd" id="6_clue"]
+[ext_resource type="Resource" path="res://data/landmarks/spring.tres" id="7_spring"]
+[ext_resource type="Resource" path="res://data/landmarks/rock.tres" id="8_rock"]
+[ext_resource type="Resource" path="res://data/landmarks/bushes.tres" id="9_bushes"]
+[ext_resource type="Resource" path="res://data/landmarks/birches.tres" id="10_birches"]
+[ext_resource type="Resource" path="res://data/landmarks/yurt.tres" id="11_yurt"]
+[ext_resource type="Resource" path="res://data/landmarks/pasture.tres" id="12_pasture"]
+[ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
+[ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
+[ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
+[ext_resource type="Resource" path="res://data/landmarks/salt_lake.tres" id="16_salt_lake"]
+[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="17_sheep"]
+[ext_resource type="Resource" path="res://data/animals/camel.tres" id="18_camel"]
+[ext_resource type="Resource" path="res://data/animals/horse.tres" id="19_horse"]
+
+[sub_resource type="Resource" id="Clue_Grandmother_0"]
+script = ExtResource("6_clue")
+form = "north"
+animal = ExtResource("18_camel")
+landmark = "Esil7"
+
+[sub_resource type="Resource" id="Clue_Shepherd_0"]
+script = ExtResource("6_clue")
+form = "near"
+animal = ExtResource("17_sheep")
+count = 2
+landmark = "Kurgan"
+
+[sub_resource type="Resource" id="Clue_Beekeeper_0"]
+script = ExtResource("6_clue")
+form = "near"
+animal = ExtResource("19_horse")
+count = 2
+landmark = "Birches"
+
+[node name="AlongTheEsil" type="Node2D"]
+script = ExtResource("1_map")
+title = "Along the Esil"
+thanks = "Thank you, {rider}! Everyone is back across the Esil."
+size = Vector2(3000, 2000)
+par_seconds = 260.0
+
+[node name="Esil1" type="Node2D" parent="."]
+position = Vector2(80, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil2" type="Node2D" parent="."]
+position = Vector2(280, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil3" type="Node2D" parent="."]
+position = Vector2(480, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil4" type="Node2D" parent="."]
+position = Vector2(680, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil5" type="Node2D" parent="."]
+position = Vector2(1120, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil6" type="Node2D" parent="."]
+position = Vector2(1320, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil7" type="Node2D" parent="."]
+position = Vector2(1520, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil8" type="Node2D" parent="."]
+position = Vector2(1720, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil9" type="Node2D" parent="."]
+position = Vector2(1920, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil10" type="Node2D" parent="."]
+position = Vector2(2360, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil11" type="Node2D" parent="."]
+position = Vector2(2560, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil12" type="Node2D" parent="."]
+position = Vector2(2760, 920)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Esil13" type="Node2D" parent="."]
+position = Vector2(2960, 880)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Kurgan" type="Node2D" parent="."]
+position = Vector2(800, 400)
+script = ExtResource("2_landmark")
+kind = ExtResource("14_kurgan")
+
+[node name="Birches" type="Node2D" parent="."]
+position = Vector2(2500, 350)
+script = ExtResource("2_landmark")
+kind = ExtResource("10_birches")
+radius = 80.0
+
+[node name="Pasture" type="Node2D" parent="."]
+position = Vector2(900, 1400)
+script = ExtResource("2_landmark")
+kind = ExtResource("12_pasture")
+radius = 70.0
+
+[node name="Spring" type="Node2D" parent="."]
+position = Vector2(2200, 1400)
+script = ExtResource("2_landmark")
+kind = ExtResource("7_spring")
+
+[node name="BigRock" type="Node2D" parent="."]
+position = Vector2(600, 1700)
+script = ExtResource("2_landmark")
+kind = ExtResource("8_rock")
+
+[node name="Bushes" type="Node2D" parent="."]
+position = Vector2(2600, 1700)
+script = ExtResource("2_landmark")
+kind = ExtResource("9_bushes")
+
+[node name="Well" type="Node2D" parent="."]
+position = Vector2(1900, 1250)
+script = ExtResource("2_landmark")
+kind = ExtResource("15_well")
+
+[node name="HomeYurtWest" type="Node2D" parent="."]
+position = Vector2(1320, 1670)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="HomeYurtEast" type="Node2D" parent="."]
+position = Vector2(1680, 1670)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="Home" type="Node2D" parent="."]
+position = Vector2(1500, 1850)
+script = ExtResource("5_home")
+
+[node name="Start" type="Marker2D" parent="."]
+position = Vector2(1500, 1700)
+
+[node name="Grandmother" type="Node2D" parent="."]
+position = Vector2(1475, 1682)
+script = ExtResource("3_person")
+speaker = "Grandmother"
+portrait = "grandmother"
+greeting = "Our animals crossed the Esil, {rider}. Cross only at the fords, where the water is shallow!"
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Grandmother_0")])
+
+[node name="Shepherd" type="Node2D" parent="."]
+position = Vector2(1000, 1150)
+script = ExtResource("3_person")
+speaker = "Shepherd"
+portrait = "shepherd"
+greeting = "Good day, {rider}! Two sheep went over the river."
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Shepherd_0")])
+
+[node name="Beekeeper" type="Node2D" parent="."]
+position = Vector2(2050, 500)
+script = ExtResource("3_person")
+speaker = "Beekeeper"
+portrait = "beekeeper"
+greeting = "Hello, {rider}! Your horses graze on my side of the river."
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Beekeeper_0")])
+
+[node name="Camel" type="Node2D" parent="."]
+position = Vector2(1530, 640)
+script = ExtResource("4_herd")
+animal = ExtResource("18_camel")
+
+[node name="SheepByTheKurgan" type="Node2D" parent="."]
+position = Vector2(800, 480)
+script = ExtResource("4_herd")
+animal = ExtResource("17_sheep")
+count = 2
+
+[node name="Horses" type="Node2D" parent="."]
+position = Vector2(2500, 480)
+script = ExtResource("4_herd")
+animal = ExtResource("19_horse")
+count = 2

@@ -133,6 +133,8 @@ About ten levels, each larger than the last. A level is data (the map, the landm
 | 9 | Autumn migration | Many animals, the longest ride. |
 | 10 | The first snow | The finale: everyone gathers at the aul for a celebration. |
 
+**Built:** all ten levels, in `data/levels/` (2200 x 1600 pixels in level 2, growing to 3600 x 2600 in level 10, with the grandmother, a shepherd and a beekeeper giving the clues). The Esil of level 6 is, for now, a chain of waters across the steppe with two fords between them, until a river is painted. The salt lake of level 7 is the painted lake made milky with a crust of salt (`assets/pictures/landmarks/salt_lake.png`, `data/landmarks/salt_lake.tres`); the horse does not drink there. The two-step clues of level 8 are told in words: the grandmother sends the rider to the shepherd at the well, who sends her on to the beekeeper by the birch grove. The tests check every level (`LevelMap.problems`), and that everything in it can be reached from the start.
+
 ### Stars
 
 Each level gives one to three stars, for being reasonably fast. There is never a "game over": the level only ends when all the animals are home. Stars only change which rewards are offered (section 8), and any level can be replayed, for better stars, but a level gives its gift only once, so that riding it again is no mine of finery.

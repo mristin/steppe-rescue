@@ -245,6 +245,57 @@ func problems() -> PackedStringArray:
     for herd in herds():
         if not covered.has(herd) and herd.animal != null:
             result.append("no clue points to the herd %s" % herd.name)
+    for what in unreachable():
+        result.append("the rider cannot reach %s from the start" % what)
+    return result
+
+
+## What the rider cannot reach from the start: the names of the herds and the
+## people, and "the gate" of the pen; found by flooding a grid of the steppe
+## from the start around what blocks the horse.
+func unreachable() -> PackedStringArray:
+    var result := PackedStringArray()
+    if start() == null:
+        return result
+    var step := 12.0
+    var cells := Vector2i((size / step).floor())
+    var blocked := solids()
+    var is_free := func(point: Vector2) -> bool:
+        if not Rect2(Vector2.ZERO, size).grow(-Rider.EDGE).has_point(point):
+            return false
+        for solid in blocked:
+            if point.distance_to(Vector2(solid.x, solid.y)) < solid.z + Rider.RADIUS:
+                return false
+        return true
+    var seen := {}
+    var first := Vector2i((start().position / step).round())
+    var stack: Array[Vector2i] = [first]
+    seen[first] = true
+    while not stack.is_empty():
+        var cell: Vector2i = stack.pop_back()
+        for direction in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.DOWN, Vector2i.UP]:
+            var next: Vector2i = cell + direction
+            if next.x < 0 or next.y < 0 or next.x >= cells.x or next.y >= cells.y:
+                continue
+            if seen.has(next) or not is_free.call(Vector2(next) * step):
+                continue
+            seen[next] = true
+            stack.append(next)
+    var reached := func(point: Vector2) -> bool:
+        var center := Vector2i((point / step).round())
+        for dx in range(-3, 4):
+            for dy in range(-3, 4):
+                if seen.has(center + Vector2i(dx, dy)):
+                    return true
+        return false
+    for herd in herds():
+        if not reached.call(herd.position):
+            result.append(herd.name)
+    for person in people():
+        if not reached.call(person.position):
+            result.append(person.name)
+    if home() != null and not reached.call(home().gate() + Vector2(0, -20)):
+        result.append("the gate")
     return result
 
 

@@ -18,6 +18,7 @@ const PAINTED := {
     "bushes": 1.6,
     "birches": 1.3,
     "lake": 1.35,
+    "salt_lake": 1.35,
     "pasture": 1.2,
     "kurgan": 1.4,
     "well": 6.0,

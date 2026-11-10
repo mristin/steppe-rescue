@@ -1,0 +1,182 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level_map/level_map.gd" id="1_map"]
+[ext_resource type="Script" path="res://scenes/level_map/landmark.gd" id="2_landmark"]
+[ext_resource type="Script" path="res://scenes/level_map/person.gd" id="3_person"]
+[ext_resource type="Script" path="res://scenes/level_map/herd.gd" id="4_herd"]
+[ext_resource type="Script" path="res://scenes/level_map/home.gd" id="5_home"]
+[ext_resource type="Script" path="res://scenes/level_map/clue.gd" id="6_clue"]
+[ext_resource type="Resource" path="res://data/landmarks/spring.tres" id="7_spring"]
+[ext_resource type="Resource" path="res://data/landmarks/rock.tres" id="8_rock"]
+[ext_resource type="Resource" path="res://data/landmarks/bushes.tres" id="9_bushes"]
+[ext_resource type="Resource" path="res://data/landmarks/birches.tres" id="10_birches"]
+[ext_resource type="Resource" path="res://data/landmarks/yurt.tres" id="11_yurt"]
+[ext_resource type="Resource" path="res://data/landmarks/pasture.tres" id="12_pasture"]
+[ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
+[ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
+[ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
+[ext_resource type="Resource" path="res://data/landmarks/salt_lake.tres" id="16_salt_lake"]
+[ext_resource type="Resource" path="res://data/animals/sheep.tres" id="17_sheep"]
+[ext_resource type="Resource" path="res://data/animals/camel.tres" id="18_camel"]
+[ext_resource type="Resource" path="res://data/animals/horse.tres" id="19_horse"]
+
+[sub_resource type="Resource" id="Clue_Grandmother_0"]
+script = ExtResource("6_clue")
+form = "near"
+animal = ExtResource("17_sheep")
+count = 4
+landmark = "PastureWest"
+
+[sub_resource type="Resource" id="Clue_Grandmother_1"]
+script = ExtResource("6_clue")
+form = "near"
+animal = ExtResource("18_camel")
+landmark = "Well"
+
+[sub_resource type="Resource" id="Clue_Shepherd_0"]
+script = ExtResource("6_clue")
+form = "north"
+animal = ExtResource("18_camel")
+count = 2
+landmark = "Lake"
+
+[sub_resource type="Resource" id="Clue_Shepherd_1"]
+script = ExtResource("6_clue")
+form = "between"
+animal = ExtResource("19_horse")
+count = 3
+landmark = "Birches"
+other = "Kurgan"
+
+[sub_resource type="Resource" id="Clue_Beekeeper_0"]
+script = ExtResource("6_clue")
+form = "west"
+animal = ExtResource("17_sheep")
+count = 2
+landmark = "BigRock"
+
+[node name="AutumnMigration" type="Node2D"]
+script = ExtResource("1_map")
+title = "Autumn migration"
+thanks = "Thank you, {rider}! The whole herd is ready for the winter pastures."
+size = Vector2(3600, 2400)
+par_seconds = 340.0
+
+[node name="PastureWest" type="Node2D" parent="."]
+position = Vector2(800, 700)
+script = ExtResource("2_landmark")
+kind = ExtResource("12_pasture")
+radius = 80.0
+
+[node name="Lake" type="Node2D" parent="."]
+position = Vector2(2400, 1200)
+script = ExtResource("2_landmark")
+kind = ExtResource("13_lake")
+radius = 110.0
+
+[node name="Birches" type="Node2D" parent="."]
+position = Vector2(3000, 500)
+script = ExtResource("2_landmark")
+kind = ExtResource("10_birches")
+radius = 90.0
+
+[node name="Kurgan" type="Node2D" parent="."]
+position = Vector2(2200, 400)
+script = ExtResource("2_landmark")
+kind = ExtResource("14_kurgan")
+
+[node name="BigRock" type="Node2D" parent="."]
+position = Vector2(600, 1600)
+script = ExtResource("2_landmark")
+kind = ExtResource("8_rock")
+
+[node name="Well" type="Node2D" parent="."]
+position = Vector2(3100, 1800)
+script = ExtResource("2_landmark")
+kind = ExtResource("15_well")
+
+[node name="Spring" type="Node2D" parent="."]
+position = Vector2(1500, 1300)
+script = ExtResource("2_landmark")
+kind = ExtResource("7_spring")
+
+[node name="Bushes" type="Node2D" parent="."]
+position = Vector2(1400, 500)
+script = ExtResource("2_landmark")
+kind = ExtResource("9_bushes")
+
+[node name="PastureSouth" type="Node2D" parent="."]
+position = Vector2(2300, 1900)
+script = ExtResource("2_landmark")
+kind = ExtResource("12_pasture")
+radius = 70.0
+
+[node name="HomeYurtWest" type="Node2D" parent="."]
+position = Vector2(1620, 2070)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="HomeYurtEast" type="Node2D" parent="."]
+position = Vector2(1980, 2070)
+script = ExtResource("2_landmark")
+kind = ExtResource("11_yurt")
+
+[node name="Home" type="Node2D" parent="."]
+position = Vector2(1800, 2250)
+script = ExtResource("5_home")
+
+[node name="Start" type="Marker2D" parent="."]
+position = Vector2(1800, 2100)
+
+[node name="Grandmother" type="Node2D" parent="."]
+position = Vector2(1775, 2082)
+script = ExtResource("3_person")
+speaker = "Grandmother"
+portrait = "grandmother"
+greeting = "Autumn has come, {rider}. We move to the winter pastures, but our animals are scattered!"
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Grandmother_0"), SubResource("Clue_Grandmother_1")])
+
+[node name="Shepherd" type="Node2D" parent="."]
+position = Vector2(1800, 800)
+script = ExtResource("3_person")
+speaker = "Shepherd"
+portrait = "shepherd"
+greeting = "Good day, {rider}! I saw camels and horses on my way."
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Shepherd_0"), SubResource("Clue_Shepherd_1")])
+
+[node name="Beekeeper" type="Node2D" parent="."]
+position = Vector2(1000, 1900)
+script = ExtResource("3_person")
+speaker = "Beekeeper"
+portrait = "beekeeper"
+greeting = "Hello, {rider}! Your sheep visited my bees."
+clues = Array[ExtResource("6_clue")]([SubResource("Clue_Beekeeper_0")])
+
+[node name="Flock" type="Node2D" parent="."]
+position = Vector2(820, 720)
+script = ExtResource("4_herd")
+animal = ExtResource("17_sheep")
+count = 4
+
+[node name="Camels" type="Node2D" parent="."]
+position = Vector2(2400, 965)
+script = ExtResource("4_herd")
+animal = ExtResource("18_camel")
+count = 2
+
+[node name="Horses" type="Node2D" parent="."]
+position = Vector2(2600, 470)
+script = ExtResource("4_herd")
+animal = ExtResource("19_horse")
+count = 3
+
+[node name="Sheep" type="Node2D" parent="."]
+position = Vector2(465, 1600)
+script = ExtResource("4_herd")
+animal = ExtResource("17_sheep")
+count = 2
+
+[node name="Camel" type="Node2D" parent="."]
+position = Vector2(3160, 1800)
+script = ExtResource("4_herd")
+animal = ExtResource("18_camel")

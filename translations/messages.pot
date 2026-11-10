@@ -718,7 +718,11 @@ msgid "Thank you, {rider}! The lamb is home again."
 msgstr ""
 
 #. the name of a person of the steppe
-#: data/levels/01_the_lamb_by_the_spring.tscn
+#: data/levels/01_the_lamb_by_the_spring.tscn data/levels/02_after_the_storm.tscn
+#: data/levels/03_grandmothers_camel.tscn data/levels/04_the_foals.tscn
+#: data/levels/05_the_birch_groves.tscn data/levels/06_along_the_esil.tscn
+#: data/levels/07_the_salt_lake.tscn data/levels/08_the_herders_request.tscn
+#: data/levels/09_autumn_migration.tscn data/levels/10_the_first_snow.tscn
 msgid "Grandmother"
 msgstr ""
 
@@ -727,6 +731,230 @@ msgstr ""
 msgid "Our lamb ran off in the night. Please bring it home, {rider}!"
 msgstr ""
 
+#. the name of a level, a few words
+#: data/levels/02_after_the_storm.tscn
+msgid "After the storm"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/02_after_the_storm.tscn
+msgid "Thank you, {rider}! All our sheep are home after the storm."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/02_after_the_storm.tscn
+msgid "The storm scattered our sheep, {rider}! Please find them."
+msgstr ""
+
+#. the name of a person of the steppe
+#: data/levels/02_after_the_storm.tscn data/levels/03_grandmothers_camel.tscn
+#: data/levels/05_the_birch_groves.tscn data/levels/06_along_the_esil.tscn
+#: data/levels/07_the_salt_lake.tscn data/levels/08_the_herders_request.tscn
+#: data/levels/09_autumn_migration.tscn data/levels/10_the_first_snow.tscn
+msgid "Shepherd"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/02_after_the_storm.tscn
+msgid "Good day, {rider}! I saw one of your sheep."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/03_grandmothers_camel.tscn
+msgid "Grandmother's camel"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/03_grandmothers_camel.tscn
+msgid "Thank you, {rider}! My camel is home, and the sheep too."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/03_grandmothers_camel.tscn
+msgid "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/03_grandmothers_camel.tscn
+msgid "Hello, {rider}! Two sheep came to drink at my well."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/04_the_foals.tscn
+msgid "The foals"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/04_the_foals.tscn
+msgid "Thank you, {rider}! The foals are home with their mothers."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/04_the_foals.tscn
+msgid "The foals ran off, {rider}. Ride slowly to them, or they run away!"
+msgstr ""
+
+#. the name of a person of the steppe
+#: data/levels/04_the_foals.tscn data/levels/05_the_birch_groves.tscn
+#: data/levels/06_along_the_esil.tscn data/levels/07_the_salt_lake.tscn
+#: data/levels/08_the_herders_request.tscn data/levels/09_autumn_migration.tscn
+#: data/levels/10_the_first_snow.tscn
+msgid "Beekeeper"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/04_the_foals.tscn
+msgid "Hello, {rider}! A young horse grazes near my hives. Come slowly!"
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/05_the_birch_groves.tscn
+msgid "The birch groves"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/05_the_birch_groves.tscn
+msgid "Thank you, {rider}! You found them all among the trees."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn
+msgid "Our animals hide among the birches, {rider}. The map shows on which side!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn
+msgid "Good day, {rider}! A camel rests in the shade of the trees."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn data/levels/09_autumn_migration.tscn
+msgid "Hello, {rider}! Your sheep visited my bees."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/06_along_the_esil.tscn
+msgid "Along the Esil"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/06_along_the_esil.tscn
+msgid "Thank you, {rider}! Everyone is back across the Esil."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+msgid "Our animals crossed the Esil, {rider}. Cross only at the fords, where the water is shallow!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+msgid "Good day, {rider}! Two sheep went over the river."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+msgid "Hello, {rider}! Your horses graze on my side of the river."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/07_the_salt_lake.tscn
+msgid "The salt lake"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/07_the_salt_lake.tscn
+msgid "Thank you, {rider}! You rode across the whole salt steppe!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+msgid ""
+"Our camels went towards the salt lake, {rider}. Its water is too salty, so let your horse drink "
+"elsewhere!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+msgid "Good day, {rider}! I saw sheep far in the east."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+msgid "Hello, {rider}! Horses run between the rock and the bushes."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/08_the_herders_request.tscn
+msgid "The herder's request"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/08_the_herders_request.tscn
+msgid "Thank you, {rider}! Asking around helped!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+msgid "Our camels are gone, {rider}! Ask the shepherd at the well; he sees far."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+msgid "Good day, {rider}! The beekeeper by the birch grove saw your camels. And I saw sheep."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+msgid "Hello, {rider}! Yes, I saw your camels."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/09_autumn_migration.tscn
+msgid "Autumn migration"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/09_autumn_migration.tscn
+msgid "Thank you, {rider}! The whole herd is ready for the winter pastures."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/09_autumn_migration.tscn
+msgid "Autumn has come, {rider}. We move to the winter pastures, but our animals are scattered!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/09_autumn_migration.tscn
+msgid "Good day, {rider}! I saw camels and horses on my way."
+msgstr ""
+
+#. the name of a level, a few words
+#: data/levels/10_the_first_snow.tscn
+msgid "The first snow"
+msgstr ""
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/10_the_first_snow.tscn
+msgid ""
+"Thank you, {rider}! Everyone is home before the snow. Let's celebrate with the dombra and songs!"
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+msgid "The first snow is coming, {rider}! Bring everyone home, and we will celebrate together."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+msgid "Good day, {rider}! I saw horses by the lake and sheep by the spring."
+msgstr ""
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+msgid "Hello, {rider}! One little sheep is south of the birches."
+msgstr ""
+
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
 #. родника', 'бұлақтың жанында'
 #: data/landmarks/birches.tres
@@ -893,6 +1121,34 @@ msgstr ""
 #: data/landmarks/rock.tres
 msgctxt "between"
 msgid "the big rock"
+msgstr ""
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/salt_lake.tres
+msgctxt "near"
+msgid "the salt lake"
+msgstr ""
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/salt_lake.tres
+msgctxt "of"
+msgid "the salt lake"
+msgstr ""
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/salt_lake.tres
+msgctxt "and"
+msgid "the salt lake"
+msgstr ""
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/salt_lake.tres
+msgctxt "between"
+msgid "the salt lake"
 msgstr ""
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у

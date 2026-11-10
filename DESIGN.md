@@ -183,10 +183,10 @@ In the level, the game never writes "do squats" or "pull the reins". It shows th
 
 ### Menus: the hand cursor
 
-* In the menus, the conversations and the character creator, an open hand moves a cursor (a big bird, easy to see from two metres away). The hand comes from the hand detector (YOLOX, the same run which finds the heads for the face overlay), which runs on every frame while a menu shows the bird, as in Bird Dog; the hand is smoothed with a 1€ filter. The pose only tells where the shoulders are: the bottom of the screen lies at the shoulders, and a hand resting lower does not count.
+* In the menus, the conversations and the character creator, every raised hand moves its own cursor (a big bird, easy to see from two metres away); a bird held still on a button for 3 s clicks it, whichever hand it belongs to. The hand comes from the hand detector (YOLOX, the same run which finds the heads for the face overlay), which runs on every frame while a menu shows the bird, as in Bird Dog; the hand is smoothed with a 1€ filter. The pose only tells where the shoulders are: the bottom of the screen lies at the shoulders, and a hand resting lower does not count.
 * **The player sees herself:** behind the buttons, the camera picture shows dimly, mirrored, so that her hand in the picture lies right under the bird.
 * **Sticky buttons:** a bird on a button is drawn towards its middle and leaves only when the hand moves clearly beyond the edge, since the hands of children are hard to hold still; it glides instead of jumping.
-* **Clicking:** holding the cursor still over a button for about 1.5 s fills a ring around it, and then the button clicks. Hovering grows the button.
+* **Clicking:** holding the cursor still over a button for about 3 s fills a ring around it, and then the button clicks. Hovering grows the button.
 * The buttons are big, with at most four on a screen.
 
 ### Fallbacks
@@ -402,7 +402,7 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
 * **The level select** (section 6, `scenes/level_select/`): the painted map of the steppe around the home aul, with the rider by the yurts and the path from the aul past the spots of the levels; each open level has a banner with its name and its stars, and its number on its spot; the next level is crimson; the levels not open yet show only their number on a stone. The levels are the scenes of `data/levels/` in the order of their names (`LevelList`); finishing a level keeps its best stars and opens the next one. Play goes to the next level not finished yet, or to the level select once all are; after Grandmother's thanks, a squat goes on to the level select (until the reward screen is built).
 * **The settings** (`scenes/settings/`): the language and the rider with her horse, next to the big camera picture with the face overlay, so that the player can check that the camera sees her (without a camera, her rider stands there).
 * **The face overlay** (section 6, `FrontView`): the hat, the hair (two braids, one braid, a bun, short, loose, in her hair colour) and the finery the rider wears from the start, the earrings (*сырға*) and the owl feathers (*үкі*) on the *тақия*, follow the head in the camera picture.
-* **The hand cursor** (section 5, `scenes/menu/`): the raised hand moves a bird; holding it still over a button for 1.5 s fills a ring around the button and clicks it. The mouse clicks, too.
+* **The hand cursor** (section 5, `scenes/menu/`): the raised hand moves a bird; holding it still over a button for 3 s fills a ring around the button and clicks it. The mouse clicks, too.
 * **The art at 1920 × 1080, vectors first** (section 11, `scenes/pixel/`): the pictures are SVG, pixelated by `Pixelate` with the help of `PixelQuantizer` in C#; the rider and her horse are drawn from the side in all their looks (`SideView`), with the ornaments (`Ornaments`); the portraits are 128 × 128; Grandmother's portrait is retouched into a gentle smile.
 
 **Not yet:** see section 16.
@@ -450,7 +450,7 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
 
 1. **Only a girl?** The story is about a girl. Should the player also be able to choose a boy rider?
 2. **Two players?** One player for now. A second player on a split screen (as a second rider) could come later.
-3. **The menus:** is holding the cursor still for 1.5 s good enough, or should a fist be needed for a click?
+3. **The menus:** is holding the cursor still for 3 s good enough, or should a fist be needed for a click?
 4. **The clues on the map:** should a clue be drawn automatically on the map (as described above), or should the child remember it?
 5. **Stars by time:** or no stars at all, so that there is no pressure?
 6. **Kazakh in Latin script** as well as Cyrillic?

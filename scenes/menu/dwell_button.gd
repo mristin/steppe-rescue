@@ -13,7 +13,7 @@ extends Control
 signal pressed
 
 ## The hand holds still this long to click.
-const DWELL_SECONDS := 1.5
+const DWELL_SECONDS := 3.0
 
 ## The hovered button grows by this many pixels on each side.
 const _GROW := 2.0
@@ -90,13 +90,17 @@ func press() -> void:
     pressed.emit()
 
 
-## Whether the bird or the mouse is over the button.
+## Whether a bird or the mouse is over the button.
 func hovered() -> bool:
     return _hand_inside() or (_mouse_inside and not HandCursor.by_hand)
 
 
 func _hand_inside() -> bool:
-    return HandCursor.by_hand and get_global_rect().has_point(HandCursor.at)
+    var rect := get_global_rect()
+    for point in HandCursor.points():
+        if rect.has_point(point):
+            return true
+    return false
 
 
 func _draw() -> void:

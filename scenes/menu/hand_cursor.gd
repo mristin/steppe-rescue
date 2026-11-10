@@ -1,14 +1,15 @@
 class_name HandCursor
 extends Control
 
-## Move the cursor of the menus, a bird, with the player's raised hand (see
+## Move the cursors of the menus, birds, with the players' raised hands (see
 ## section 5 of DESIGN.md, "Menus: the hand cursor"), or with the mouse when
 ## no hand is seen. The hands come from the hand detector (YOLOX), which runs
 ## on every frame while the bird shows; the pose only tells where the
 ## shoulders are, below which a hand rests and does not count.
 ##
-## The [DwellButton]s ask where the bird is with [member at] and whether a
-## hand moves it with [member by_hand]: a hand clicks by holding the bird still
+## Every raised hand has its own bird, so that a child sees at once which bird
+## is hers, and two riders can point together. The [DwellButton]s ask where
+## the birds are with [method points]: a hand clicks by holding its bird still
 ## over a button, the mouse by clicking.
 ##
 ## The bird of a hand is calm and sticky, since the hands of children are hard
@@ -64,11 +65,21 @@ const _THRESHOLD := 0.5
 const _LEFT_SHOULDER := 5
 const _RIGHT_SHOULDER := 6
 
-## Where the bird is, in the logical pixels of the screen.
+## A hand is followed this long after the detector lost it, in seconds, so
+## that a missed frame does not make its bird vanish.
+const _GRACE_SECONDS := 0.3
+
+## A hand moving further than this in one frame, normalized, is another hand.
+const _SAME_HAND := 0.25
+
+## Where the first bird is (or the mouse), in the logical pixels of the screen.
 static var at := Vector2(-100, -100)
 
-## Whether a hand moves the bird now (else the mouse does).
+## Whether hands move the birds now (else the mouse moves the cursor).
 static var by_hand := false
+
+## Where all the birds are, in the logical pixels of the screen.
+static var birds: Array[Vector2] = []
 
 ## Whether the tests hold the bird (at [member at], by hand), so that neither
 ## the camera nor the mouse moves it.
@@ -78,11 +89,18 @@ static var held := false
 static var reach := _REACH
 
 var _service: Node = null
-var _stuck: DwellButton = null
-var _followed := Vector2(-1, -1)
-var _smooth_x := OneEuro.new()
-var _smooth_y := OneEuro.new()
+var _hands: Array[Hand] = []
 var _mirror: Control = null
+
+
+## Where the hands point: all the birds, or the held bird of the tests.
+static func points() -> Array[Vector2]:
+    var result: Array[Vector2] = []
+    if held:
+        if by_hand:
+            result.append(at)
+        return result
+    return birds if by_hand else result
 
 
 func _ready() -> void:
@@ -102,38 +120,41 @@ func _process(delta: float) -> void:
     if held:
         queue_redraw()
         return
-    var hand := _hand()
-    if hand.x >= 0.0:
-        var target := (hand - reach.position) / reach.size * get_viewport_rect().size
-        target = target.clamp(Vector2.ZERO, get_viewport_rect().size)
-        at = target if not by_hand else _glide(target, delta)
-        by_hand = true
-    else:
-        by_hand = false
-        at = get_viewport().get_mouse_position()
+    _follow_hands()
+    var screen := get_viewport_rect().size
+    birds.clear()
+    for hand in _hands:
+        var target := (hand.smoothed - reach.position) / reach.size * screen
+        target = target.clamp(Vector2.ZERO, screen)
+        hand.bird = target if hand.fresh else _glide(hand, target, delta)
+        hand.fresh = false
+        birds.append(hand.bird)
+    by_hand = not birds.is_empty()
+    at = birds[0] if by_hand else get_viewport().get_mouse_position()
     queue_redraw()
 
 
-## The bird glides towards the hand, and sticks to the button under it.
-func _glide(target: Vector2, delta: float) -> Vector2:
+## The bird glides towards its hand, and sticks to the button under it.
+func _glide(hand: Hand, target: Vector2, delta: float) -> Vector2:
     var glide := 1.0 - exp(-delta / _GLIDE_SECONDS)
+    var stuck := hand.stuck
     var button: DwellButton = null
     if (
-        is_instance_valid(_stuck)
-        and _stuck.is_visible_in_tree()
-        and _stuck.get_global_rect().grow(_margin_of(_stuck)).has_point(target)
+        is_instance_valid(stuck)
+        and stuck.is_visible_in_tree()
+        and stuck.get_global_rect().grow(_margin_of(stuck)).has_point(target)
     ):
-        button = _stuck
+        button = stuck
     if button == null:
         button = _button_at(target)
-    _stuck = button
+    hand.stuck = button
     if button == null:
-        return at.lerp(target, glide)
+        return hand.bird.lerp(target, glide)
     var middle := button.get_global_rect().get_center()
     var wanted := middle + (target - middle) * STICKY_SHARE
     if not button.get_global_rect().has_point(wanted):
         wanted = middle
-    return at.lerp(wanted, glide)
+    return hand.bird.lerp(wanted, glide)
 
 
 func _margin_of(button: DwellButton) -> float:
@@ -191,6 +212,7 @@ func _draw_mirror() -> void:
 
 
 func _exit_tree() -> void:
+    birds.clear()
     if _service != null:
         _service.SetWantHands(false)
 
@@ -217,41 +239,51 @@ func _follow_shoulders(points: Array, scores: Array) -> void:
     reach.size.y = lerpf(reach.size.y, height, step)
 
 
-## The raised hand in the mirrored camera picture, normalized and smoothed;
-## negative if no hand is raised. Of the hands which the detector found, the
-## ones resting below the shoulders do not count; we keep to the hand we
-## followed, else take the highest.
-func _hand() -> Vector2:
+## Follow the raised hands in the mirrored camera picture, normalized and
+## smoothed. Each found hand continues the nearest hand followed before, if
+## close; the others start new birds. The hands resting below the shoulders do
+## not count.
+func _follow_hands() -> void:
     if _service == null or not _service.IsRunning():
-        return Vector2(-1, -1)
-    var points: Array = _service.GetKeypoints()
+        _hands.clear()
+        return
+    var keypoints: Array = _service.GetKeypoints()
     var scores: Array = _service.GetKeypointScores()
-    if points.size() > _RIGHT_SHOULDER:
-        _follow_shoulders(points, scores)
+    if keypoints.size() > _RIGHT_SHOULDER:
+        _follow_shoulders(keypoints, scores)
     var lowest := reach.end.y + _BELOW_REACH
-    var best := Vector2(-1, -1)
-    var followed := _followed if _followed.x >= 0.0 else Vector2(-1, -1)
-    for hand in _service.GetHands():
-        if hand.y > lowest:
-            continue
-        if best.x < 0.0:
-            best = hand
-        elif followed.x >= 0.0:
-            if hand.distance_to(followed) < best.distance_to(followed):
-                best = hand
-        elif hand.y < best.y:
-            best = hand
-    if best.x < 0.0:
-        _followed = Vector2(-1, -1)
-        return best
-    # NOTE (mristin):
-    # A jump to another hand far away starts the smoothing afresh.
-    if followed.x < 0.0 or best.distance_to(followed) > 0.25:
-        _smooth_x.reset(best.x)
-        _smooth_y.reset(best.y)
-    _followed = best
     var now := Time.get_ticks_msec() / 1000.0
-    return Vector2(_smooth_x.filter(best.x, now), _smooth_y.filter(best.y, now))
+    var found: Array[Vector2] = []
+    for hand in _service.GetHands():
+        if hand.y <= lowest:
+            found.append(hand)
+    # NOTE (mristin):
+    # Match greedily, the closest pairs first; there are only a few hands.
+    var pairs := []
+    for h in _hands.size():
+        for f in found.size():
+            var distance := _hands[h].raw.distance_to(found[f])
+            if distance <= _SAME_HAND:
+                pairs.append([distance, h, f])
+    pairs.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+    var taken_hands := {}
+    var taken_found := {}
+    for pair in pairs:
+        if taken_hands.has(pair[1]) or taken_found.has(pair[2]):
+            continue
+        taken_hands[pair[1]] = true
+        taken_found[pair[2]] = true
+        _hands[pair[1]].see(found[pair[2]], now)
+    for f in found.size():
+        if not taken_found.has(f):
+            var born := Hand.new()
+            born.see(found[f], now)
+            _hands.append(born)
+    var kept: Array[Hand] = []
+    for hand in _hands:
+        if now - hand.seen_at <= _GRACE_SECONDS:
+            kept.append(hand)
+    _hands = kept
 
 
 func _draw() -> void:
@@ -260,7 +292,30 @@ func _draw() -> void:
     if not by_hand:
         return
     var bird := Icons.bird(BIRD_SCALE)
-    draw_texture(bird, (at - bird.get_size() * 0.5).round())
+    for point in birds:
+        draw_texture(bird, (point - bird.get_size() * 0.5).round())
+
+
+## A raised hand which we follow, and its bird.
+class Hand:
+    extends RefCounted
+    ## Where the detector saw it last, normalized.
+    var raw := Vector2.ZERO
+    ## Where it is, smoothed, normalized.
+    var smoothed := Vector2.ZERO
+    var seen_at := 0.0
+    ## Where its bird is, in the logical pixels of the screen.
+    var bird := Vector2.ZERO
+    ## Whether the bird just appeared (it jumps to the hand, not glides).
+    var fresh := true
+    var stuck: DwellButton = null
+    var _x := OneEuro.new()
+    var _y := OneEuro.new()
+
+    func see(point: Vector2, now: float) -> void:
+        raw = point
+        seen_at = now
+        smoothed = Vector2(_x.filter(point.x, now), _y.filter(point.y, now))
 
 
 ## Smooth a noisy signal with little lag: the faster it moves, the less we

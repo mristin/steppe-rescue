@@ -420,7 +420,7 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
   * herds of saigas (*ақбөкен*) and roe deer, hares (which run in zigzags), corsac foxes and swarms of locusts (*саранша*) graze and run or hop away from the rider who comes near, from farther the faster she rides;
   * the marmots stand by their burrows, dive in as she passes and peek out again after she has left;
   * the larks fly up from the grass and land farther on;
-  * the golden eagles and the saker falcons circle high above with their shadows on the ground, and a flock of swallows swoops around the horse.
+  * the golden eagles (150 to 220 px up) and the saker falcons (100 to 160 px) circle high above, and two small flocks of swallows (25 to 60 px) dart around the steppe on their own, in wide random arcs; each bird rises and sinks slowly, and the higher it flies, the farther and fainter its shadow on the ground, and the bigger the bird (nearer to us, looking from above).
   * They are drawn from above in 16 headings, and only those on the screen.
 
 **Built since, too:**

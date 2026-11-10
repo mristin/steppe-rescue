@@ -7,11 +7,13 @@ extends Node2D
 ## away from the rider, the faster she rides the sooner; the marmots stand by
 ## their burrows and dive in as she passes; the larks fly up from the grass
 ## and land farther on; the eagles (бүркіт) and the falcons circle high above,
-## and the swallows swoop around the horse to catch the insects it stirs up.
+## and the swallows dart around the steppe in wide, random arcs, lower.
 ##
 ## The creatures on the ground are drawn by this node, under the rider; the
 ## birds in the air by its sky (see [method sky]), over her, with their
-## shadows on the ground. They are paintings seen from above
+## shadows on the ground: the higher a bird flies, the farther its shadow lies
+## from it, the fainter the shadow, and the bigger the bird (it is nearer to
+## us, who look from above). They are paintings seen from above
 ## (assets/pictures/top_down/wild/), turned smoothly to their heading; the
 ## locusts are a few pixels.
 
@@ -45,7 +47,7 @@ const _POPULATION := [
     ["lark", 8, 1, 0.0],
     ["eagle", 2, 1, 0.0],
     ["falcon", 1, 1, 0.0],
-    ["swallow", 1, 5, 0.0],
+    ["swallow", 2, 3, 60.0],
 ]
 
 ## A fleeing creature calms down this many times its fleeing distance away.
@@ -59,6 +61,20 @@ const _FLIGHT_SECONDS := 2.5
 
 ## A locust hops this long, in seconds.
 const _HOP_SECONDS := 0.45
+
+## How high each bird flies, in pixels: [lowest, highest]; it rises and sinks
+## slowly between them.
+const _ALTITUDES := {
+    "eagle": [150.0, 220.0],
+    "falcon": [100.0, 160.0],
+    "swallow": [25.0, 60.0],
+}
+
+## A swallow turns this fast, in radians per second.
+const _SWALLOW_TURN := 3.0
+
+## A swallow flies to random points this far away, in pixels.
+const _SWALLOW_REACH := 260.0
 
 ## The steppe keeps the creatures this far from its edge, in pixels.
 const _MARGIN := 16.0
@@ -121,10 +137,6 @@ func populate(
         var groups := maxi(1, roundi(entry[1] * area_factor))
         for g in range(groups):
             var center := _free_spot(keep_away)
-            # NOTE (mristin):
-            # The swallows follow the rider from the start.
-            if entry[0] == "swallow" and not keep_away.is_empty():
-                center = keep_away[0]
             for i in range(entry[2]):
                 var creature := Creature.new()
                 creature.kind = entry[0]
@@ -134,10 +146,8 @@ func populate(
                 creature.target = creature.position
                 creature.heading = _rng.randf() * TAU
                 creature.phase = _rng.randf() * TAU
-                if creature.kind in ["eagle", "falcon"]:
-                    creature.altitude = 60.0 if creature.kind == "eagle" else 40.0
-                elif creature.kind == "swallow":
-                    creature.altitude = 12.0
+                if _ALTITUDES.has(creature.kind):
+                    creature.altitude = _altitude(creature)
                 creatures.append(creature)
 
 
@@ -151,7 +161,7 @@ func update(delta: float, rider_at: Vector2, gait: int) -> void:
             "eagle", "falcon":
                 _circle(creature, delta)
             "swallow":
-                _swoop(creature, delta, rider_at)
+                _swoop(creature, delta)
             "marmot":
                 _burrow(creature, delta, rider_at, alarm)
             "lark":
@@ -262,8 +272,17 @@ func _locust(creature: Creature, delta: float, rider_at: Vector2, alarm: float) 
         )
 
 
+## How high the bird flies now: between its lowest and its highest, rising and
+## sinking slowly, each bird in its own rhythm.
+func _altitude(creature: Creature) -> float:
+    var span: Array = _ALTITUDES[creature.kind]
+    var wave := 0.5 + 0.5 * sin(_time * 0.25 + creature.phase * 3.0)
+    return lerpf(span[0], span[1], wave)
+
+
 ## An eagle or a falcon circles slowly high over its home, in wide circles.
 func _circle(creature: Creature, delta: float) -> void:
+    creature.altitude = _altitude(creature)
     var radius := 140.0 if creature.kind == "eagle" else 90.0
     var speed: float = KINDS[creature.kind]["speed"]
     creature.phase += speed / radius * delta
@@ -273,16 +292,24 @@ func _circle(creature: Creature, delta: float) -> void:
     creature.stride += delta
 
 
-## A swallow swoops in loops around the rider, low over the grass.
-func _swoop(creature: Creature, delta: float, rider_at: Vector2) -> void:
-    creature.phase += delta * 2.4
-    var loop := Vector2(cos(creature.phase), sin(creature.phase * 1.7)) * Vector2(70, 50)
-    var goal := rider_at + loop.rotated(creature.home.x)
-    var towards := goal - creature.position
-    var velocity := towards.limit_length(KINDS["swallow"]["speed"] * delta * 1.6)
-    if velocity.length() > 0.01:
-        creature.heading = Vector2.UP.angle_to(velocity)
-    creature.position += velocity
+## A swallow darts around the steppe on its own: it flies at its speed towards
+## a random point, turning in wide arcs, and picks the next one when it is
+## near; the rider does not bother it.
+func _swoop(creature: Creature, delta: float) -> void:
+    creature.altitude = _altitude(creature)
+    if creature.position.distance_to(creature.target) < 40.0 or creature.target == creature.home:
+        var angle := _rng.randf() * TAU
+        var reach := _rng.randf_range(0.4, 1.0) * _SWALLOW_REACH
+        creature.target = _bounds_clamp(creature.position + Vector2.from_angle(angle) * reach)
+    var wanted := Vector2.UP.angle_to(creature.target - creature.position)
+    var turn := wrapf(wanted - creature.heading, -PI, PI)
+    creature.heading += clampf(turn, -_SWALLOW_TURN * delta, _SWALLOW_TURN * delta)
+    var velocity := Vector2.UP.rotated(creature.heading) * KINDS["swallow"]["speed"] * delta
+    # NOTE (mristin):
+    # A swallow flies over everything, but stays over the steppe.
+    creature.position = _bounds_clamp(creature.position + velocity)
+    if not _bounds.has_point(creature.position + velocity * 10.0):
+        creature.target = _bounds.get_center()
     creature.stride += delta
 
 
@@ -354,7 +381,7 @@ func _draw() -> void:
 
 
 func _draw_sky() -> void:
-    var seen := _seen()
+    var seen := _seen().grow(_ALTITUDES["eagle"][1] * 0.7)
     for creature in creatures:
         if creature.on_ground() or not seen.has_point(creature.position):
             continue
@@ -367,23 +394,31 @@ func _draw_sky() -> void:
             _sky.draw_rect(Rect2(at + Vector2(-1 + frame * 2, -1), Vector2(2, 1)), Palette.FELT)
             continue
         # NOTE (mristin):
-        # The shadow on the ground, under the bird which flies higher.
-        var shadow := Color(0, 0, 0, 0.25)
+        # The shadow on the ground, under the bird which flies higher: the
+        # higher, the fainter; the bird itself is nearer to us, and bigger.
+        var shadow := Color(0, 0, 0, clampf(0.3 - creature.altitude / 1000.0, 0.08, 0.3))
+        var nearer := 1.0 + creature.altitude / 450.0
         _paint(_sky, creature.kind, frame, creature.position, creature.heading, shadow)
-        _paint(_sky, creature.kind, frame, creature.position + lift, creature.heading)
+        _paint(_sky, creature.kind, frame, creature.position + lift, creature.heading, Color.WHITE, nearer)
 
 
 ## Draw the painting of the kind in the frame on the item, its middle at the
 ## point, turned to the heading.
 func _paint(
-    item: CanvasItem, kind: String, frame: int, at: Vector2, heading: float, tint := Color.WHITE
+    item: CanvasItem,
+    kind: String,
+    frame: int,
+    at: Vector2,
+    heading: float,
+    tint := Color.WHITE,
+    scale := 1.0
 ) -> void:
     var key := "%s_%d" % [kind, frame]
     if not _paintings.has(key):
         _paintings[key] = load("res://assets/pictures/top_down/wild/%s.png" % key)
     var picture: Texture2D = _paintings[key]
     var shown := picture.get_size() * 0.5
-    item.draw_set_transform(at, heading, Vector2.ONE)
+    item.draw_set_transform(at, heading, Vector2.ONE * scale)
     item.draw_texture_rect(picture, Rect2(-shown * 0.5, shown), false, tint)
     item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 

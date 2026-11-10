@@ -3,8 +3,8 @@ extends SceneTree
 ## hare, the saiga and the fox run away from the rider who comes near and
 ## stay in the steppe; the marmot dives into its burrow and peeks out again
 ## after she left; the lark flies up and lands farther on; the locusts hop
-## away; the eagle circles over its home; and the swallows swoop around the
-## rider.
+## away; the eagle circles over its home, high; and the swallows dart around
+## the steppe on their own, lower.
 
 var _failures: Array[String] = []
 
@@ -61,13 +61,20 @@ func _run() -> void:
         _check(bounds.has_point(runner.position), "the %s stays in the steppe" % kind)
     _check(eagle.position.distance_to(eagle_from) > 5.0, "the eagle circles")
     _check(eagle.position.distance_to(eagle.home) < 150.0, "the eagle circles over its home")
+    _check(eagle.altitude >= 150.0, "the eagle flies high: %.0f px" % eagle.altitude)
+    var swallows_from: Array[Vector2] = []
     for swallow in wild.of_kind("swallow"):
-        _check(
-            swallow.position.distance_to(level.rider().position) < 250.0,
-            "the swallows swoop around the rider"
-        )
+        swallows_from.append(swallow.position)
+        _check(swallow.altitude >= 25.0, "the swallow flies: %.0f px" % swallow.altitude)
+        _check(swallow.altitude < eagle.altitude, "the swallow flies lower than the eagle")
 
     await _wait(3.0)
+    var swallows := wild.of_kind("swallow")
+    for i in range(swallows.size()):
+        _check(
+            swallows[i].position.distance_to(swallows_from[i]) > 50.0, "the swallow darts around"
+        )
+        _check(bounds.has_point(swallows[i].position), "the swallow stays over the steppe")
     _check(lark.altitude == 0.0, "the lark lands again")
     _check(lark.position.distance_to(rider_at) > 60.0, "the lark lands farther on")
 

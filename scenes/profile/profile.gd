@@ -50,6 +50,10 @@ var finery: Dictionary = {}
 ## The pieces of the finery which she won but took off in the wardrobe.
 var taken_off: Array = []
 
+## The ids of the levels whose gift she chose: a level gives its gift once, so
+## that riding it again is no mine of finery.
+var rewarded: Array = []
+
 
 func _ready() -> void:
     var settings := ConfigFile.new()
@@ -119,6 +123,7 @@ func _load(i: int) -> void:
     has_seen_instruction = settings.get_value(progress, "instruction_seen", false)
     finery = Finery.complete(settings.get_value(progress, "finery", {}))
     taken_off = settings.get_value(progress, "taken_off", [])
+    rewarded = settings.get_value(progress, "rewarded", [])
 
 
 func _section(i: int) -> String:
@@ -197,6 +202,19 @@ func win(piece: String) -> void:
     finery[piece] = mini(int(finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
     taken_off.erase(piece)
     _store(_progress(index), {"finery": finery, "taken_off": taken_off})
+
+
+## Whether she chose the gift of the level already.
+func was_rewarded(level_id: String) -> bool:
+    return level_id in rewarded
+
+
+## Remember that she chose the gift of the level.
+func reward(level_id: String) -> void:
+    if level_id == "" or level_id in rewarded:
+        return
+    rewarded.append(level_id)
+    _store(_progress(index), {"rewarded": rewarded})
 
 
 ## Whether the player finished the level.

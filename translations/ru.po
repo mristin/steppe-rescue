@@ -207,6 +207,11 @@ msgstr "Тулпар"
 msgid "Press Esc again to quit."
 msgstr "Нажми Esc ещё раз, чтобы выйти."
 
+#. {rider} is the rider's name; she rode a level again, whose gift she won before.
+#: scenes/reward/reward.gd
+msgid "Well done, {rider}! This ride gave its gift already."
+msgstr ""
+
 #: scenes/reward/reward.gd
 #, fuzzy
 msgid "{rider}, you have won all the finery!"

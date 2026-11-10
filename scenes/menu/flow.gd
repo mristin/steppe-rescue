@@ -41,10 +41,14 @@ static var room_asked := false
 ## The stars won in the level just finished, for the reward.
 static var reward_stars := 0
 
+## The id of the level just finished, for the reward; empty in the tests.
+static var reward_level := ""
+
 
 ## Go on from the end of a level with the stars to the reward.
-static func reward(tree: SceneTree, stars: int) -> void:
+static func reward(tree: SceneTree, stars: int, level_id := "") -> void:
     reward_stars = stars
+    reward_level = level_id
     open(tree, REWARD)
 
 

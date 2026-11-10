@@ -46,6 +46,7 @@ func _run() -> void:
     _check(offer[0] == ["mane", 3], "three stars offer the most splendid step first: %s" % [offer])
 
     Flow.reward_stars = 3
+    Flow.reward_level = "01_the_lamb_by_the_spring"
     change_scene_to_file(Flow.REWARD)
     await _frames(3)
     _check(current_scene is Reward, "the reward shows")
@@ -67,6 +68,14 @@ func _run() -> void:
     var saved := ConfigFile.new()
     saved.load(path)
     _check(saved.get_value("progress", "finery", {}).get(piece, 0) == 1, "the finery is saved")
+
+    # NOTE (mristin):
+    # Riding the level again gives no gift, so that it is no mine of finery.
+    change_scene_to_file(Flow.REWARD)
+    await _frames(3)
+    _check((current_scene as Reward).replayed, "the level gave its gift already")
+    _check((current_scene as Reward).cards().is_empty(), "a level ridden again gives no gift")
+    Flow.reward_level = ""
 
     for each in Finery.PIECES:
         profile.finery[each] = Finery.PIECES[each]["steps"]

@@ -389,7 +389,7 @@ func level_id() -> String:
 
 ## Go on to the reward after the end of the level.
 func _leave() -> void:
-    Flow.reward(get_tree(), stars())
+    Flow.reward(get_tree(), stars(), level_id())
 
 
 func _update_hud(speed: float) -> void:

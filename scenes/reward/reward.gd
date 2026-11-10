@@ -7,7 +7,8 @@ extends Control
 ## on big cards as a painting of the piece, with its name and its Kazakh
 ## word. The choice rings with a sparkle and a tune; Go on leads to the level
 ## select, and Wardrobe to the choice of what to wear. More stars offer the
-## more splendid pieces (see [method Finery.offer]).
+## more splendid pieces (see [method Finery.offer]). A level gives its gift
+## only once: riding it again shows the home without cards.
 ##
 ## Keys: 1, 2 and 3 choose a card, Enter goes on, Escape goes on, too.
 
@@ -70,6 +71,9 @@ var chosen := ""
 ## The stars won in the level.
 var stars := 0
 
+## Whether the level gave its gift before.
+var replayed := false
+
 var _cards: Array[DwellButton] = []
 var _subtitles: Array[Label] = []
 var _title: Label
@@ -85,7 +89,8 @@ func _ready() -> void:
     _rng.randomize()
     var profile := get_node("/root/Profile")
     stars = Flow.reward_stars
-    offered = Finery.offer(profile.finery, stars, _rng)
+    replayed = profile.was_rewarded(Flow.reward_level)
+    offered = [] if replayed else Finery.offer(profile.finery, stars, _rng)
 
     _title = Label.new()
     _title.position = Vector2(420, 34)
@@ -168,6 +173,7 @@ func choose(index: int) -> void:
         return
     chosen = offered[index][0]
     get_node("/root/Profile").win(chosen)
+    get_node("/root/Profile").reward(Flow.reward_level)
     for i in range(_cards.size()):
         _cards[i].visible = i == index
         _subtitles[i].visible = i == index
@@ -245,7 +251,12 @@ static func preview(piece: String, at: int, _looks := {}) -> ImageTexture:
 
 func _update_texts() -> void:
     var rider_name: String = get_node("/root/Profile").rider_name()
-    if offered.is_empty():
+    if replayed:
+        # TRANSLATORS: {rider} is the rider's name; she rode a level again, whose gift she won before.
+        _title.text = tr("Well done, {rider}! This ride gave its gift already.").format(
+            {"rider": rider_name}
+        )
+    elif offered.is_empty():
         _title.text = tr("{rider}, you have won all the finery!").format({"rider": rider_name})
     elif chosen == "":
         # TRANSLATORS: {rider} is the rider's name; she chooses one of three gifts.

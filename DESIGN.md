@@ -135,7 +135,7 @@ About ten levels, each larger than the last. A level is data (the map, the landm
 
 ### Stars
 
-Each level gives one to three stars, for being reasonably fast. There is never a "game over": the level only ends when all the animals are home. Stars only change which rewards are offered (section 8), and any level can be replayed.
+Each level gives one to three stars, for being reasonably fast. There is never a "game over": the level only ends when all the animals are home. Stars only change which rewards are offered (section 8), and any level can be replayed, for better stars, but a level gives its gift only once, so that riding it again is no mine of finery.
 
 ## 5. Controls: squats and reaching across
 

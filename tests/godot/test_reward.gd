@@ -103,8 +103,10 @@ func _run() -> void:
     await _frames(3)
     var wardrobe := current_scene as Wardrobe
     _check(wardrobe.cards().size() == 2, "the wardrobe shows the pieces she won")
+    _check(wardrobe.in_worn_panel("earrings"), "what she wears is in the panel of the worn")
     wardrobe.toggle("earrings")
     _check(not profile.wears("earrings"), "she takes the earrings off")
+    _check(not wardrobe.in_worn_panel("earrings"), "and they move to the other panel")
     _check(not profile.dressed()["finery"].has("earrings"), "and does not wear them")
     _check(profile.dressed()["finery"].has("saddle"), "but still the saddle")
     saved = ConfigFile.new()

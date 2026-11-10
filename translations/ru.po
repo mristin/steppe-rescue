@@ -729,8 +729,7 @@ msgid "Rider"
 msgstr "Наездница"
 
 #. The button which opens the wardrobe, to choose what to wear.
-#. The title of the wardrobe; the chosen pieces are golden.
-#: scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#: scenes/settings/settings.gd
 #, fuzzy
 msgid "Choose what to wear"
 msgstr "Выбери, что надеть"
@@ -788,6 +787,16 @@ msgstr "Не хватает моделей. Играй с клавиатуры."
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Ошибка камеры. Играй с клавиатуры."
+
+#. The wardrobe: the title of the panel of the finery which she wears.
+#: scenes/wardrobe/wardrobe.gd
+msgid "Wearing"
+msgstr ""
+
+#. The wardrobe: the title of the panel of the finery which she won, but took off.
+#: scenes/wardrobe/wardrobe.gd
+msgid "Not wearing"
+msgstr ""
 
 #. In the wardrobe, before the rider won any finery.
 #: scenes/wardrobe/wardrobe.gd

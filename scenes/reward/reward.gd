@@ -197,9 +197,12 @@ func cards() -> Array[DwellButton]:
 
 ## Draw the home on the item: the yurt at sunset, with the decorations of the
 ## home which the rider wears (see [Finery]), and the painted rider standing
-## in front of her painted horse.
-static func draw_home(item: CanvasItem, profile: Node) -> void:
+## in front of her painted horse; with [param spotlight], the home is dimmed
+## and the rider and her horse stand in a golden light (the wardrobe).
+static func draw_home(item: CanvasItem, profile: Node, spotlight := false) -> void:
     item.draw_texture(Painting.texture(HOME), Vector2.ZERO)
+    if spotlight:
+        _draw_spotlight(item)
     for piece in _DECORATIONS:
         if profile.wears(piece) and Finery.has_picture(piece, 1):
             var at: Rect2 = _DECORATIONS[piece]
@@ -219,6 +222,24 @@ static func draw_home(item: CanvasItem, profile: Node) -> void:
     var rider_rect := Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown)
     item.draw_texture_rect(rider, rider_rect, false)
     dress(item, rider_rect, looks, "rider")
+
+
+## Dim the home, and light the place where the rider and her horse stand.
+static func _draw_spotlight(item: CanvasItem) -> void:
+    item.draw_rect(Rect2(0, 0, 960, 540), Color(Palette.NIGHT, 0.55))
+    var middle := Vector2(200, 410)
+    for i in range(10):
+        var t := float(i) / 10.0
+        var radius := lerpf(240.0, 60.0, t)
+        item.draw_set_transform(middle, 0.0, Vector2(1.0, 0.8))
+        item.draw_circle(Vector2.ZERO, radius, Color(Palette.GOLD, 0.07 + 0.04 * t))
+    item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+    # NOTE (mristin):
+    # A golden ring on the ground, where they stand.
+    item.draw_set_transform(Vector2(185, 506), 0.0, Vector2(1.0, 0.22))
+    item.draw_circle(Vector2.ZERO, 150.0, Color(Palette.GOLD, 0.35))
+    item.draw_arc(Vector2.ZERO, 150.0, 0.0, TAU, 64, Palette.GOLD, 6.0, true)
+    item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
 ## Lay the painted finery which she wears over the painted horse (or rider)

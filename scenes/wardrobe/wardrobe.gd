@@ -2,23 +2,31 @@ class_name Wardrobe
 extends Control
 
 ## Let the rider choose which pieces of the finery she won to wear (see
-## section 8 of DESIGN.md), at home, for free and at any time: a card for each
-## piece she won, golden while she wears it; pressing it takes it off or puts
-## it on. The rider stands at home, and the decorations of the home show as
-## she chooses them (see [method Reward.draw_home]); what she wears also shows
-## over her face in the camera picture.
+## section 8 of DESIGN.md), at home, for free and at any time. The rider and
+## her horse stand in a golden light on the left, dressed as she chooses.
+## On the right, two panels: on top what she wears, below what she does not;
+## pressing a card moves its piece to the other panel. The decorations of the
+## home show at home as she chooses them (see [method Reward.draw_home]);
+## what she wears also shows over her face in the camera picture.
 ##
 ## Keys: Escape goes back.
 
-## The cards stand in a wide strip along the top, over the sky, so that the
-## home below (the yurt with its decorations, the rider and her horse) shows.
-const _PANEL := Rect2(16, 12, 880, 232)
-const _CARD := Vector2(88, 80)
-const _COLUMNS := 9
+## The panel of what she wears, and the panel of what she does not.
+const _WORN := Rect2(392, 8, 552, 250)
+const _NOT_WORN := Rect2(392, 264, 552, 250)
+## The cards are big while a panel holds at most two rows of them, and
+## smaller when it needs three.
+const _CARD := Vector2(96, 88)
+const _SMALL_CARD := Vector2(66, 60)
+const _GAP := 4.0
+const _COLUMNS := 5
+const _SMALL_COLUMNS := 7
 
 var _cards: Array[DwellButton] = []
 var _pieces: Array[String] = []
-var _title: Label
+var _worn_title: Label
+var _not_worn_title: Label
+var _empty: Label
 var _back: DwellButton
 
 
@@ -27,14 +35,9 @@ func _ready() -> void:
     texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
     var profile := get_node("/root/Profile")
 
-    _title = Label.new()
-    _title.position = _PANEL.position + Vector2(16, 18)
-    _title.size = Vector2(_PANEL.size.x - 32, 24)
-    _title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    _title.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    _title.add_theme_color_override("font_color", Palette.CRIMSON_DARK)
-    _title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
-    add_child(_title)
+    _worn_title = _label(_WORN)
+    _not_worn_title = _label(_NOT_WORN)
+    _empty = _label(Rect2(_WORN.position + Vector2(0, 90), _WORN.size))
 
     for piece in Finery.PIECES:
         if not profile.finery.has(piece):
@@ -42,34 +45,69 @@ func _ready() -> void:
         var at: int = profile.finery[piece]
         if not Finery.has_picture(piece, at):
             continue
-        var i := _pieces.size()
         var card := DwellButton.new()
-        card.position = (
-            _PANEL.position
-            + Vector2(20 + (i % _COLUMNS) * (_CARD.x + 6), 50 + (i / _COLUMNS) * (_CARD.y + 6))
-        )
-        card.size = _CARD
-        card.picture = Painting.fitted(Finery.PICTURES % [piece, at], Vector2(64, 60))
-        card.selected = profile.wears(piece)
         card.pressed.connect(func() -> void: toggle(piece))
         add_child(card)
         _cards.append(card)
         _pieces.append(piece)
 
     _back = DwellButton.new()
-    _back.position = Vector2(776, 470)
+    _back.position = Vector2(16, 12)
     _back.size = Vector2(168, 54)
     _back.font_size = 32
     _back.primary = true
     _back.pressed.connect(func() -> void: Flow.cancel(get_tree()))
     add_child(_back)
 
+    _arrange()
     add_child(HandCursor.new())
     _update_texts()
 
 
+func _label(panel: Rect2) -> Label:
+    var label := Label.new()
+    label.position = panel.position + Vector2(16, 12)
+    label.size = Vector2(panel.size.x - 32, 24)
+    label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    label.add_theme_font_size_override("font_size", 24)
+    label.add_theme_color_override("font_color", Palette.CRIMSON_DARK)
+    label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
+    add_child(label)
+    return label
+
+
+## Put each card into the panel where its piece is: worn or not.
+func _arrange() -> void:
+    var profile := get_node("/root/Profile")
+    var totals := {true: 0, false: 0}
+    for piece in _pieces:
+        totals[profile.wears(piece)] += 1
+    var counts := {true: 0, false: 0}
+    for i in range(_cards.size()):
+        var worn: bool = profile.wears(_pieces[i])
+        var panel := _WORN if worn else _NOT_WORN
+        var small: bool = totals[worn] > 2 * _COLUMNS
+        var card_size := _SMALL_CARD if small else _CARD
+        var columns := _SMALL_COLUMNS if small else _COLUMNS
+        var n: int = counts[worn]
+        counts[worn] = n + 1
+        _cards[i].size = card_size
+        _cards[i].position = (
+            panel.position
+            + Vector2(
+                18 + (n % columns) * (card_size.x + _GAP), 46 + (n / columns) * (card_size.y + _GAP)
+            )
+        )
+        var at: int = profile.finery[_pieces[i]]
+        _cards[i].picture = Painting.fitted(
+            Finery.PICTURES % [_pieces[i], at], card_size - Vector2(16, 14)
+        )
+        _cards[i].selected = worn
+
+
 func _notification(what: int) -> void:
-    if what == NOTIFICATION_TRANSLATION_CHANGED and _title != null:
+    if what == NOTIFICATION_TRANSLATION_CHANGED and _worn_title != null:
         _update_texts()
 
 
@@ -83,9 +121,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func toggle(piece: String) -> void:
     var profile := get_node("/root/Profile")
     profile.wear(piece, not profile.wears(piece))
-    var i := _pieces.find(piece)
-    if i >= 0:
-        _cards[i].selected = profile.wears(piece)
+    _arrange()
     queue_redraw()
 
 
@@ -99,16 +135,24 @@ func pieces() -> Array[String]:
     return _pieces
 
 
+## Whether the piece's card stands in the panel of what she wears, for the
+## tests.
+func in_worn_panel(piece: String) -> bool:
+    var i := _pieces.find(piece)
+    return i >= 0 and Rect2(_WORN).has_point(_cards[i].position)
+
+
 func _update_texts() -> void:
-    if _pieces.is_empty():
-        # TRANSLATORS: In the wardrobe, before the rider won any finery.
-        _title.text = tr("Bring the animals home to win finery!")
-    else:
-        # TRANSLATORS: The title of the wardrobe; the chosen pieces are golden.
-        _title.text = tr("Choose what to wear")
+    # TRANSLATORS: The wardrobe: the title of the panel of the finery which she wears.
+    _worn_title.text = tr("Wearing")
+    # TRANSLATORS: The wardrobe: the title of the panel of the finery which she won, but took off.
+    _not_worn_title.text = tr("Not wearing")
+    # TRANSLATORS: In the wardrobe, before the rider won any finery.
+    _empty.text = tr("Bring the animals home to win finery!") if _pieces.is_empty() else ""
     _back.text = tr("Back")
 
 
 func _draw() -> void:
-    Reward.draw_home(self, get_node("/root/Profile"))
-    draw_texture(Ornaments.panel(_PANEL.size), _PANEL.position)
+    Reward.draw_home(self, get_node("/root/Profile"), true)
+    draw_texture(Ornaments.panel(_WORN.size), _WORN.position)
+    draw_texture(Ornaments.panel(_NOT_WORN.size), _NOT_WORN.position)

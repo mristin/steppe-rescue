@@ -1,9 +1,10 @@
 class_name CameraPanel
 extends Control
 
-## Show the player in the camera picture, mirrored, dressed as her rider: her
-## hat, her hair and her finery (see [method FrontView.overlay]) are drawn over
-## her head, following the landmarks of her face.
+## Show the player in the camera picture, mirrored, dressed as her rider: the
+## painted hat and hair of her rider and her finery (see
+## [method FrontView.painted_overlay]) are drawn over her head, following the
+## landmarks of her face.
 ##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
@@ -41,6 +42,7 @@ var _service: Node = null
 func _ready() -> void:
     _service = get_node("/root/Vision").service
     clip_contents = true
+    texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func _process(_delta: float) -> void:
@@ -117,20 +119,23 @@ func _draw_overlay() -> void:
         return
 
     # NOTE (mristin):
-    # The overlay is pixelated anew at the distance of the eyes (in whole
-    # pixels, so that only a few sizes are cached), so it stays pixel art,
-    # close or far.
+    # The painted hair and hat of the rider, scaled smoothly to the eyes; a
+    # rider without a painting is pixelated anew at the distance of the eyes
+    # (in whole pixels, so that only a few sizes are cached).
+    var dressed: Dictionary = looks if not looks.is_empty() else get_node("/root/Profile").dressed()
     var unit := maxf(3.0, roundf(eyes))
-    var texture := FrontView.overlay(
-        looks if not looks.is_empty() else get_node("/root/Profile").dressed(), unit
-    )
+    var texture: Texture2D = FrontView.painted_overlay(dressed)
+    if texture == null:
+        texture = FrontView.overlay(dressed, unit)
+    else:
+        unit = eyes
     var center: Vector2 = anchor["center"] * size
     var angle: float = anchor["angle"]
 
     draw_set_transform(center, angle, Vector2.ONE)
     draw_texture_rect(
         texture,
-        Rect2((FrontView.OVERLAY_BOX.position * unit).round(), texture.get_size()),
+        Rect2(FrontView.OVERLAY_BOX.position * unit, FrontView.OVERLAY_BOX.size * unit),
         false,
         Color(1, 1, 1, alpha)
     )

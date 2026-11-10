@@ -5,8 +5,9 @@ extends RefCounted
 ## the way the felt carpets (сырмақ) are bordered: painted panels (see
 ## assets/pictures/ui/) stretched to any size as a nine-patch. The corners
 ## with the ram's horn (қошқар мүйіз) keep their shape and shrink to fit a
-## small button; the edges are repeated along the sides; the felt in the
-## middle is stretched. They frame the buttons, the panels and the banners
+## small button; the edges are repeated along the sides; the middle is a
+## seamless felt (assets/pictures/felt/), repeated in the colour of the
+## style. They frame the buttons, the panels and the banners
 ## (see section 11 of DESIGN.md).
 
 ## The styles, by the name of their painting: cream felt with a crimson
@@ -29,7 +30,13 @@ const _PLAIN_Y := Vector2i(135, 245)
 const _MAX_CORNER := 72
 const _CORNER_FRACTION := 0.42
 
+## The seamless felt of the middle of the panels, repeated every this many
+## pixels of the screen.
+const _FELT := "res://assets/pictures/felt/felt.png"
+const _FELT_TILE := 256
+
 static var _sources: Dictionary = {}
+static var _felts: Dictionary = {}
 static var _panels: Dictionary = {}
 
 
@@ -54,8 +61,10 @@ static func panel(size: Vector2, style := "felt") -> ImageTexture:
     var c := _CORNER
 
     # NOTE (mristin):
-    # The middle first, then the edges and the corners over it.
-    _put(canvas, source, Rect2i(c, src - 2 * c), Rect2i(corner, inner))
+    # The middle first, a seamless felt repeated (not the painted middle
+    # stretched, which would look lighter on a big panel), then the edges
+    # and the corners over it.
+    _felt(canvas, style if style in STYLES else "felt", Rect2i(corner, inner))
     var plain_x := _PLAIN_X.y - _PLAIN_X.x
     var plain_y := _PLAIN_Y.y - _PLAIN_Y.x
     _repeat(
@@ -98,6 +107,52 @@ static func panel(size: Vector2, style := "felt") -> ImageTexture:
     result.set_size_override(whole)
     _panels[key] = result
     return result
+
+
+## Fill the rectangle of the canvas with the seamless felt, in the colour of
+## the felt in the middle of the painted panel of the style.
+static func _felt(canvas: Image, style: String, to: Rect2i) -> void:
+    if to.size.x <= 0 or to.size.y <= 0:
+        return
+    if not _felts.has(style):
+        var felt := (load(_FELT) as Texture2D).get_image()
+        felt.convert(Image.FORMAT_RGBA8)
+        felt.resize(_FELT_TILE, _FELT_TILE, Image.INTERPOLATE_LANCZOS)
+        var source := _source(style)
+        var middle := source.get_region(Rect2i(_CORNER, source.get_size() - 2 * _CORNER))
+        var target := _mean(middle)
+        var own := _mean(felt)
+        var gain := Vector3(target.r / own.r, target.g / own.g, target.b / own.b)
+        for y in range(felt.get_height()):
+            for x in range(felt.get_width()):
+                var color := felt.get_pixel(x, y)
+                felt.set_pixel(
+                    x,
+                    y,
+                    Color(
+                        minf(1.0, color.r * gain.x),
+                        minf(1.0, color.g * gain.y),
+                        minf(1.0, color.b * gain.z),
+                        1.0
+                    )
+                )
+        _felts[style] = felt
+    var tile: Image = _felts[style]
+    for y in range(to.position.y, to.end.y, _FELT_TILE):
+        for x in range(to.position.x, to.end.x, _FELT_TILE):
+            var take := Vector2i(mini(_FELT_TILE, to.end.x - x), mini(_FELT_TILE, to.end.y - y))
+            canvas.blit_rect(tile, Rect2i(Vector2i.ZERO, take), Vector2i(x, y))
+
+
+## The mean colour of the image, sampled.
+static func _mean(image: Image) -> Color:
+    var sum := Color(0, 0, 0, 0)
+    var count := 0
+    for y in range(0, image.get_height(), 4):
+        for x in range(0, image.get_width(), 4):
+            sum += image.get_pixel(x, y)
+            count += 1
+    return sum / maxf(1.0, count)
 
 
 ## The painting of the style.

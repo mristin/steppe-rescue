@@ -153,6 +153,12 @@ const _FACE := """
       fill="none" stroke-linecap="round"/>
 """
 
+## The painted overlays are this many pixels per eye distance.
+const PAINTED_UNIT := 100
+
+## The painted overlays, by the rider and her finery.
+static var _painted: Dictionary = {}
+
 ## The textures of [method figure], by the looks and the pose.
 static var _figures: Dictionary = {}
 
@@ -215,6 +221,72 @@ static func overlay_svg(looks: Dictionary) -> String:
     if Finery.step(completed, "earrings") >= 1:
         parts.append(_EARRINGS)
     return "".join(parts).format({"h0": hair[0], "h1": hair[1], "h2": hair[2]})
+
+
+## The painted overlay of the rider of the looks (see [constant Looks.PRESETS]):
+## her hair and hat (assets/pictures/overlay/), with the earrings on both
+## ears and the owl feathers on the top of her hat once she won them (see
+## [Finery]), at [constant PAINTED_UNIT] pixels per eye distance over the
+## [constant OVERLAY_BOX]; null if the rider has no painted overlay.
+static func painted_overlay(looks: Dictionary) -> ImageTexture:
+    var preset: String = looks.get("rider", "")
+    var path := "res://assets/pictures/overlay/%s.png" % preset
+    if preset == "" or not ResourceLoader.exists(path):
+        return null
+    var earrings := Finery.step(looks, "earrings") >= 1
+    var feathers := Finery.step(looks, "feathers") >= 1
+    var key := "%s|%s|%s" % [preset, earrings, feathers]
+    if _painted.has(key):
+        return _painted[key]
+
+    var image := (load(path) as Texture2D).get_image()
+    image.convert(Image.FORMAT_RGBA8)
+    var at := func(x: float, y: float) -> Vector2i:
+        return Vector2i(
+            roundi((x - OVERLAY_BOX.position.x) * PAINTED_UNIT),
+            roundi((y - OVERLAY_BOX.position.y) * PAINTED_UNIT)
+        )
+    if feathers:
+        # NOTE (mristin):
+        # The feathers stand on the top of the hat (or of the hair), in the
+        # middle, where the painting starts from above.
+        var top := image.get_height()
+        for y in range(image.get_height()):
+            if image.get_pixel(image.get_width() / 2, y).a > 0.5:
+                top = y
+                break
+        var feather := _sized("feathers", 1.3)
+        var foot := Vector2i(image.get_width() / 2, top + roundi(0.12 * PAINTED_UNIT))
+        image.blend_rect(
+            feather,
+            Rect2i(Vector2i.ZERO, feather.get_size()),
+            foot - Vector2i(feather.get_width() / 2, feather.get_height())
+        )
+    if earrings:
+        var earring := _sized("earring", 0.85)
+        for side in [-1.0, 1.0]:
+            var piece := earring.duplicate() as Image
+            if side < 0.0:
+                piece.flip_x()
+            var hook: Vector2i = at.call(side * 1.04, 0.5)
+            image.blend_rect(
+                piece,
+                Rect2i(Vector2i.ZERO, piece.get_size()),
+                hook - Vector2i(piece.get_width() / 2, 0)
+            )
+    var result := ImageTexture.create_from_image(image)
+    _painted[key] = result
+    return result
+
+
+## The painting of the overlay of the name, [param height] eye distances high.
+static func _sized(name: String, height: float) -> Image:
+    var image := (load("res://assets/pictures/overlay/%s.png" % name) as Texture2D).get_image()
+    image.convert(Image.FORMAT_RGBA8)
+    var high := roundi(height * PAINTED_UNIT)
+    var wide := maxi(1, roundi(image.get_width() * float(high) / image.get_height()))
+    image.resize(wide, high, Image.INTERPOLATE_LANCZOS)
+    return image
 
 
 ## The overlay of the looks over a face whose eyes are [param eyes] logical

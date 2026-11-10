@@ -65,6 +65,12 @@ func _run() -> void:
             )
 
     # NOTE (mristin):
+    # Every painted rider has her painted hair and hat for the camera picture.
+    for preset in Looks.PRESETS:
+        var looks := Looks.preset(Looks.DEFAULT, preset)
+        _check(FrontView.painted_overlay(looks) != null, "rider %s is painted on the face" % preset)
+
+    # NOTE (mristin):
     # The overlay shows the hair and the finery, not only the hat.
     var plain := {"hair": "short", "hat": "takiya", "finery": {}}
     var braids := {"hair": "two_braids", "hat": "takiya", "finery": {"earrings": 1}}

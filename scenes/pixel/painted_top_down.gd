@@ -40,8 +40,43 @@ static func draw_rider(
     var prefix := "big/" if big else ""
     var steed: String = looks.get("steed", "1")
     var index := 0 if gait <= 0 else posmod(frame, HORSE_FRAMES)
-    draw(item, _load("horses/%s/%s%d" % [steed, prefix, index]), center, heading)
+    var horse := _load("horses/%s/%s%d" % [steed, prefix, index])
+    draw(item, horse, center, heading)
+    _dress(item, looks, "horse", horse, center, heading)
     draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), center, heading)
+    _dress(item, looks, "rider", horse, center, heading)
+
+
+## Lay the finery which she wears, seen from above, over the horse (or the
+## rider) drawn at the center: each piece is painted on the canvas of the
+## horse from above, around the seat of the saddle (see
+## dev/pictures/top_down_template.png), so it is drawn over the same square.
+## A piece without its picture from above is not shown.
+static func _dress(
+    item: CanvasItem,
+    looks: Dictionary,
+    who: String,
+    horse: Texture2D,
+    center: Vector2,
+    heading: float
+) -> void:
+    for piece in Finery.PIECES:
+        if Finery.PIECES[piece]["for"] != who:
+            continue
+        var at := Finery.step(looks, piece)
+        if at < 1:
+            continue
+        # NOTE (mristin):
+        # A step without its own picture from above shows the one before.
+        for step in range(at, 0, -1):
+            var name := "finery/%s_%d" % [piece, step]
+            if ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % name):
+                var shown := horse.get_size() * 0.5
+                var picture := _load(name)
+                item.draw_set_transform(center, heading, Vector2.ONE)
+                item.draw_texture_rect(picture, Rect2(-shown * 0.5, shown), false)
+                item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+                break
 
 
 ## The animal of the kind ("sheep", "lamb", "horse", "camel"), walking in the

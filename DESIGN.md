@@ -383,7 +383,7 @@ Before the game, a test scene with only the camera, the two detectors and the me
 **Built** (`scenes/movement_test/`): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
 
 * a squat counts when the head goes down by at least half the width of the shoulders, and fully at the whole width,
-* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the first squat starts a walk right away, but it takes 4 to 5 brisk squats to gallop; a squat may come 0.75 s late before the horse slows down; a galloping horse slows down gently out of the gallop, and then, like a walking or trotting horse, stops quickly; the horse stops at the latest 4.5 s after the last squat,
+* a squat every 3 s walks, every 2 s trots, and every 1.5 s or faster gallops; the first squat starts a walk right away, but it takes 4 to 5 brisk squats to gallop; the horse stops within about a second once the player stands still: a squat counts when she is up again, the horse coasts 0.3 s plus a fifth of her rhythm, and stops at once unless her head already goes down into the next squat (from the keyboard, it stops when the next squat is 0.35 s overdue); it stops at the latest 4.5 s after the last squat,
 * a hand starts to turn at 0.1 of the width of the shoulders across the axis of the head, and turns fully at 0.6.
 
 ## 14. The second thing we build: the first level

@@ -59,26 +59,25 @@ namespace SteppeRescue.Tests
             // NOTE (mristin):
             // The last squat ended at the end of the period, so the horse may walk
             // on until the next squat would be due, but no longer than the pause.
-            Assert.InRange(TimeToStop(meter, 15.0), 0.5, meter.MaxPause);
+            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.0);
         }
 
         [Fact]
-        public void A_galloping_horse_eases_out_of_the_gallop_and_then_stops()
+        public void A_galloping_horse_stops_at_once_after_the_squats()
         {
             var meter = Squat(period: 1.3, depth: 1.2f, duration: 15.0);
             Assert.Equal(Gait.Gallop, meter.Gait);
 
-            float speedAfterOneSecond = float.NaN;
-            double stopped = TimeToStop(meter, 15.0, since =>
-            {
-                if (double.IsNaN(speedAfterOneSecond) && since >= 1.0)
-                {
-                    speedAfterOneSecond = meter.Speed;
-                }
-            });
+            double stopped = TimeToStop(meter, 15.0);
+            Assert.InRange(stopped, 0.2, 1.0);
+        }
 
-            Assert.InRange(speedAfterOneSecond, SquatMeter.TrotFrom, 1f);
-            Assert.InRange(stopped, 2.0, meter.MaxPause + 1.0);
+        [Fact]
+        public void A_trotting_horse_stops_soon_after_the_squats()
+        {
+            var meter = Squat(period: 2.0, depth: 1.2f, duration: 15.0);
+            Assert.Equal(Gait.Trot, meter.Gait);
+            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.0);
         }
 
         [Fact]

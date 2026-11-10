@@ -64,10 +64,23 @@ namespace SteppeRescue.Vision
         public double MaxPause = 4.5;
 
         /// <summary>
-        /// A squat may come this late (in seconds) before the horse slows down, so
-        /// that it keeps its momentum between the squats.
+        /// A squat may come this late (in seconds) after the rhythm of the player
+        /// expects it; then the horse stops briskly.
         /// </summary>
-        public double Grace = 0.75;
+        public double Grace = 0.35;
+
+        /// <summary>
+        /// The horse keeps going this long (in seconds) after a squat, which counts
+        /// once the player stood up again, plus <see cref="CoastShare"/> of the
+        /// rhythm; then it stops, unless the head already goes down into the next
+        /// squat (by <see cref="StartDepth"/>).
+        /// </summary>
+        public double Coast = 0.3;
+
+        public double CoastShare = 0.2;
+
+        /// <summary>The head this deep (in units) goes down into the next squat.</summary>
+        public float StartDepth = 0.1f;
 
         /// <summary>How fast the horse speeds up to a walk, in the full speed per second.</summary>
         public float Acceleration = 0.35f;
@@ -79,13 +92,13 @@ namespace SteppeRescue.Vision
         public float FastAcceleration = 0.18f;
 
         /// <summary>How fast the horse slows down, in the full speed per second.</summary>
-        public float Deceleration = 0.6f;
+        public float Deceleration = 4.0f;
 
         /// <summary>
         /// How fast a galloping horse slows down, in the full speed per second: it
-        /// keeps its momentum for a moment, and then stops at <see cref="Deceleration"/>.
+        /// keeps its momentum for a very short moment, and then stops at <see cref="Deceleration"/>.
         /// </summary>
-        public float GallopDeceleration = 0.25f;
+        public float GallopDeceleration = 2.0f;
 
         /// <summary>A shallow squat (at <see cref="CountDepth"/>) counts this much.</summary>
         public float ShallowFactor = 0.6f;
@@ -266,10 +279,15 @@ namespace SteppeRescue.Vision
                 double since = t - _lastSquat;
 
                 // NOTE (mristin):
-                // While no new squat comes, the period effectively grows (after the
-                // grace), so the horse slows down gradually instead of keeping its pace.
-                double period = Math.Max(Period, since - Grace);
-                TargetSpeed = since > MaxPause ? 0f : SpeedOfPeriod(period) * _lastFactor;
+                // The horse keeps the pace of the player's rhythm while she squats.
+                // Once she stands still after a squat, or the next squat is overdue,
+                // she stopped, and so does the horse, at once.
+                // Without the camera (squats from the keyboard), we cannot see her
+                // stand, and wait for the rhythm only.
+                bool seen = !double.IsNaN(_lastObserved) && t - _lastObserved < 0.5;
+                bool standing = seen && since > Coast + CoastShare * Period && RawDepth < StartDepth;
+                bool overdue = standing || since > Period + Grace || since > MaxPause;
+                TargetSpeed = overdue ? 0f : SpeedOfPeriod(Period) * _lastFactor;
             }
 
             float rate = TargetSpeed > Speed

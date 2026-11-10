@@ -59,12 +59,15 @@ for preset, name in FILES.items():
     hsv = cv2.cvtColor(warped, cv2.COLOR_RGB2HSV).astype(int)
     r, g, b = [warped[..., i].astype(int) for i in range(3)]
     spread = np.maximum(np.maximum(r, g), b) - np.minimum(np.minimum(r, g), b)
-    white = (spread < 14) & (np.minimum(np.minimum(r, g), b) > 232)
-    # Only the white background, connected to the edges: a white scarf stays.
-    n, labels, _, _ = cv2.connectedComponentsWithStats(white.astype(np.uint8), 4)
-    edge = set(np.unique(np.concatenate([labels[0], labels[-1], labels[:, 0], labels[:, -1]])))
-    edge.discard(0)
-    white = np.isin(labels, list(edge))
+    # NOTE (mristin):
+    # The white background is perfectly flat, also where the hair encloses
+    # it (e.g., between the braids); a white scarf is textured, so it stays.
+    lum = warped.astype(np.float32).mean(axis=2)
+    mean = cv2.blur(lum, (7, 7))
+    flat = (cv2.blur(lum * lum, (7, 7)) - mean * mean) < 4.0
+    white = (spread < 14) & (np.minimum(np.minimum(r, g), b) > 232) & flat
+    white = cv2.dilate(white.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0
+    white &= (spread < 20) & (np.minimum(np.minimum(r, g), b) > 215)
     grey = (spread < 16) & (r > 115) & (r < 222)
 
     # The template's shapes, in the result's pixels: where the face, the neck
@@ -105,7 +108,8 @@ for preset, name in FILES.items():
     # Drop specks left of the template's outlines.
     n, labels, stats, _ = cv2.connectedComponentsWithStats((alpha > 0).astype(np.uint8), 8)
     for k in range(1, n):
-        if stats[k, cv2.CC_STAT_AREA] < 150:
+        thin = min(stats[k, cv2.CC_STAT_WIDTH], stats[k, cv2.CC_STAT_HEIGHT]) <= 8
+        if stats[k, cv2.CC_STAT_AREA] < 150 or thin:
             alpha[labels == k] = 0
     alpha = cv2.GaussianBlur(alpha, (0, 0), 0.8)
     Image.fromarray(np.dstack([warped, alpha])).save(

@@ -68,8 +68,12 @@ func _label(text: String, width: float, color: Color) -> Label:
     label.text = text
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     label.custom_minimum_size = Vector2(width, 0)
-    label.add_theme_color_override("font_color", color)
+    label.add_theme_color_override(
+        "font_color", Palette.FELT if color == Palette.OUTLINE else Palette.GOLD
+    )
     label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0))
+    label.add_theme_color_override("font_outline_color", Palette.OUTLINE)
+    label.add_theme_constant_override("outline_size", 6)
     return label
 
 
@@ -81,8 +85,11 @@ func _fit() -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE)
-    draw_rect(Rect2(Vector2.ONE * 2.0, size - Vector2.ONE * 4.0), Palette.FELT)
+    # NOTE (mristin):
+    # The panel is see-through, so that the rider and the steppe show behind
+    # it; the text is light with a dark outline, readable on anything.
+    draw_rect(Rect2(Vector2.ZERO, size), Color(Palette.OUTLINE, 0.55))
+    draw_rect(Rect2(Vector2.ONE * 2.0, size - Vector2.ONE * 4.0), Color(Palette.NIGHT, 0.35))
 
     # NOTE (mristin):
     # The corners in gold, as a hint of the ornaments which come later.

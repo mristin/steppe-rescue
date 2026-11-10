@@ -183,7 +183,9 @@ In the level, the game never writes "do squats" or "pull the reins". It shows th
 
 ### Menus: the hand cursor
 
-* In the menus, the conversations and the character creator, an open hand moves a cursor (a small bird).
+* In the menus, the conversations and the character creator, an open hand moves a cursor (a big bird, easy to see from two metres away).
+* **The player sees herself:** behind the buttons, the camera picture shows dimly, mirrored, so that her hand in the picture lies right under the bird.
+* **Sticky buttons:** a bird on a button is drawn towards its middle and leaves only when the hand moves clearly beyond the edge, since the hands of children are hard to hold still; it glides instead of jumping.
 * **Clicking:** holding the cursor still over a button for about 1.5 s fills a ring around it, and then the button clicks. Hovering grows the button.
 * The buttons are big, with at most four on a screen.
 

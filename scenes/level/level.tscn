@@ -80,8 +80,8 @@ script = ExtResource("11_needs_bars")
 [node name="CameraPanel" type="Control" parent="Hud"]
 layout_mode = 3
 anchors_preset = 0
-offset_left = 792.0
-offset_top = 412.0
+offset_left = 664.0
+offset_top = 316.0
 offset_right = 952.0
 offset_bottom = 532.0
 mouse_filter = 2

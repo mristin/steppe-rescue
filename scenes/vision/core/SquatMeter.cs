@@ -58,7 +58,7 @@ namespace SteppeRescue.Vision
         public float ReturnDepth = 0.2f;
 
         /// <summary>The period which we assume before the first squat, in seconds.</summary>
-        public double FirstPeriod = 4.0;
+        public double FirstPeriod = 3.5;
 
         /// <summary>After this long without a squat (in seconds), the horse stops.</summary>
         public double MaxPause = 4.5;
@@ -67,7 +67,7 @@ namespace SteppeRescue.Vision
         /// A squat may come this late (in seconds) after the rhythm of the player
         /// expects it; then the horse stops briskly.
         /// </summary>
-        public double Grace = 0.6;
+        public double Grace = 0.48;
 
         /// <summary>
         /// The horse keeps going this long (in seconds) after a squat, which counts
@@ -75,24 +75,24 @@ namespace SteppeRescue.Vision
         /// rhythm; then it stops, unless the head already goes down into the next
         /// squat (by <see cref="StartDepth"/>).
         /// </summary>
-        public double Coast = 0.5;
+        public double Coast = 0.4;
 
-        public double CoastShare = 0.3;
+        public double CoastShare = 0.25;
 
         /// <summary>The share of the rhythm adds at most this much to the coasting, in seconds.</summary>
-        public double MaxCoastShare = 0.6;
+        public double MaxCoastShare = 0.5;
 
         /// <summary>The head this deep (in units) goes down into the next squat.</summary>
         public float StartDepth = 0.1f;
 
         /// <summary>How fast the horse speeds up to a walk, in the full speed per second.</summary>
-        public float Acceleration = 0.6f;
+        public float Acceleration = 0.48f;
 
         /// <summary>
         /// How fast the horse speeds up beyond the walk, in the full speed per second:
         /// two or three brisk squats gallop, which children manage.
         /// </summary>
-        public float FastAcceleration = 0.4f;
+        public float FastAcceleration = 0.29f;
 
         /// <summary>How fast the brake stops the horse, in the full speed per second.</summary>
         public float BrakeDeceleration = 5.0f;
@@ -168,17 +168,17 @@ namespace SteppeRescue.Vision
 
         private static readonly (double Period, float Speed)[] _speedTable =
         {
-            (1.5, 1.0f),
-            (1.9, 0.85f),
-            (2.5, 0.62f),
-            (3.4, 0.35f),
-            (4.5, 0.2f),
+            (1.35, 1.0f),
+            (1.7, 0.85f),
+            (2.25, 0.62f),
+            (3.2, 0.35f),
+            (4.25, 0.2f),
         };
 
         /// <summary>
         /// Map the time between two squats (in seconds) to the speed of a full,
-        /// deep squatting: a squat every 4 s walks, every 2.5 s trots, and every
-        /// 2 s or faster gallops.
+        /// deep squatting: a squat every 3.5 s walks, about every 2.5 s trots,
+        /// and every 1.8 s or faster gallops.
         /// </summary>
         public static float SpeedOfPeriod(double period)
         {

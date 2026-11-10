@@ -152,11 +152,11 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
   | Squatting | The horse |
   |---|---|
   | none (standing still) | stops within a second or so |
-  | slow (a squat every 4 s or more) | walks |
+  | slow (a squat every 3.5 s or more) | walks |
   | steady (about a squat every 2.5 s) | trots |
-  | brisk (a squat every 2 s or faster) | gallops |
+  | brisk (a squat every 1.8 s or faster) | gallops |
 
-  Children squat slower than adults and pause between the squats, so these rates are generous: two or three brisk squats gallop.
+  Children squat slower than adults and pause between the squats, so these rates are generous: three or four brisk squats gallop.
 
 * **Deep squats count more** than shallow bobs: the depth is measured relative to the size of the head, so the game works whether the player stands close or far. A tiny nod of the head does nothing.
 * **Gentle changes.** The horse speeds up and slows down over a second or two, so the speed doesn't flicker between squats. When the player stops, the horse slows down to a walk and then stops, but never instantly.
@@ -398,7 +398,7 @@ Before the game, a test scene with only the camera, the two detectors and the me
 **Built** (`scenes/movement_test/`): the mirrored camera picture with the skeleton, the axis of the head, the hands (red when across) and the embroidered skullcap over the face; the speed bar with the three horse icons; the turn gauge; and the depth of the squats over the last 8 seconds, with the counted squats marked. The keyboard plays without a camera. The thresholds are first guesses and wait for the play-tests:
 
 * a squat counts when the head goes down by at least half the width of the shoulders, and fully at the whole width,
-* a squat every 4 s walks, every 2.5 s trots, and every 2 s or faster gallops; the first squat starts a walk right away, and two or three brisk squats gallop; the horse stops within about a second and a half once the player stands still: a squat counts when she is up again, the horse coasts 0.5 s plus 0.3 of her rhythm (at most 0.6 s more), and stops at once unless her head already goes down into the next squat (from the keyboard, it stops when the next squat is 0.6 s overdue); it stops at the latest 4.5 s after the last squat; both hands above the head brake, and the horse rears up (`Brake`, `Rider.rear`),
+* a squat every 3.5 s walks, about every 2.5 s trots, and every 1.8 s or faster gallops; the first squat starts a walk right away, and three or four brisk squats gallop; the horse stops within about a second and a half once the player stands still: a squat counts when she is up again, the horse coasts 0.4 s plus a quarter of her rhythm (at most 0.5 s more), and stops at once unless her head already goes down into the next squat (from the keyboard, it stops when the next squat is 0.48 s overdue); it stops at the latest 4.5 s after the last squat; both hands above the head brake, and the horse rears up (`Brake`, `Rider.rear`),
 * a hand starts to turn at 0.1 of the width of the shoulders across the axis of the head, and turns fully at 0.6.
 
 ## 14. The second thing we build: the first level

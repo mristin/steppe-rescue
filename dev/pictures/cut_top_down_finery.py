@@ -29,6 +29,11 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 TEMPLATE = REPO / "dev" / "pictures" / "top_down_template.png"
 CANVAS = 282  # the big canvas of the horses from above, in pixels
 
+# The greys of the horse and the rider in the template (and, as painted, in
+# the sheets: the image model keeps them flat).
+HORSE_GREY = 171
+RIDER_GREY = 130
+
 ## The pieces in the cells of the grid sheet, row by row: [piece, step].
 GRID = [
     ["saddle", 1],
@@ -46,13 +51,37 @@ GRID = [
 ]
 
 
+def flat_background(rgb: np.ndarray) -> np.ndarray:
+    """
+    The pixels of the template in the painting: the white background and the
+    flat greys of the horse and the rider. Silver and white pieces are
+    textured, so a pixel counts only where the colour is also flat around it.
+    """
+    image = rgb.astype(np.float32)
+    grey = image.mean(axis=2)
+    spread = image.max(axis=2) - image.min(axis=2)
+    mean = cv2.blur(grey, (5, 5))
+    variance = cv2.blur(grey * grey, (5, 5)) - mean * mean
+    flat = (spread < 8) & (variance < 6.0)
+    tones = (grey > 246) | (np.abs(grey - HORSE_GREY) < 7) | (np.abs(grey - RIDER_GREY) < 7)
+    background = flat & tones
+    # NOTE (mristin):
+    # The soft edges of the template (and the lines of the grid) blend its
+    # tones, so they are neither flat nor of a tone: any neutral pixel right
+    # next to the template counts as the template, too.
+    near = cv2.dilate(background.astype(np.uint8), np.ones((7, 7), np.uint8)) > 0
+    return background | (near & (spread < 14))
+
+
 def silhouette_box(rgb: np.ndarray) -> tuple:
-    r, g, b = [rgb[..., i].astype(int) for i in range(3)]
-    spread = np.maximum(np.maximum(r, g), b) - np.minimum(np.minimum(r, g), b)
-    grey = (spread < 14) & (r > 100) & (r < 200)
-    n, labels, stats, _ = cv2.connectedComponentsWithStats(grey.astype(np.uint8), 8)
-    big = 1 + np.argmax(stats[1:, cv2.CC_STAT_AREA])
-    ys, xs = np.where(labels == big)
+    """The box of the flat greys of the horse and the rider (the pieces may
+    split them, but they never cover the nose or the tip of the tail)."""
+    image = rgb.astype(np.float32)
+    grey = image.mean(axis=2)
+    spread = image.max(axis=2) - image.min(axis=2)
+    silhouette = (spread < 8) & (grey > 100) & (grey < 200)
+    silhouette = cv2.morphologyEx(silhouette.astype(np.uint8), cv2.MORPH_OPEN, np.ones((3, 3)))
+    ys, xs = np.where(silhouette > 0)
     return xs.min(), ys.min(), xs.max(), ys.max()
 
 
@@ -66,8 +95,14 @@ def main() -> None:
     h, w = painted.shape[:2]
     for i, (piece, step) in enumerate(GRID):
         r, c = divmod(i, 4)
-        cell = painted[r * h // 3 : (r + 1) * h // 3, c * w // 4 : (c + 1) * w // 4]
-        cut(np.ascontiguousarray(cell), piece, step)
+        cell = painted[r * h // 3 : (r + 1) * h // 3, c * w // 4 : (c + 1) * w // 4].copy()
+        # NOTE (mristin):
+        # The lines of the grid run along the borders of the cells: paint the
+        # borders white.
+        margin = max(4, cell.shape[1] // 40)
+        cell[:margin] = cell[-margin:] = 255
+        cell[:, :margin] = cell[:, -margin:] = 255
+        cut(cell, piece, step)
 
 
 def cut(painted: np.ndarray, piece: str, step: int) -> None:
@@ -85,15 +120,12 @@ def cut(painted: np.ndarray, piece: str, step: int) -> None:
     size = template.shape[1], template.shape[0]
     warped = cv2.warpAffine(painted, M, size, flags=cv2.INTER_AREA, borderValue=(255, 255, 255))
 
-    r, g, b = [warped[..., i].astype(int) for i in range(3)]
-    spread = np.maximum(np.maximum(r, g), b) - np.minimum(np.minimum(r, g), b)
-    white = (spread < 16) & (np.minimum(np.minimum(r, g), b) > 228)
-    grey = (spread < 16) & (r > 100) & (r < 200)
-    alpha = np.where(white | grey, 0, 255).astype(np.uint8)
+    alpha = np.where(flat_background(warped), 0, 255).astype(np.uint8)
     alpha = cv2.morphologyEx(alpha, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
     n, labels, stats, _ = cv2.connectedComponentsWithStats((alpha > 0).astype(np.uint8), 8)
     for k in range(1, n):
-        if stats[k, cv2.CC_STAT_AREA] < 60:
+        thin = max(stats[k, cv2.CC_STAT_WIDTH], stats[k, cv2.CC_STAT_HEIGHT]) < 40
+        if stats[k, cv2.CC_STAT_AREA] < 200 or (thin and stats[k, cv2.CC_STAT_AREA] < 600):
             alpha[labels == k] = 0
     alpha = cv2.GaussianBlur(alpha, (0, 0), 0.8)
 

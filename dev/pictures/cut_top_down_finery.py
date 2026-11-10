@@ -5,6 +5,11 @@ assets/pictures/top_down/finery/<piece>_<step>.png:
 
     python dev/pictures/cut_top_down_finery.py <painted.png> <piece> <step>
 
+or a whole sheet, painted on dev/pictures/top_down_template_grid.png, with the
+pieces of GRID in its cells, row by row:
+
+    python dev/pictures/cut_top_down_finery.py <painted_sheet.png>
+
 The template is a flat grey horse (light) with the rider (dark) on white. The
 script finds the grey silhouette in the painting, maps the painting onto the
 canvas of the template by the box of the silhouette, and keeps only what is
@@ -24,6 +29,22 @@ REPO = pathlib.Path(__file__).resolve().parents[2]
 TEMPLATE = REPO / "dev" / "pictures" / "top_down_template.png"
 CANVAS = 282  # the big canvas of the horses from above, in pixels
 
+## The pieces in the cells of the grid sheet, row by row: [piece, step].
+GRID = [
+    ["saddle", 1],
+    ["saddle", 2],
+    ["saddle_cloth", 1],
+    ["saddle_cloth", 2],
+    ["bridle", 1],
+    ["bridle", 2],
+    ["breastplate", 1],
+    ["stirrups", 1],
+    ["mane", 1],
+    ["mane", 2],
+    ["mane", 3],
+    ["feathers", 1],
+]
+
 
 def silhouette_box(rgb: np.ndarray) -> tuple:
     r, g, b = [rgb[..., i].astype(int) for i in range(3)]
@@ -36,9 +57,22 @@ def silhouette_box(rgb: np.ndarray) -> tuple:
 
 
 def main() -> None:
-    painted_path, piece, step = sys.argv[1], sys.argv[2], int(sys.argv[3])
+    painted = np.array(Image.open(sys.argv[1]).convert("RGB"))
+    if len(sys.argv) > 2:
+        cut(painted, sys.argv[2], int(sys.argv[3]))
+        return
+    # NOTE (mristin):
+    # A sheet: the cells of the grid, 4 across and 3 down, whatever its size.
+    h, w = painted.shape[:2]
+    for i, (piece, step) in enumerate(GRID):
+        r, c = divmod(i, 4)
+        cell = painted[r * h // 3 : (r + 1) * h // 3, c * w // 4 : (c + 1) * w // 4]
+        cut(np.ascontiguousarray(cell), piece, step)
+
+
+def cut(painted: np.ndarray, piece: str, step: int) -> None:
+    """Cut the piece out of the painting of one template, and save it."""
     template = np.array(Image.open(TEMPLATE).convert("RGB"))
-    painted = np.array(Image.open(painted_path).convert("RGB"))
 
     tx0, ty0, tx1, ty1 = silhouette_box(template)
     px0, py0, px1, py1 = silhouette_box(painted)

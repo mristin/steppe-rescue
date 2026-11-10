@@ -27,18 +27,20 @@ func _ready() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
     _painting = load(PAINTING)
 
-    _play = _button(Rect2(606, 296, 228, 56), 32)
+    # NOTE (mristin):
+    # Big buttons, easy to hit with the hand from two metres away.
+    _play = _button(Rect2(596, 254, 320, 80), 32)
     _play.primary = true
     _play.pressed.connect(func() -> void: Flow.play(get_tree()))
-    _levels = _button(Rect2(636, 362, 168, 38), 16)
+    _levels = _button(Rect2(606, 342, 300, 60), 32)
     _levels.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.LEVEL_SELECT))
-    _settings = _button(Rect2(636, 408, 168, 38), 16)
+    _settings = _button(Rect2(606, 408, 300, 60), 32)
     _settings.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.SETTINGS))
-    _how_to_play = _button(Rect2(636, 454, 168, 38), 16)
+    _how_to_play = _button(Rect2(606, 474, 300, 60), 32)
     _how_to_play.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.INSTRUCTION))
 
     _quit_hint = QuitHint.new()
-    _quit_hint.position = Vector2(0, 516)
+    _quit_hint.position = Vector2(0, 4)
     _quit_hint.size = Vector2(960, 20)
     add_child(_quit_hint)
 

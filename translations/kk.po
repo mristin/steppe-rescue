@@ -74,7 +74,7 @@ msgstr "Деңгейлер"
 #: scenes/intro/intro.gd
 #, fuzzy
 msgid "How to Play"
-msgstr "Қалай ойнау керек"
+msgstr "Қалай ойнау"
 
 #: scenes/intro/intro.gd scenes/settings/settings.gd
 #, fuzzy

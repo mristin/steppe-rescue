@@ -18,8 +18,17 @@ extends Control
 ## hand in the picture lies right under the bird (see [constant _REACH]).
 
 ## The part of the camera picture, normalized, which maps onto the whole
-## screen, so that the player reaches every corner without stretching.
+## screen, so that the player reaches every corner without stretching. Its
+## bottom follows the shoulders of the player (see [member reach]), so that
+## the bottom of the screen is reached with the hand still raised.
 const _REACH := Rect2(0.15, 0.1, 0.7, 0.6)
+
+## The bottom of the screen lies this far below the shoulders, in the
+## normalized picture: just within a raised hand.
+const _BELOW_SHOULDERS := 0.04
+
+## How fast the reach follows the shoulders (they move as the player does).
+const _REACH_FOLLOW := 2.0
 
 ## The bird is drawn this many times the size of an icon, big enough to see
 ## from two metres away.
@@ -61,6 +70,9 @@ static var by_hand := false
 ## the camera nor the mouse moves it.
 static var held := false
 
+## The part of the camera picture which maps onto the screen now.
+static var reach := _REACH
+
 var _service: Node = null
 var _stuck: DwellButton = null
 var _mirror: Control = null
@@ -83,7 +95,7 @@ func _process(delta: float) -> void:
         return
     var hand := _hand()
     if hand.x >= 0.0:
-        var target := (hand - _REACH.position) / _REACH.size * get_viewport_rect().size
+        var target := (hand - reach.position) / reach.size * get_viewport_rect().size
         target = target.clamp(Vector2.ZERO, get_viewport_rect().size)
         at = target if not by_hand else _glide(target, delta)
         by_hand = true
@@ -159,8 +171,8 @@ func _draw_mirror() -> void:
     # NOTE (mristin):
     # Dim the picture of the screen behind, so that the player stands out.
     _mirror.draw_rect(Rect2(Vector2.ZERO, screen), Color(Palette.NIGHT, MIRROR_DIM))
-    var whole := screen / _REACH.size
-    var origin := -_REACH.position * whole
+    var whole := screen / reach.size
+    var origin := -reach.position * whole
     # NOTE (mristin):
     # The keypoints are in the mirrored picture, so the texture is flipped.
     _mirror.draw_set_transform(Vector2(screen.x, 0), 0, Vector2(-1, 1))
@@ -174,6 +186,23 @@ func _input(event: InputEvent) -> void:
         by_hand = false
 
 
+## Let the bottom of the reach follow the shoulders of the player, so that
+## the hand reaches the bottom of the screen while it is still raised.
+func _follow_shoulders(points: Array, scores: Array) -> void:
+    var shoulders := 0.0
+    var count := 0
+    for i in [_LEFT_SHOULDER, _RIGHT_SHOULDER]:
+        if scores[i] >= _THRESHOLD:
+            shoulders += (points[i] as Vector2).y
+            count += 1
+    if count == 0:
+        return
+    var bottom := clampf(shoulders / count + _BELOW_SHOULDERS, _REACH.position.y + 0.25, 0.95)
+    var height := bottom - _REACH.position.y
+    var step := minf(1.0, get_process_delta_time() * _REACH_FOLLOW)
+    reach.size.y = lerpf(reach.size.y, height, step)
+
+
 ## The raised hand in the mirrored camera picture, normalized; negative if no
 ## hand is raised: the higher wrist, if it is above its shoulder's height.
 func _hand() -> Vector2:
@@ -183,6 +212,7 @@ func _hand() -> Vector2:
     var scores: Array = _service.GetKeypointScores()
     if points.size() <= _RIGHT_WRIST:
         return Vector2(-1, -1)
+    _follow_shoulders(points, scores)
     var best := Vector2(-1, -1)
     for pair in [[_LEFT_WRIST, _LEFT_SHOULDER], [_RIGHT_WRIST, _RIGHT_SHOULDER]]:
         if scores[pair[0]] < _THRESHOLD:

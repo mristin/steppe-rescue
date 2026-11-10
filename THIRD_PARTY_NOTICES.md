@@ -90,6 +90,15 @@ We distribute the model unmodified.
 
 **Altered:** cut out of the generated sprite sheets (their painted checkerboard or black backgrounds removed), cropped, scaled, and aligned on common canvases so that the frames of an animation stand on the same spot; the pen is turned around so that its gate faces north; the ground is softened a little; the photographs of the people are no longer shown in the game.
 
+### The melody of "Көзімнің қарасы"
+
+* Files: the notes in `scenes/sound/sounds.gd` and `assets/music/kozimnin_karasi.mid`, both written by `dev/music/kozimnin_karasi.py`
+* Composer: Abai Qunanbaiuly (1845–1904)
+* License: Public domain (the composer died more than 70 years ago)
+* Source: only the melody, transcribed from the oboe (bars 1–8) and the flute (bars 9–16) of a band arrangement published by the Center for Middle Eastern Studies of the University of Arizona, https://cmes.arizona.edu/node/648; the arrangement itself is not used.
+
+**Altered:** transposed an octave down to the range of the dombra, and played by the game's synthesized dombra over a soft strum of its open strings.
+
 ## Used only for the development
 
 * The test photo `tests/SteppeRescue.Tests/data/astronaut_640x480.png` is a public-domain NASA photo of Eileen Collins (the scikit-image "astronaut"), fitted into a 640x480 frame.

@@ -2,7 +2,8 @@ extends Node
 
 ## Play the sounds of the game (see section 11 of DESIGN.md), all synthesized
 ## here, so that the game needs no sound files and no licenses for them: the
-## plucked strings of a dombra (Karplus-Strong) for the gentle music, the
+## plucked strings of a dombra (Karplus-Strong) for the background music (the
+## melody of "Көзімнің қарасы" by Abai, in the public domain), the
 ## celebration tune and the clicks, a low thud for the hooves, and filtered
 ## noise for the wind of the steppe.
 ##
@@ -19,28 +20,58 @@ const _SCALE := [146.83, 174.61, 196.0, 220.0, 261.63, 293.66, 349.23, 392.0, 44
 ## The celebration: a rising phrase and a bright ending, [degree, beats].
 const _TUNE := [[4, 0.5], [5, 0.5], [7, 0.5], [8, 1.0], [7, 0.5], [9, 1.5]]
 
-## The gentle music: a strummed pattern of the dombra, looped.
-const _MUSIC := [
-    [0, 1],
-    [4, 0.5],
-    [3, 0.5],
-    [2, 1],
-    [4, 1],
-    [0, 1],
-    [3, 0.5],
-    [2, 0.5],
-    [1, 1],
-    [2, 1],
-    [0, 1],
-    [4, 0.5],
-    [5, 0.5],
-    [4, 1],
-    [3, 1],
-    [2, 1],
-    [1, 0.5],
-    [2, 0.5],
-    [0, 2],
+## The background music: the melody of "Көзімнің қарасы" by Abai
+## Qunanbaiuly (1845-1904), in the public domain, as [MIDI note, beats] in 2/4
+## (see dev/music/kozimnin_karasi.py, which also writes it as a MIDI file).
+const _SONG := [
+    [50, 1],
+    [52, 1],
+    [54, 2],
+    [54, 0.5],
+    [52, 0.5],
+    [54, 0.5],
+    [52, 0.5],
+    [59, 2],
+    [59, 1],
+    [61, 1],
+    [62, 0.5],
+    [55, 0.5],
+    [59, 0.5],
+    [62, 0.5],
+    [61, 0.5],
+    [59, 0.5],
+    [62, 0.5],
+    [61, 0.5],
+    [59, 2],
+    [66, 0.5],
+    [64, 0.5],
+    [62, 0.5],
+    [59, 0.5],
+    [64, 1.5],
+    [66, 0.5],
+    [69, 1],
+    [71, 0.5],
+    [69, 0.25],
+    [71, 0.25],
+    [66, 2],
+    [61, 1],
+    [62, 1],
+    [64, 0.5],
+    [55, 0.5],
+    [59, 0.5],
+    [61, 0.5],
+    [62, 0.5],
+    [64, 0.5],
+    [61, 0.5],
+    [57, 0.5],
+    [59, 2],
 ]
+
+## The song is played at this many seconds per beat (Andante).
+const _SONG_BEAT := 0.72
+
+## The open strings of the dombra, D3 and A3, strummed softly on every beat.
+const _DRONE := [50, 57]
 
 ## Whether the sounds are on.
 var enabled := true
@@ -134,7 +165,7 @@ func _stream(sound: String) -> AudioStreamWAV:
             "tune":
                 samples = _phrase(_TUNE, 0.28, 0.8)
             "music":
-                samples = _phrase(_MUSIC, 0.42, 0.5)
+                samples = _song(_SONG, _SONG_BEAT)
             "hoof":
                 samples = _thud(0.12, 90.0)
             "stamp":
@@ -191,6 +222,38 @@ func _phrase(notes: Array, beat: float, loudness: float) -> PackedFloat32Array:
                 result[offset + i] += tone[i]
         start += note[1] * beat
     return result
+
+
+## The song plucked on the dombra, note by note, over a soft strum of its
+## open strings on every beat, with a breath of silence before it repeats.
+func _song(notes: Array, beat: float) -> PackedFloat32Array:
+    var total := 0.0
+    for note in notes:
+        total += note[1] * beat
+    var result := PackedFloat32Array()
+    result.resize(roundi((total + beat) * RATE))
+    var start := 0.0
+    for note in notes:
+        _mix(result, _pluck(_midi(note[0]), note[1] * beat + 0.5, 0.55), start)
+        start += note[1] * beat
+    for i in range(roundi(total / beat)):
+        for k in range(_DRONE.size()):
+            _mix(result, _pluck(_midi(_DRONE[k]), beat, 0.16), i * beat + 0.012 * k)
+    return result
+
+
+## Add the sound into the samples from the time on.
+func _mix(samples: PackedFloat32Array, sound: PackedFloat32Array, at: float) -> void:
+    var offset := roundi(at * RATE)
+    for i in range(sound.size()):
+        if offset + i >= samples.size():
+            return
+        samples[offset + i] += sound[i]
+
+
+## The frequency of the MIDI note.
+static func _midi(note: int) -> float:
+    return 440.0 * pow(2.0, (note - 69) / 12.0)
 
 
 ## A thud of a hoof on the ground: a low, quickly falling tone with a click.

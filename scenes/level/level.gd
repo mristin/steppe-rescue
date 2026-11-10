@@ -68,6 +68,14 @@ var _revealed: Array[Clue] = []
 var _started := false
 var _edge_time := 0.0
 
+## How often the rider ran into each obstacle, by its index (see
+## [member Rider.blocked_by]), and the one she touches now.
+var _bumps: Dictionary = {}
+var _touching := -1
+
+## How long the hint to turn still shows, in seconds.
+var _turn_hint_time := 0.0
+
 var _coach: Coach
 var _wildlife: Wildlife
 var _still_time := 0.0
@@ -97,6 +105,7 @@ var _talk_squats := 0
 func _ready() -> void:
     _service = get_node("/root/Vision").service
     _service.ResetRiding()
+    get_node("/root/Sounds").wind(true)
 
     if Flow.level != "":
         map_scene = load(Flow.level)
@@ -150,6 +159,10 @@ func _ready() -> void:
     _rider.add_child(bubble)
 
 
+func _exit_tree() -> void:
+    get_node("/root/Sounds").wind(false)
+
+
 func _unhandled_input(event: InputEvent) -> void:
     if event is InputEventKey and event.pressed and not event.echo:
         match event.keycode:
@@ -184,6 +197,8 @@ func _process(delta: float) -> void:
     # The edge of the steppe blocks the horse like a wall, and Grandmother's
     # word reminds the rider to stay near.
     _edge_time = EDGE_SECONDS if _rider.at_edge else maxf(0.0, _edge_time - delta)
+
+    note_bumps(delta)
     _edge_label.visible = _edge_time > 0.0
     _edge_label.text = tr("Don't ride too far away!")
     if _started and not finished:
@@ -335,6 +350,7 @@ func _update_lost(animal: Animal, delta: float, gait: int) -> void:
         if animal.near_time >= Animal.JOIN_SECONDS:
             animal.state = Animal.State.FOLLOWING
             animal.heart_time = Animal.HEART_SECONDS
+            get_node("/root/Sounds").play("chime")
             _followers.append(animal)
     else:
         animal.near_time = maxf(0.0, animal.near_time - delta)
@@ -356,6 +372,7 @@ func _trail_point(distance: float) -> Vector2:
 
 func _finish() -> void:
     finished = true
+    get_node("/root/Sounds").play("tune")
     _map_view.large = false
     get_node("/root/Profile").finish_level(level_id(), stars())
     _talk_time = 0.0
@@ -424,8 +441,9 @@ func _update_hud(speed: float) -> void:
 
 
 ## Let the small figure show what the game waits for: a squat when the horse
-## stands still or a conversation waits for one, the reach across after the
-## edge of the steppe, else the echo of the player's squats.
+## stands still or a conversation waits for one, the reins pulled after the
+## edge of the steppe or the second run into the same obstacle, else the echo
+## of the player's squats.
 func _update_coach(delta: float) -> void:
     _still_time = _still_time + delta if _rider.speed <= 0.0 else 0.0
     var squats: int = _service.GetSquatCount()
@@ -435,12 +453,31 @@ func _update_coach(delta: float) -> void:
     var waiting := _talk_time >= (THANKS_SECONDS if finished else TALK_SECONDS)
     if _talking != null or finished:
         _coach.mode = Coach.Mode.SQUAT if waiting else Coach.Mode.STAND
-    elif _edge_time > 0.0:
+    elif _edge_time > 0.0 or _turn_hint_time > 0.0:
         _coach.mode = Coach.Mode.REACH
     elif _still_time >= STILL_SECONDS:
         _coach.mode = Coach.Mode.SQUAT
     else:
         _coach.mode = Coach.Mode.STAND
+
+
+## Count the runs into the obstacles: running into the same obstacle a
+## second time shows how to turn (see section 5 of DESIGN.md); a touch counts
+## once, until she leaves it.
+func note_bumps(delta: float) -> void:
+    var blocked := _rider.blocked_by if _rider.speed > 0.0 else -1
+    if blocked >= 0 and blocked != _touching:
+        _bumps[blocked] = int(_bumps.get(blocked, 0)) + 1
+        if _bumps[blocked] >= 2:
+            _turn_hint_time = EDGE_SECONDS
+    _touching = blocked
+    _turn_hint_time = maxf(0.0, _turn_hint_time - delta)
+
+
+## Whether the hint to turn shows, after the rider ran into the same
+## obstacle twice.
+func turn_hint() -> bool:
+    return _turn_hint_time > 0.0
 
 
 ## What the small figure next to the camera picture does now.

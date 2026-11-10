@@ -105,7 +105,7 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr ""
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/settings/settings.gd
+#: scenes/level_select/level_select.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
 msgid "Back"
 msgstr ""
 
@@ -186,6 +186,11 @@ msgstr ""
 msgid "Go on"
 msgstr ""
 
+#. The label of the row which opens the wardrobe of the finery.
+#: scenes/reward/reward.gd scenes/settings/settings.gd
+msgid "Wardrobe"
+msgstr ""
+
 #: scenes/reward/reward.gd
 msgid "Silver studs"
 msgstr ""
@@ -258,6 +263,21 @@ msgstr ""
 
 #: scenes/reward/reward.gd
 msgid "Embroidered boots"
+msgstr ""
+
+#. The felt carpet of the yurt, сырмақ.
+#: scenes/reward/reward.gd
+msgid "Felt carpet"
+msgstr ""
+
+#. The carved and painted door of the yurt.
+#: scenes/reward/reward.gd
+msgid "Carved door"
+msgstr ""
+
+#. The dombra, the two-stringed lute, hanging at home.
+#: scenes/reward/reward.gd
+msgid "Dombra"
 msgstr ""
 
 #: scenes/rider_creator/rider_creator.gd
@@ -558,6 +578,27 @@ msgstr ""
 msgid "Rider"
 msgstr ""
 
+#. The button which opens the wardrobe, to choose what to wear.
+#. The title of the wardrobe; the chosen pieces are golden.
+#: scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+msgid "Choose what to wear"
+msgstr ""
+
+#. The label of the row with the sound on or off.
+#: scenes/settings/settings.gd
+msgid "Sound"
+msgstr ""
+
+#: scenes/settings/settings.gd
+msgctxt "sound"
+msgid "On"
+msgstr ""
+
+#: scenes/settings/settings.gd
+msgctxt "sound"
+msgid "Off"
+msgstr ""
+
 #. {pose} and {face} are the milliseconds to find the body and the face.
 #: scenes/vision/vision_status.gd
 msgid "I see you! (body {pose} ms, face {face} ms)"
@@ -585,6 +626,11 @@ msgstr ""
 
 #: scenes/vision/vision_status.gd
 msgid "The camera failed. Use the keyboard."
+msgstr ""
+
+#. In the wardrobe, before the rider won any finery.
+#: scenes/wardrobe/wardrobe.gd
+msgid "Bring the animals home to win finery!"
 msgstr ""
 
 #. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'

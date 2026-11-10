@@ -92,6 +92,24 @@ func _run() -> void:
     await _wait(0.2)
     _check(level.coach_mode() == Coach.Mode.REACH, "at the edge, the figure reaches across")
     rider.position = before
+
+    # NOTE (mristin):
+    # The impatient horse stamps a hoof; running into the same obstacle twice
+    # shows how to turn.
+    _check(rider.still_time > Rider.IMPATIENT_SECONDS, "the horse stands still for a while")
+    var solid: Vector3 = level.map.solids()[0]
+    for bump in range(2):
+        # NOTE (mristin):
+        # Ride north into the obstacle from just south of it, then away.
+        rider.position = Vector2(solid.x, solid.y) + Vector2(0, solid.z + Rider.RADIUS + 1.0)
+        rider.heading = 0.0
+        rider.ride(0.1, 1.0, 0.0)
+        level.note_bumps(0.016)
+        rider.position = Vector2(solid.x, solid.y) + Vector2(0, solid.z + 60.0)
+        rider.ride(0.016, 1.0, 0.0)
+        level.note_bumps(0.016)
+    _check(level.turn_hint(), "two runs into the same obstacle show how to turn")
+    rider.position = before
     var lamb: Animal = level.animals[0]
     rider.position = lamb.position + Vector2(0, 14)
     await _wait(1.5)

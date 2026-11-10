@@ -83,6 +83,9 @@ func _process(delta: float) -> void:
 
 ## Click the button.
 func press() -> void:
+    var sounds := get_node_or_null("/root/Sounds")
+    if sounds != null:
+        sounds.play("click")
     progress = 0.0
     pressed.emit()
 

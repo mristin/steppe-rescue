@@ -18,6 +18,7 @@ const SETTINGS := "res://scenes/settings/settings.tscn"
 const LEVEL := "res://scenes/level/level.tscn"
 const REWARD := "res://scenes/reward/reward.tscn"
 const FREE_SPACE := "res://scenes/free_space/free_space.tscn"
+const WARDROBE := "res://scenes/wardrobe/wardrobe.tscn"
 
 ## Whether the player is on her way from Play to the level (else she opened a
 ## screen from a menu, and goes back to it when done).

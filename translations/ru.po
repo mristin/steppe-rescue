@@ -128,7 +128,7 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr "Видели {animals} к западу от {landmark@of}."
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/settings/settings.gd
+#: scenes/level_select/level_select.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
 #, fuzzy
 msgid "Back"
 msgstr "Назад"
@@ -228,6 +228,12 @@ msgstr "Как красиво!"
 msgid "Go on"
 msgstr "Дальше"
 
+#. The label of the row which opens the wardrobe of the finery.
+#: scenes/reward/reward.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Wardrobe"
+msgstr "Гардероб"
+
 #: scenes/reward/reward.gd
 #, fuzzy
 msgid "Silver studs"
@@ -319,6 +325,24 @@ msgstr "Серебряный пояс"
 #, fuzzy
 msgid "Embroidered boots"
 msgstr "Вышитые сапожки"
+
+#. The felt carpet of the yurt, сырмақ.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Felt carpet"
+msgstr "Войлочный ковёр"
+
+#. The carved and painted door of the yurt.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Carved door"
+msgstr "Резная дверь"
+
+#. The dombra, the two-stringed lute, hanging at home.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Dombra"
+msgstr "Домбра"
 
 #: scenes/rider_creator/rider_creator.gd
 #, fuzzy
@@ -680,6 +704,31 @@ msgstr "Язык"
 msgid "Rider"
 msgstr "Наездница"
 
+#. The button which opens the wardrobe, to choose what to wear.
+#. The title of the wardrobe; the chosen pieces are golden.
+#: scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Choose what to wear"
+msgstr "Выбери, что надеть"
+
+#. The label of the row with the sound on or off.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Sound"
+msgstr "Звук"
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "On"
+msgstr "Вкл."
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "Off"
+msgstr "Выкл."
+
 #. {pose} and {face} are the milliseconds to find the body and the face.
 #: scenes/vision/vision_status.gd
 #, fuzzy
@@ -715,6 +764,12 @@ msgstr "Не хватает моделей. Играй с клавиатуры."
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Ошибка камеры. Играй с клавиатуры."
+
+#. In the wardrobe, before the rider won any finery.
+#: scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Bring the animals home to win finery!"
+msgstr "Приводи животных домой, чтобы получать украшения!"
 
 #. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
 #: data/animals/camel.tres

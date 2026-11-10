@@ -2,17 +2,26 @@ class_name Reward
 extends Control
 
 ## Reward the rider at the end of a level (see section 8 of DESIGN.md): at
-## home, in front of the yurts, she stands next to her horse wearing all the
-## finery she won so far, and chooses one new piece of three, shown on big
-## cards as a close-up of her own horse or of her, with the name and, for the
-## tack, the Kazakh word. The piece joins the picture with a sparkle, and Go
-## on leads to the level select. More stars offer the more splendid pieces
-## (see [method Finery.offer]).
+## home, in front of the yurt, she stands next to her horse, with the
+## decorations of the home she won, and chooses one new piece of three, shown
+## on big cards as a painting of the piece, with its name and its Kazakh
+## word. The choice rings with a sparkle and a tune; Go on leads to the level
+## select, and Wardrobe to the choice of what to wear. More stars offer the
+## more splendid pieces (see [method Finery.offer]).
 ##
 ## Keys: 1, 2 and 3 choose a card, Enter goes on, Escape goes on, too.
 
 ## The painting of the home, the yurt at sunset, behind the rider.
 const HOME := "res://assets/pictures/home/reward.png"
+
+## Where the decorations of the home go in the painting of the home: the
+## felt carpet in front of the door, the carved door in the doorway, and the
+## dombra leaning against the barrel.
+const _DECORATIONS := {
+    "carpet": Rect2(592, 340, 276, 72),
+    "door": Rect2(733, 200, 118, 152),
+    "dombra": Rect2(612, 230, 56, 130),
+}
 
 ## The rider stands here, in front of her horse.
 const _RIDER_FEET := Vector2(110, 512)
@@ -38,6 +47,7 @@ var _cards: Array[DwellButton] = []
 var _subtitles: Array[Label] = []
 var _title: Label
 var _go_on: DwellButton
+var _wardrobe: DwellButton
 var _sparkle := 0.0
 var _rng := RandomNumberGenerator.new()
 
@@ -91,6 +101,14 @@ func _ready() -> void:
     _go_on.visible = offered.is_empty()
     _go_on.pressed.connect(go_on)
     add_child(_go_on)
+    _wardrobe = DwellButton.new()
+    _wardrobe.position = Vector2(810, 448)
+    _wardrobe.size = Vector2(130, 44)
+    _wardrobe.visible = _go_on.visible
+    _wardrobe.pressed.connect(
+        func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.LEVEL_SELECT)
+    )
+    add_child(_wardrobe)
 
     add_child(HandCursor.new())
     _update_texts()
@@ -128,7 +146,9 @@ func choose(index: int) -> void:
         _subtitles[i].visible = i == index
         _cards[i].selected = i == index
     _sparkle = SPARKLE_SECONDS
+    get_node("/root/Sounds").play("tune")
     _go_on.visible = true
+    _wardrobe.visible = true
     _update_texts()
 
 
@@ -142,10 +162,36 @@ func cards() -> Array[DwellButton]:
     return _cards
 
 
+## Draw the home on the item: the yurt at sunset, with the decorations of the
+## home which the rider wears (see [Finery]), and the painted rider standing
+## in front of her painted horse.
+static func draw_home(item: CanvasItem, profile: Node) -> void:
+    item.draw_texture(Painting.texture(HOME), Vector2.ZERO)
+    for piece in _DECORATIONS:
+        if profile.wears(piece) and Finery.has_picture(piece, 1):
+            var at: Rect2 = _DECORATIONS[piece]
+            item.draw_texture_rect(
+                Painting.fitted(Finery.PICTURES % [piece, 1], at.size), at, false
+            )
+    var looks: Dictionary = profile.looks
+    var horse := Painting.horse(looks.get("steed", "1"))
+    var horse_shown := horse.get_size() * 0.8
+    item.draw_texture_rect(
+        horse,
+        Rect2((_HORSE_GROUND - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown),
+        false
+    )
+    var rider := Painting.rider(looks.get("rider", "1"))
+    var shown := rider.get_size() * 0.7
+    item.draw_texture_rect(
+        rider, Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown), false
+    )
+
+
 ## The painting of the step of the piece (see assets/pictures/finery/), as
 ## the card shows it.
 static func preview(piece: String, at: int, _looks := {}) -> ImageTexture:
-    return Painting.fitted("res://assets/pictures/finery/%s_%d.png" % [piece, at], _PICTURE)
+    return Painting.fitted(Finery.PICTURES % [piece, at], _PICTURE)
 
 
 func _update_texts() -> void:
@@ -161,6 +207,7 @@ func _update_texts() -> void:
         _cards[i].text = piece_name(offered[i][0], offered[i][1])
     # TRANSLATORS: The button which goes on from the gift to the map of the levels.
     _go_on.text = tr("Go on")
+    _wardrobe.text = tr("Wardrobe")
 
 
 ## The name of the step of the piece.
@@ -179,34 +226,24 @@ func piece_name(piece: String, at: int) -> String:
         "bracelets": [tr("Bracelets")],
         "belt": [tr("Silver belt")],
         "boots": [tr("Embroidered boots")],
+        # TRANSLATORS: The felt carpet of the yurt, сырмақ.
+        "carpet": [tr("Felt carpet")],
+        # TRANSLATORS: The carved and painted door of the yurt.
+        "door": [tr("Carved door")],
+        # TRANSLATORS: The dombra, the two-stringed lute, hanging at home.
+        "dombra": [tr("Dombra")],
     }
     var steps: Array = names.get(piece, [piece])
     return steps[clampi(at - 1, 0, steps.size() - 1)]
 
 
 func _draw() -> void:
-    draw_texture(Painting.texture(HOME), Vector2.ZERO)
+    draw_home(self, get_node("/root/Profile"))
     draw_texture(Ornaments.panel(Vector2(540, 70)), Vector2(410, 14))
     var star := Icons.star(2.0)
     for i in range(3):
         var tint := Color.WHITE if i < stars else Color(0.25, 0.2, 0.15, 0.55)
         draw_texture(star, Vector2(644 + i * 28, 58), tint)
-
-    # NOTE (mristin):
-    # The painted rider stands in front of her painted horse, at home.
-    var looks: Dictionary = get_node("/root/Profile").looks
-    var horse := Painting.horse(looks.get("steed", "1"))
-    var horse_shown := horse.get_size() * 0.8
-    draw_texture_rect(
-        horse,
-        Rect2((_HORSE_GROUND - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown),
-        false
-    )
-    var rider := Painting.rider(looks.get("rider", "1"))
-    var shown := rider.get_size() * 0.7
-    draw_texture_rect(
-        rider, Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown), false
-    )
 
     if _sparkle <= 0.0:
         return

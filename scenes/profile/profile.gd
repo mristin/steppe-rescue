@@ -37,6 +37,9 @@ var has_seen_instruction := false
 ## The finery which the rider won: the step of each piece (see [Finery]).
 var finery: Dictionary = {}
 
+## The pieces of the finery which she won but took off in the wardrobe.
+var taken_off: Array = []
+
 
 func _ready() -> void:
     var settings := ConfigFile.new()
@@ -49,6 +52,7 @@ func _ready() -> void:
         stars = settings.get_value(_PROGRESS, "stars", {})
         has_seen_instruction = settings.get_value(_PROGRESS, "instruction_seen", false)
         finery = Finery.complete(settings.get_value(_PROGRESS, "finery", {}))
+        taken_off = settings.get_value(_PROGRESS, "taken_off", [])
     if "--new-rider" in OS.get_cmdline_user_args():
         has_rider = false
 
@@ -88,11 +92,30 @@ func save(a_rider_name: String, a_horse_name: String, a_looks: Dictionary) -> vo
     )
 
 
-## The looks of the rider dressed in her finery, to draw her.
+## The looks of the rider dressed in the finery she wears, to draw her.
 func dressed() -> Dictionary:
     var result := looks.duplicate()
-    result["finery"] = finery.duplicate()
+    var worn := {}
+    for piece in finery:
+        if piece not in taken_off:
+            worn[piece] = finery[piece]
+    result["finery"] = worn
     return result
+
+
+## Whether she wears the piece which she won.
+func wears(piece: String) -> bool:
+    return finery.has(piece) and piece not in taken_off
+
+
+## Put on (or take off) the piece which she won, in the wardrobe, and
+## remember it.
+func wear(piece: String, on: bool) -> void:
+    if on:
+        taken_off.erase(piece)
+    elif piece not in taken_off:
+        taken_off.append(piece)
+    _store(_PROGRESS, {"taken_off": taken_off})
 
 
 ## Win the next step of the piece of finery, and remember it.
@@ -100,7 +123,8 @@ func win(piece: String) -> void:
     if not Finery.PIECES.has(piece):
         return
     finery[piece] = mini(int(finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
-    _store(_PROGRESS, {"finery": finery})
+    taken_off.erase(piece)
+    _store(_PROGRESS, {"finery": finery, "taken_off": taken_off})
 
 
 ## Whether the player finished the level.

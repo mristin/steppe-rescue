@@ -25,7 +25,14 @@ const PIECES := {
     "bracelets": {"steps": 1, "for": "rider", "kazakh": "білезік"},
     "belt": {"steps": 1, "for": "rider", "kazakh": "белбеу"},
     "boots": {"steps": 1, "for": "rider", "kazakh": "етік"},
+    "carpet": {"steps": 1, "for": "home", "kazakh": "сырмақ"},
+    "door": {"steps": 1, "for": "home", "kazakh": "есік"},
+    "dombra": {"steps": 1, "for": "home", "kazakh": "домбыра"},
 }
+
+## The pictures of the steps of the pieces (the cards of the reward and the
+## wardrobe), and of the home pieces at home, by the piece and the step.
+const PICTURES := "res://assets/pictures/finery/%s_%d.png"
 
 ## How many pieces the reward offers.
 const OFFERED := 3
@@ -35,6 +42,12 @@ const OFFERED := 3
 static func step(looks: Dictionary, piece: String) -> int:
     var finery: Dictionary = looks.get("finery", {})
     return int(finery.get(piece, 0))
+
+
+## Whether the step of the piece has its picture: the home pieces are
+## offered only once they are painted.
+static func has_picture(piece: String, at: int) -> bool:
+    return PIECES[piece]["for"] != "home" or ResourceLoader.exists(PICTURES % [piece, at])
 
 
 ## The finery with only the known pieces and steps.
@@ -55,7 +68,7 @@ static func offer(finery: Dictionary, stars: int, rng: RandomNumberGenerator) ->
     var candidates := []
     for piece in PIECES:
         var next := int(finery.get(piece, 0)) + 1
-        if next <= PIECES[piece]["steps"]:
+        if next <= PIECES[piece]["steps"] and has_picture(piece, next):
             candidates.append([piece, next])
     # NOTE (mristin):
     # Shuffle with the generator, so that the tests can repeat an offer.

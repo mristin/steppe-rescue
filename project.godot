@@ -20,6 +20,7 @@ config/icon="res://icon.svg"
 
 Languages="*res://scenes/languages/languages.gd"
 Profile="*res://scenes/profile/profile.gd"
+Sounds="*res://scenes/sound/sounds.gd"
 Vision="*res://scenes/vision/vision.tscn"
 
 [display]

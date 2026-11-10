@@ -2,18 +2,21 @@ class_name Settings
 extends Control
 
 ## Let the player change her settings (see section 6 of DESIGN.md): the
-## language and the rider with her horse, on a felt panel with a row for each,
+## language, the rider with her horse, what she wears (the wardrobe) and the
+## sound, on a felt panel with a row for each,
 ## next to the camera picture, big, in which she sees herself dressed as her
 ## rider (see [CameraPanel]), so that she can check that the camera sees her;
 ## without the camera, her rider stands there instead.
 ##
 ## Keys: Escape goes back to the intro.
 
-const _PANEL := Rect2(424, 100, 512, 300)
+const _PANEL := Rect2(424, 40, 512, 380)
 const _CAMERA := Rect2(32, 112, 352, 264)
 
 var _language: DwellButton
 var _rider: DwellButton
+var _wardrobe: DwellButton
+var _sound: DwellButton
 var _back: DwellButton
 var _title: Label
 var _row_labels: Array[Label] = []
@@ -43,15 +46,24 @@ func _ready() -> void:
     _title.add_theme_font_size_override("font_size", 32)
 
     var left := _PANEL.position.x + 30.0
-    for i in range(2):
-        var top := _PANEL.position.y + 90.0 + i * 64.0
+    for i in range(4):
+        var top := _PANEL.position.y + 80.0 + i * 70.0
         _row_labels.append(_label(Rect2(left, top + 14, 150, 20)))
-    _language = _button(Rect2(left + 160, _PANEL.position.y + 90, 290, 48))
+    _language = _button(Rect2(left + 160, _PANEL.position.y + 80, 290, 48))
     _language.pressed.connect(
         func() -> void: Flow.open(get_tree(), Flow.LANGUAGE_SELECT, Flow.SETTINGS)
     )
-    _rider = _button(Rect2(left + 160, _PANEL.position.y + 154, 290, 48))
+    _rider = _button(Rect2(left + 160, _PANEL.position.y + 150, 290, 48))
     _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.RIDER_CREATOR, Flow.SETTINGS))
+    _wardrobe = _button(Rect2(left + 160, _PANEL.position.y + 220, 290, 48))
+    _wardrobe.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.SETTINGS))
+    _sound = _button(Rect2(left + 160, _PANEL.position.y + 290, 290, 48))
+    _sound.pressed.connect(
+        func() -> void:
+            var sounds := get_node("/root/Sounds")
+            sounds.set_enabled(not sounds.enabled)
+            _update_texts()
+    )
 
     _back = _button(Rect2(_PANEL.get_center().x - 90, _PANEL.end.y + 24, 180, 56))
     _back.font_size = 32
@@ -86,7 +98,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## The buttons, for the tests: the language, the rider and Back.
 func buttons() -> Array[DwellButton]:
-    return [_language, _rider, _back]
+    return [_language, _rider, _back, _wardrobe, _sound]
 
 
 func _update_texts() -> void:
@@ -101,6 +113,13 @@ func _update_texts() -> void:
             _language.text = language["name"]
     var profile := get_node("/root/Profile")
     _rider.text = "%s · %s" % [profile.rider_name(), profile.horse_name()]
+    # TRANSLATORS: The label of the row which opens the wardrobe of the finery.
+    _row_labels[2].text = tr("Wardrobe")
+    # TRANSLATORS: The button which opens the wardrobe, to choose what to wear.
+    _wardrobe.text = tr("Choose what to wear")
+    # TRANSLATORS: The label of the row with the sound on or off.
+    _row_labels[3].text = tr("Sound")
+    _sound.text = tr("On", "sound") if get_node("/root/Sounds").enabled else tr("Off", "sound")
     # TRANSLATORS: The button which goes back to the previous screen.
     _back.text = tr("Back")
 

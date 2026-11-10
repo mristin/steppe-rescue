@@ -86,6 +86,33 @@ func _run() -> void:
     _check(creator.camera_panel().looks == creator.looks, "the camera dresses her as she chooses")
     _check(Finery.step(creator.looks, "saddle") == 2, "the creator shows the rider in her finery")
 
+    # NOTE (mristin):
+    # The wardrobe: she takes a piece off and puts it on again.
+    profile.finery = {"saddle": 1, "earrings": 1}
+    profile.taken_off = []
+    Flow.open(self, Flow.WARDROBE)
+    await _frames(3)
+    var wardrobe := current_scene as Wardrobe
+    _check(wardrobe.cards().size() == 2, "the wardrobe shows the pieces she won")
+    wardrobe.toggle("earrings")
+    _check(not profile.wears("earrings"), "she takes the earrings off")
+    _check(not profile.dressed()["finery"].has("earrings"), "and does not wear them")
+    _check(profile.dressed()["finery"].has("saddle"), "but still the saddle")
+    saved = ConfigFile.new()
+    saved.load(path)
+    _check("earrings" in saved.get_value("progress", "taken_off", []), "what she took off is saved")
+    wardrobe.toggle("earrings")
+    _check(profile.wears("earrings"), "she puts them on again")
+    var all_but_home := {}
+    for each in Finery.PIECES:
+        if Finery.PIECES[each]["for"] != "home":
+            all_but_home[each] = Finery.PIECES[each]["steps"]
+    for entry in Finery.offer(all_but_home, 3, rng):
+        _check(
+            Finery.has_picture(entry[0], entry[1]),
+            "a piece of the home is offered only once it is painted: %s" % entry[0]
+        )
+
     Flow.room_asked = false
     Flow.open(self, Flow.FREE_SPACE)
     await _frames(3)

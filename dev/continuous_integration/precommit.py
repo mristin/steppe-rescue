@@ -257,6 +257,7 @@ def smoke_scenes(godot: str, jobs: int) -> int:
         REPO_ROOT / "scenes" / "settings" / "settings.tscn",
         REPO_ROOT / "scenes" / "reward" / "reward.tscn",
         REPO_ROOT / "scenes" / "free_space" / "free_space.tscn",
+        REPO_ROOT / "scenes" / "wardrobe" / "wardrobe.tscn",
         REPO_ROOT / "scenes" / "level" / "level.tscn",
         REPO_ROOT / "scenes" / "movement_test" / "movement_test.tscn",
     ]

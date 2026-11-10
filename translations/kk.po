@@ -128,7 +128,7 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr "{landmark@of} батыс жағында {animals} көрдім."
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/settings/settings.gd
+#: scenes/level_select/level_select.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
 #, fuzzy
 msgid "Back"
 msgstr "Артқа"
@@ -228,6 +228,12 @@ msgstr "Қандай әдемі!"
 msgid "Go on"
 msgstr "Әрі қарай"
 
+#. The label of the row which opens the wardrobe of the finery.
+#: scenes/reward/reward.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Wardrobe"
+msgstr "Киім сандығы"
+
 #: scenes/reward/reward.gd
 #, fuzzy
 msgid "Silver studs"
@@ -319,6 +325,24 @@ msgstr "Күміс белбеу"
 #, fuzzy
 msgid "Embroidered boots"
 msgstr "Кестелі етік"
+
+#. The felt carpet of the yurt, сырмақ.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Felt carpet"
+msgstr "Сырмақ"
+
+#. The carved and painted door of the yurt.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Carved door"
+msgstr "Ойма есік"
+
+#. The dombra, the two-stringed lute, hanging at home.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Dombra"
+msgstr "Домбыра"
 
 #: scenes/rider_creator/rider_creator.gd
 #, fuzzy
@@ -680,6 +704,31 @@ msgstr "Тіл"
 msgid "Rider"
 msgstr "Шабандоз"
 
+#. The button which opens the wardrobe, to choose what to wear.
+#. The title of the wardrobe; the chosen pieces are golden.
+#: scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Choose what to wear"
+msgstr "Не киетініңді таңда"
+
+#. The label of the row with the sound on or off.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Sound"
+msgstr "Дыбыс"
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "On"
+msgstr "Қосулы"
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "Off"
+msgstr "Өшірулі"
+
 #. {pose} and {face} are the milliseconds to find the body and the face.
 #: scenes/vision/vision_status.gd
 #, fuzzy
@@ -715,6 +764,12 @@ msgstr "Модельдер жоқ. Пернетақтаны қолдан."
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Камера істен шықты. Пернетақтаны қолдан."
+
+#. In the wardrobe, before the rider won any finery.
+#: scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Bring the animals home to win finery!"
+msgstr "Әшекей алу үшін малды үйге әкел!"
 
 #. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
 #: data/animals/camel.tres

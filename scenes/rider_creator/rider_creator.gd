@@ -346,12 +346,16 @@ func _draw() -> void:
     # horse is a bit taller than the girl of ten.
     var horse := Painting.horse(looks.get("steed", "1"))
     var horse_size := horse.get_size()
-    draw_texture(horse, (_HORSE_GROUND - Vector2(horse_size.x * 0.5, horse_size.y)).round())
+    var horse_rect := Rect2(
+        (_HORSE_GROUND - Vector2(horse_size.x * 0.5, horse_size.y)).round(), horse_size
+    )
+    draw_texture_rect(horse, horse_rect, false)
+    Reward.dress(self, horse_rect, looks, "horse")
     var rider := Painting.rider(looks.get("rider", "1"))
     var shown := rider.get_size() * _RIDER_SHOWN
-    draw_texture_rect(
-        rider, Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown), false
-    )
+    var rider_rect := Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown)
+    draw_texture_rect(rider, rider_rect, false)
+    Reward.dress(self, rider_rect, looks, "rider")
 
     draw_texture(Ornaments.panel(_PANEL.size), _PANEL.position)
 

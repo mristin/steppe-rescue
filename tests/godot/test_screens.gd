@@ -170,6 +170,29 @@ func _run() -> void:
     _check(current_scene is Intro, "Back goes to the intro")
 
     # NOTE (mristin):
+    # A second child creates her own rider; then Play asks who rides.
+    _check(profile.riders().size() == 1, "one rider shares the computer")
+    _check(profile.new_rider(), "a new rider starts")
+    _check(not profile.has_rider and profile.index == 1, "the new rider is still to create")
+    profile.save("Дана", "", Looks.preset(Looks.DEFAULT, "4"))
+    _check(profile.riders().size() == 2, "two riders share the computer")
+    Flow.rider_asked = false
+    Flow.play(self)
+    await _frames(3)
+    _check(current_scene is Riders, "Play asks who rides")
+    var riders := current_scene as Riders
+    _check(riders.cards().size() == 2, "a card for each rider")
+    riders.choose(0)
+    await _frames(3)
+    _check(profile.index == 0 and profile.rider_name() == "Әсел", "the first rider rides again")
+    _check(profile.has_seen_instruction, "with her own progress")
+    profile.choose_rider(1)
+    _check(profile.rider_name() == "Дана", "the second rider is kept")
+    _check(profile.stars.is_empty(), "with her own stars")
+    profile.choose_rider(0)
+    Flow.rider_asked = true
+
+    # NOTE (mristin):
     # Finishing every level keeps the stars, opens the next level, and sends
     # Play to the level select.
     var paths := LevelList.paths()

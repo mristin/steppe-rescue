@@ -19,6 +19,7 @@ const LEVEL := "res://scenes/level/level.tscn"
 const REWARD := "res://scenes/reward/reward.tscn"
 const FREE_SPACE := "res://scenes/free_space/free_space.tscn"
 const WARDROBE := "res://scenes/wardrobe/wardrobe.tscn"
+const RIDERS := "res://scenes/riders/riders.tscn"
 
 ## Whether the player is on her way from Play to the level (else she opened a
 ## screen from a menu, and goes back to it when done).
@@ -29,6 +30,10 @@ static var back := INTRO
 
 ## The path of the level to play (see [LevelList]); empty for the next one.
 static var level := ""
+
+## Whether the riders who share the computer chose who rides since the game
+## started.
+static var rider_asked := false
 
 ## Whether the player was asked for room around her since the game started.
 static var room_asked := false
@@ -62,6 +67,8 @@ static func next(tree: SceneTree) -> void:
     var profile := tree.root.get_node("Profile")
     if not tree.root.get_node("Languages").has_chosen:
         tree.change_scene_to_file.call_deferred(LANGUAGE_SELECT)
+    elif not rider_asked and profile.riders().size() > 1:
+        tree.change_scene_to_file.call_deferred(RIDERS)
     elif not profile.has_rider:
         tree.change_scene_to_file.call_deferred(RIDER_CREATOR)
     elif not profile.has_seen_instruction:

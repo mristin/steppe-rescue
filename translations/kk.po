@@ -128,7 +128,8 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr "{landmark@of} батыс жағында {animals} көрдім."
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#: scenes/level_select/level_select.gd scenes/riders/riders.gd scenes/settings/settings.gd
+#: scenes/wardrobe/wardrobe.gd
 #, fuzzy
 msgid "Back"
 msgstr "Артқа"
@@ -190,7 +191,7 @@ msgid "Straight ahead"
 msgstr "Тура алға"
 
 #. The default name of the rider, a girl, in your alphabet.
-#: scenes/profile/profile.gd
+#: scenes/profile/profile.gd scenes/riders/riders.gd
 #, fuzzy
 msgid "Aigerim"
 msgstr "Айгерім"
@@ -686,6 +687,24 @@ msgstr "сары"
 msgctxt "mane"
 msgid "grey"
 msgstr "сұр"
+
+#. The title of the screen where the children choose who rides.
+#: scenes/riders/riders.gd
+#, fuzzy
+msgid "Who rides today?"
+msgstr "Бүгін кім шабады?"
+
+#. The card which starts a new rider; keep it short.
+#: scenes/riders/riders.gd
+#, fuzzy
+msgid "+ New"
+msgstr "+ Жаңа"
+
+#. The button which opens the creator for the current rider.
+#: scenes/riders/riders.gd
+#, fuzzy
+msgid "Change rider"
+msgstr "Шабандозды өзгерту"
 
 #: scenes/settings/settings.gd scenes/vision/vision_status.gd
 #, fuzzy

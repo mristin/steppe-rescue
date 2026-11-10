@@ -105,7 +105,8 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr ""
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#: scenes/level_select/level_select.gd scenes/riders/riders.gd scenes/settings/settings.gd
+#: scenes/wardrobe/wardrobe.gd
 msgid "Back"
 msgstr ""
 
@@ -155,7 +156,7 @@ msgid "Straight ahead"
 msgstr ""
 
 #. The default name of the rider, a girl, in your alphabet.
-#: scenes/profile/profile.gd
+#: scenes/profile/profile.gd scenes/riders/riders.gd
 msgid "Aigerim"
 msgstr ""
 
@@ -562,6 +563,21 @@ msgstr ""
 #: scenes/rider_creator/rider_creator.gd
 msgctxt "mane"
 msgid "grey"
+msgstr ""
+
+#. The title of the screen where the children choose who rides.
+#: scenes/riders/riders.gd
+msgid "Who rides today?"
+msgstr ""
+
+#. The card which starts a new rider; keep it short.
+#: scenes/riders/riders.gd
+msgid "+ New"
+msgstr ""
+
+#. The button which opens the creator for the current rider.
+#: scenes/riders/riders.gd
+msgid "Change rider"
 msgstr ""
 
 #: scenes/settings/settings.gd scenes/vision/vision_status.gd

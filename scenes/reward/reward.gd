@@ -14,6 +14,31 @@ extends Control
 ## The painting of the home, the yurt at sunset, behind the rider.
 const HOME := "res://assets/pictures/home/reward.png"
 
+## Where the pieces of the finery go on the painted horses, which all stand
+## alike, in profile, facing right: [piece, x, y, width], as fractions of the
+## picture of the horse, in the order they are laid on. The braided mane and
+## its ribbons, close-ups of a mane, show only on their cards.
+const _ON_HORSE := [
+    ["saddle_cloth", 0.5, 0.37, 0.34],
+    ["stirrups", 0.5, 0.6, 0.1],
+    ["saddle", 0.5, 0.3, 0.28],
+    ["breastplate", 0.77, 0.43, 0.14],
+    ["bridle", 0.88, 0.2, 0.16],
+    ["mane", 0.76, 0.13, 0.07, 3],
+]
+
+## Where the pieces go on the painted riders, who all stand alike, facing the
+## viewer. The coat shows only on its card and in the camera picture; the
+## earrings only in the camera picture, since the painted girls wear their
+## own.
+const _ON_RIDER := [
+    ["boots", 0.5, 0.925, 0.58],
+    ["belt", 0.5, 0.45, 0.46],
+    ["bracelets", 0.2, 0.62, 0.11],
+    ["bracelets", 0.8, 0.62, 0.11],
+    ["feathers", 0.5, 0.0, 0.3],
+]
+
 ## Where the decorations of the home go in the painting of the home: the
 ## felt carpet in front of the door, the carved door in the doorway, and the
 ## dombra leaning against the barrel.
@@ -33,6 +58,8 @@ const _PICTURE := Vector2(128, 116)
 
 ## How long the sparkle lasts, in seconds.
 const SPARKLE_SECONDS := 1.6
+
+static var _pictures: Dictionary = {}
 
 ## The pieces on offer, as [piece, step] pairs.
 var offered: Array = []
@@ -173,19 +200,41 @@ static func draw_home(item: CanvasItem, profile: Node) -> void:
             item.draw_texture_rect(
                 Painting.fitted(Finery.PICTURES % [piece, 1], at.size), at, false
             )
-    var looks: Dictionary = profile.looks
+    var looks: Dictionary = profile.dressed()
     var horse := Painting.horse(looks.get("steed", "1"))
     var horse_shown := horse.get_size() * 0.8
-    item.draw_texture_rect(
-        horse,
-        Rect2((_HORSE_GROUND - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown),
-        false
+    var horse_rect := Rect2(
+        (_HORSE_GROUND - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown
     )
+    item.draw_texture_rect(horse, horse_rect, false)
+    dress(item, horse_rect, looks, "horse")
     var rider := Painting.rider(looks.get("rider", "1"))
     var shown := rider.get_size() * 0.7
-    item.draw_texture_rect(
-        rider, Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown), false
-    )
+    var rider_rect := Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown)
+    item.draw_texture_rect(rider, rider_rect, false)
+    dress(item, rider_rect, looks, "rider")
+
+
+## Lay the painted finery which she wears over the painted horse (or rider)
+## drawn in the rectangle, at the places where the pieces go (see
+## [constant _ON_HORSE] and [constant _ON_RIDER]).
+static func dress(item: CanvasItem, rect: Rect2, looks: Dictionary, who: String) -> void:
+    var places: Array = _ON_HORSE if who == "horse" else _ON_RIDER
+    for place in places:
+        var piece: String = place[0]
+        var at := Finery.step(looks, piece)
+        if at < 1 or (place.size() > 4 and at != place[4]):
+            continue
+        var path := Finery.PICTURES % [piece, at]
+        if not ResourceLoader.exists(path):
+            continue
+        if not _pictures.has(path):
+            _pictures[path] = load(path)
+        var picture: Texture2D = _pictures[path]
+        var center := rect.position + Vector2(place[1], place[2]) * rect.size
+        var width: float = place[3] * rect.size.x
+        var size := Vector2(width, width * picture.get_height() / picture.get_width())
+        item.draw_texture_rect(picture, Rect2((center - size * 0.5).round(), size), false)
 
 
 ## The painting of the step of the piece (see assets/pictures/finery/), as

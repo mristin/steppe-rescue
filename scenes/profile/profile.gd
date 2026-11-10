@@ -1,18 +1,28 @@
 extends Node
 
-## Remember the rider of the player: her name, the name of her horse and their
-## [Looks], the stars of each level she finished, the [Finery] she won, and
-## whether she has seen the instruction (see section 9 of DESIGN.md), in the settings next to the
-## language (see the autoload Languages, which also tells where the settings
-## are).
+## Remember the riders who share the computer (see section 9 of DESIGN.md),
+## each with her name, the name of her horse and their [Looks], the stars of
+## each level she finished, the [Finery] she won and wears, and whether she
+## has seen the instruction, in the settings next to the language (see the
+## autoload Languages, which also tells where the settings are). The fields
+## below are those of the current rider (see [method choose_rider]).
+##
+## The first rider is kept in the sections "rider" and "progress", the others
+## in "rider_1", "progress_1", and so on; "general/rider" is the current one.
 ##
 ## Start the game with `-- --new-rider` to create the rider again.
 
 const _SECTION := "rider"
 const _PROGRESS := "progress"
 
+## The most riders on one computer.
+const MAX_RIDERS := 6
+
 ## The longest name, in letters.
 const MAX_NAME := 12
+
+## The index of the current rider.
+var index := 0
 
 ## Whether the player created her rider already.
 var has_rider := false
@@ -43,18 +53,80 @@ var taken_off: Array = []
 
 func _ready() -> void:
     var settings := ConfigFile.new()
-    if settings.load(_path()) == OK and settings.has_section(_SECTION):
-        has_rider = settings.get_value(_SECTION, "created", false)
-        rider_name_written = settings.get_value(_SECTION, "name", "")
-        horse_name_written = settings.get_value(_SECTION, "horse_name", "")
-        looks = Looks.complete(settings.get_value(_SECTION, "looks", {}))
-    if settings.has_section(_PROGRESS):
-        stars = settings.get_value(_PROGRESS, "stars", {})
-        has_seen_instruction = settings.get_value(_PROGRESS, "instruction_seen", false)
-        finery = Finery.complete(settings.get_value(_PROGRESS, "finery", {}))
-        taken_off = settings.get_value(_PROGRESS, "taken_off", [])
+    settings.load(_path())
+    index = clampi(int(settings.get_value("general", "rider", 0)), 0, MAX_RIDERS - 1)
+    _load(index)
     if "--new-rider" in OS.get_cmdline_user_args():
         has_rider = false
+
+
+## The riders who share the computer, in their order, each a dictionary with
+## her "name" (as written, empty for the default), her "looks" and her
+## "stars" (in all the levels).
+func riders() -> Array[Dictionary]:
+    var settings := ConfigFile.new()
+    settings.load(_path())
+    var result: Array[Dictionary] = []
+    for i in range(MAX_RIDERS):
+        if not settings.get_value(_section(i), "created", false):
+            break
+        var total := 0
+        for level in settings.get_value(_progress(i), "stars", {}).values():
+            total += int(level)
+        (
+            result
+            . append(
+                {
+                    "name": settings.get_value(_section(i), "name", ""),
+                    "looks": Looks.complete(settings.get_value(_section(i), "looks", {})),
+                    "stars": total,
+                }
+            )
+        )
+    return result
+
+
+## Become the rider of the index, and remember her as the current one.
+func choose_rider(i: int) -> void:
+    index = clampi(i, 0, MAX_RIDERS - 1)
+    _load(index)
+    _store("general", {"rider": index})
+
+
+## Start a new rider after the others, to be created in the creator; false if
+## there are already [constant MAX_RIDERS].
+func new_rider() -> bool:
+    var count := riders().size()
+    if count >= MAX_RIDERS:
+        return false
+    index = count
+    _load(index)
+    _store("general", {"rider": index})
+    return true
+
+
+## Load the rider of the index, or a new one if there is none.
+func _load(i: int) -> void:
+    var settings := ConfigFile.new()
+    settings.load(_path())
+    var rider := _section(i)
+    var progress := _progress(i)
+    has_rider = settings.get_value(rider, "created", false)
+    rider_name_written = settings.get_value(rider, "name", "")
+    horse_name_written = settings.get_value(rider, "horse_name", "")
+    looks = Looks.complete(settings.get_value(rider, "looks", {}))
+    stars = settings.get_value(progress, "stars", {})
+    has_seen_instruction = settings.get_value(progress, "instruction_seen", false)
+    finery = Finery.complete(settings.get_value(progress, "finery", {}))
+    taken_off = settings.get_value(progress, "taken_off", [])
+
+
+func _section(i: int) -> String:
+    return _SECTION if i == 0 else "%s_%d" % [_SECTION, i]
+
+
+func _progress(i: int) -> String:
+    return _PROGRESS if i == 0 else "%s_%d" % [_PROGRESS, i]
 
 
 ## The name of the rider, by default Aigerim in the alphabet of the language.
@@ -82,7 +154,7 @@ func save(a_rider_name: String, a_horse_name: String, a_looks: Dictionary) -> vo
     has_rider = true
 
     _store(
-        _SECTION,
+        _section(index),
         {
             "created": true,
             "name": rider_name_written,
@@ -115,7 +187,7 @@ func wear(piece: String, on: bool) -> void:
         taken_off.erase(piece)
     elif piece not in taken_off:
         taken_off.append(piece)
-    _store(_PROGRESS, {"taken_off": taken_off})
+    _store(_progress(index), {"taken_off": taken_off})
 
 
 ## Win the next step of the piece of finery, and remember it.
@@ -124,7 +196,7 @@ func win(piece: String) -> void:
         return
     finery[piece] = mini(int(finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
     taken_off.erase(piece)
-    _store(_PROGRESS, {"finery": finery, "taken_off": taken_off})
+    _store(_progress(index), {"finery": finery, "taken_off": taken_off})
 
 
 ## Whether the player finished the level.
@@ -136,13 +208,13 @@ func has_finished(level_id: String) -> bool:
 ## most stars of all her rides.
 func finish_level(level_id: String, won: int) -> void:
     stars[level_id] = maxi(won, stars.get(level_id, 0))
-    _store(_PROGRESS, {"stars": stars})
+    _store(_progress(index), {"stars": stars})
 
 
 ## Remember that the player has seen the instruction.
 func see_instruction() -> void:
     has_seen_instruction = true
-    _store(_PROGRESS, {"instruction_seen": true})
+    _store(_progress(index), {"instruction_seen": true})
 
 
 ## Write the values into the section of the settings, keeping the rest.

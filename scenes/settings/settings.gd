@@ -54,7 +54,7 @@ func _ready() -> void:
         func() -> void: Flow.open(get_tree(), Flow.LANGUAGE_SELECT, Flow.SETTINGS)
     )
     _rider = _button(Rect2(left + 160, _PANEL.position.y + 150, 290, 48))
-    _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.RIDER_CREATOR, Flow.SETTINGS))
+    _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.RIDERS, Flow.SETTINGS))
     _wardrobe = _button(Rect2(left + 160, _PANEL.position.y + 220, 290, 48))
     _wardrobe.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.SETTINGS))
     _sound = _button(Rect2(left + 160, _PANEL.position.y + 290, 290, 48))

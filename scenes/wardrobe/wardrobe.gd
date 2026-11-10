@@ -10,9 +10,11 @@ extends Control
 ##
 ## Keys: Escape goes back.
 
-const _PANEL := Rect2(424, 20, 516, 430)
-const _CARD := Vector2(116, 96)
-const _COLUMNS := 4
+## The cards stand in a wide strip along the top, over the sky, so that the
+## home below (the yurt with its decorations, the rider and her horse) shows.
+const _PANEL := Rect2(16, 12, 880, 232)
+const _CARD := Vector2(88, 80)
+const _COLUMNS := 9
 
 var _cards: Array[DwellButton] = []
 var _pieces: Array[String] = []
@@ -44,10 +46,10 @@ func _ready() -> void:
         var card := DwellButton.new()
         card.position = (
             _PANEL.position
-            + Vector2(20 + (i % _COLUMNS) * (_CARD.x + 6), 54 + (i / _COLUMNS) * (_CARD.y + 6))
+            + Vector2(20 + (i % _COLUMNS) * (_CARD.x + 6), 50 + (i / _COLUMNS) * (_CARD.y + 6))
         )
         card.size = _CARD
-        card.picture = Painting.fitted(Finery.PICTURES % [piece, at], Vector2(84, 76))
+        card.picture = Painting.fitted(Finery.PICTURES % [piece, at], Vector2(64, 60))
         card.selected = profile.wears(piece)
         card.pressed.connect(func() -> void: toggle(piece))
         add_child(card)
@@ -55,8 +57,8 @@ func _ready() -> void:
         _pieces.append(piece)
 
     _back = DwellButton.new()
-    _back.position = Vector2(_PANEL.get_center().x - 90, _PANEL.end.y + 18)
-    _back.size = Vector2(180, 56)
+    _back.position = Vector2(776, 470)
+    _back.size = Vector2(168, 54)
     _back.font_size = 32
     _back.primary = true
     _back.pressed.connect(func() -> void: Flow.cancel(get_tree()))

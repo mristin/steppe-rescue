@@ -1,28 +1,43 @@
 extends Node
 
-## Remember the riders who share the computer (see section 9 of DESIGN.md),
-## each with her name, the name of her horse and their [Looks], the stars of
-## each level she finished, the [Finery] she won and wears, and whether she
-## has seen the instruction, in the settings next to the language (see the
-## autoload Languages, which also tells where the settings are). The fields
-## below are those of the current rider (see [method choose_rider]).
+## Keep the journeys (sessions) of the players, like the voyages of Bird Dog
+## (see section 9 of DESIGN.md): a journey is one playthrough with its name,
+## its rider (her name, the name of her horse and their [Looks]) and how far
+## she came: the stars of each level she finished, the [Finery] she won and
+## wears, the levels whose gift she chose, and whether she has seen the
+## instruction. The fields below are those of the current journey (see
+## [method choose_session]).
 ##
-## The first rider is kept in the sections "rider" and "progress", the others
-## in "rider_1", "progress_1", and so on; "general/rider" is the current one.
+## Every journey is a JSON file in the directory of the saves next to the
+## settings (see [method saves_dir]), written to a temporary file first and
+## then renamed, so that a crash while saving never destroys the last good
+## save. The settings remember the last journey ("general/last_session").
+## The riders of the older versions, kept in the settings, become journeys
+## once.
 ##
 ## Start the game with `-- --new-rider` to create the rider again.
 
-const _SECTION := "rider"
-const _PROGRESS := "progress"
-
-## The most riders on one computer.
-const MAX_RIDERS := 6
+## The format of the saves; bump it and convert the old files on load when it
+## changes.
+const FORMAT := 1
 
 ## The longest name, in letters.
 const MAX_NAME := 12
 
-## The index of the current rider.
-var index := 0
+## The longest name of a journey, in letters.
+const MAX_SESSION_NAME := 24
+
+## The most riders of the older versions which become journeys.
+const _OLD_RIDERS := 6
+
+## The id of the current journey (the name of its file); empty before one.
+var session_id := ""
+
+## The name of the current journey.
+var session_name := ""
+
+## When the current journey was created.
+var created := ""
 
 ## Whether the player created her rider already.
 var has_rider := false
@@ -56,82 +71,259 @@ var rewarded: Array = []
 
 
 func _ready() -> void:
-    var settings := ConfigFile.new()
-    settings.load(_path())
-    index = clampi(int(settings.get_value("general", "rider", 0)), 0, MAX_RIDERS - 1)
-    _load(index)
+    _migrate()
+    var last := last_id()
+    if last != "":
+        choose_session(last)
     if "--new-rider" in OS.get_cmdline_user_args():
         has_rider = false
 
 
-## The riders who share the computer, in their order, each a dictionary with
-## her "name" (as written, empty for the default), her "looks" and her
-## "stars" (in all the levels).
-func riders() -> Array[Dictionary]:
-    var settings := ConfigFile.new()
-    settings.load(_path())
+## The name of a new journey before the player changes it: the date and the
+## time.
+static func default_session_name() -> String:
+    var now := Time.get_datetime_dict_from_system()
+    return (
+        "%04d-%02d-%02d %02d:%02d"
+        % [now["year"], now["month"], now["day"], now["hour"], now["minute"]]
+    )
+
+
+## The directory of the saves: "saves" next to the settings, or, for the
+## settings of the tests, "<their name>_saves".
+func saves_dir() -> String:
+    var settings := _path()
+    if settings.get_file() == "settings.cfg":
+        return settings.get_base_dir().path_join("saves")
+    return settings.get_basename() + "_saves"
+
+
+## Start a new journey with the name and a rider still to create, and save it.
+func start_session(new_name: String) -> void:
+    _new_session(new_name)
+    _from_data({})
+    _save()
+
+
+## Give the current data a new journey: its id, its name and when it was
+## created.
+func _new_session(new_name: String) -> void:
+    var now := Time.get_datetime_dict_from_system()
+    var id := (
+        "%04d%02d%02d-%02d%02d%02d"
+        % [now["year"], now["month"], now["day"], now["hour"], now["minute"], now["second"]]
+    )
+    # NOTE (mristin):
+    # Two journeys started within a second get different ids.
+    var suffix := 1
+    session_id = id
+    while FileAccess.file_exists(_session_path(session_id)):
+        suffix += 1
+        session_id = "%s-%d" % [id, suffix]
+    session_name = new_name.strip_edges().left(MAX_SESSION_NAME)
+    if session_name == "":
+        session_name = default_session_name()
+    created = Time.get_datetime_string_from_system()
+
+
+## Go on with the journey of the id; return whether it was found.
+func choose_session(id: String) -> bool:
+    var data: Variant = read(id)
+    if data == null:
+        return false
+    session_id = id
+    session_name = data.get("name", id)
+    created = data.get("created", "")
+    _from_data(data)
+    _remember_last()
+    return true
+
+
+## The saved journeys, the most recently played first, each with "id",
+## "name", "updated", "rider" (her name as written, empty for the default),
+## "looks" and "stars" (in all the levels).
+func sessions() -> Array[Dictionary]:
     var result: Array[Dictionary] = []
-    for i in range(MAX_RIDERS):
-        if not settings.get_value(_section(i), "created", false):
-            break
+    if not DirAccess.dir_exists_absolute(saves_dir()):
+        return result
+    for file in DirAccess.get_files_at(saves_dir()):
+        if not file.ends_with(".json"):
+            continue
+        var id := file.get_basename()
+        var data: Variant = read(id)
+        if data == null:
+            continue
+        var rider: Dictionary = data.get("rider", {})
         var total := 0
-        for level in settings.get_value(_progress(i), "stars", {}).values():
+        for level in data.get("progress", {}).get("stars", {}).values():
             total += int(level)
         (
             result
             . append(
                 {
-                    "name": settings.get_value(_section(i), "name", ""),
-                    "looks": Looks.complete(settings.get_value(_section(i), "looks", {})),
+                    "id": id,
+                    "name": data.get("name", id),
+                    "updated": data.get("updated", ""),
+                    "rider": rider.get("name", ""),
+                    "looks": Looks.complete(rider.get("looks", {})),
                     "stars": total,
                 }
             )
         )
+    result.sort_custom(
+        func(a: Dictionary, b: Dictionary) -> bool:
+            return (
+                a["updated"] > b["updated"] or (a["updated"] == b["updated"] and a["id"] > b["id"])
+            )
+    )
     return result
 
 
-## Become the rider of the index, and remember her as the current one.
-func choose_rider(i: int) -> void:
-    index = clampi(i, 0, MAX_RIDERS - 1)
-    _load(index)
-    _store("general", {"rider": index})
-
-
-## Start a new rider after the others, to be created in the creator; false if
-## there are already [constant MAX_RIDERS].
-func new_rider() -> bool:
-    var count := riders().size()
-    if count >= MAX_RIDERS:
-        return false
-    index = count
-    _load(index)
-    _store("general", {"rider": index})
-    return true
-
-
-## Load the rider of the index, or a new one if there is none.
-func _load(i: int) -> void:
+## The id of the journey played last, if its save still exists, else "".
+func last_id() -> String:
     var settings := ConfigFile.new()
     settings.load(_path())
-    var rider := _section(i)
-    var progress := _progress(i)
-    has_rider = settings.get_value(rider, "created", false)
-    rider_name_written = settings.get_value(rider, "name", "")
-    horse_name_written = settings.get_value(rider, "horse_name", "")
-    looks = Looks.complete(settings.get_value(rider, "looks", {}))
-    stars = settings.get_value(progress, "stars", {})
-    has_seen_instruction = settings.get_value(progress, "instruction_seen", false)
-    finery = Finery.complete(settings.get_value(progress, "finery", {}))
-    taken_off = settings.get_value(progress, "taken_off", [])
-    rewarded = settings.get_value(progress, "rewarded", [])
+    var id: String = settings.get_value("general", "last_session", "")
+    if id == "" or read(id) == null:
+        return ""
+    return id
 
 
-func _section(i: int) -> String:
-    return _SECTION if i == 0 else "%s_%d" % [_SECTION, i]
+## Read the save of a journey; null if it is missing or broken.
+func read(id: String) -> Variant:
+    var path := _session_path(id)
+    if id == "" or not FileAccess.file_exists(path):
+        return null
+    var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+    if not data is Dictionary or int(data.get("format", 0)) > FORMAT:
+        return null
+    return data
 
 
-func _progress(i: int) -> String:
-    return _PROGRESS if i == 0 else "%s_%d" % [_PROGRESS, i]
+## The journey as plain data, for its save.
+func to_data() -> Dictionary:
+    return {
+        "format": FORMAT,
+        "id": session_id,
+        "name": session_name,
+        "created": created,
+        "updated": Time.get_datetime_string_from_system(),
+        "rider":
+        {
+            "created": has_rider,
+            "name": rider_name_written,
+            "horse_name": horse_name_written,
+            "looks": looks,
+        },
+        "progress":
+        {
+            "stars": stars,
+            "instruction_seen": has_seen_instruction,
+            "finery": finery,
+            "taken_off": taken_off,
+            "rewarded": rewarded,
+        },
+    }
+
+
+func _from_data(data: Dictionary) -> void:
+    var rider: Dictionary = data.get("rider", {})
+    var progress: Dictionary = data.get("progress", {})
+    has_rider = bool(rider.get("created", false))
+    rider_name_written = str(rider.get("name", ""))
+    horse_name_written = str(rider.get("horse_name", ""))
+    looks = Looks.complete(rider.get("looks", {}))
+    stars = {}
+    var saved_stars: Dictionary = progress.get("stars", {})
+    for level in saved_stars:
+        stars[level] = int(saved_stars[level])
+    has_seen_instruction = bool(progress.get("instruction_seen", false))
+    var saved_finery: Dictionary = progress.get("finery", {})
+    var won := {}
+    for piece in saved_finery:
+        won[piece] = int(saved_finery[piece])
+    finery = Finery.complete(won)
+    taken_off = progress.get("taken_off", []).duplicate()
+    rewarded = progress.get("rewarded", []).duplicate()
+
+
+## Save the current journey; without one (e.g., in the tests), start one.
+func _save() -> void:
+    if session_id == "":
+        _new_session(default_session_name())
+    DirAccess.make_dir_recursive_absolute(saves_dir())
+    var path := _session_path(session_id)
+    var temporary := path + ".tmp"
+    var file := FileAccess.open(temporary, FileAccess.WRITE)
+    if file == null:
+        push_error(
+            "Could not save the journey to %s: %s" % [temporary, FileAccess.get_open_error()]
+        )
+        return
+    file.store_string(JSON.stringify(to_data(), "  "))
+    file.close()
+    if FileAccess.file_exists(path):
+        DirAccess.remove_absolute(path)
+    DirAccess.rename_absolute(temporary, path)
+    _remember_last()
+
+
+func _remember_last() -> void:
+    var settings := ConfigFile.new()
+    settings.load(_path())
+    settings.set_value("general", "last_session", session_id)
+    DirAccess.make_dir_recursive_absolute(_path().get_base_dir())
+    settings.save(_path())
+
+
+func _session_path(id: String) -> String:
+    return saves_dir().path_join("%s.json" % id)
+
+
+## Turn the riders of the older versions, kept in the settings ("rider",
+## "rider_1", ... with their "progress", "progress_1", ...), into journeys,
+## once; the current one becomes the last journey.
+func _migrate() -> void:
+    var settings := ConfigFile.new()
+    if settings.load(_path()) != OK or settings.get_value("general", "migrated", false):
+        return
+    var current := int(settings.get_value("general", "rider", 0))
+    var current_id := ""
+    for i in range(_OLD_RIDERS):
+        var rider := "rider" if i == 0 else "rider_%d" % i
+        var progress := "progress" if i == 0 else "progress_%d" % i
+        if not settings.get_value(rider, "created", false):
+            break
+        var written: String = settings.get_value(rider, "name", "")
+        start_session(written if written != "" else default_session_name())
+        _from_data(
+            {
+                "rider":
+                {
+                    "created": true,
+                    "name": written,
+                    "horse_name": settings.get_value(rider, "horse_name", ""),
+                    "looks": settings.get_value(rider, "looks", {}),
+                },
+                "progress":
+                {
+                    "stars": settings.get_value(progress, "stars", {}),
+                    "instruction_seen": settings.get_value(progress, "instruction_seen", false),
+                    "finery": settings.get_value(progress, "finery", {}),
+                    "taken_off": settings.get_value(progress, "taken_off", []),
+                    "rewarded": settings.get_value(progress, "rewarded", []),
+                },
+            }
+        )
+        _save()
+        if i == current:
+            current_id = session_id
+    settings.load(_path())
+    settings.set_value("general", "migrated", true)
+    if current_id != "":
+        settings.set_value("general", "last_session", current_id)
+    settings.save(_path())
+    session_id = ""
 
 
 ## The name of the rider, by default Aigerim in the alphabet of the language.
@@ -157,16 +349,7 @@ func save(a_rider_name: String, a_horse_name: String, a_looks: Dictionary) -> vo
     looks = Looks.complete(a_looks)
     looks.erase("finery")
     has_rider = true
-
-    _store(
-        _section(index),
-        {
-            "created": true,
-            "name": rider_name_written,
-            "horse_name": horse_name_written,
-            "looks": looks,
-        }
-    )
+    _save()
 
 
 ## The looks of the rider dressed in the finery she wears, to draw her.
@@ -192,7 +375,7 @@ func wear(piece: String, on: bool) -> void:
         taken_off.erase(piece)
     elif piece not in taken_off:
         taken_off.append(piece)
-    _store(_progress(index), {"taken_off": taken_off})
+    _save()
 
 
 ## Win the next step of the piece of finery, and remember it.
@@ -201,7 +384,7 @@ func win(piece: String) -> void:
         return
     finery[piece] = mini(int(finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
     taken_off.erase(piece)
-    _store(_progress(index), {"finery": finery, "taken_off": taken_off})
+    _save()
 
 
 ## Whether she chose the gift of the level already.
@@ -214,7 +397,7 @@ func reward(level_id: String) -> void:
     if level_id == "" or level_id in rewarded:
         return
     rewarded.append(level_id)
-    _store(_progress(index), {"rewarded": rewarded})
+    _save()
 
 
 ## Whether the player finished the level.
@@ -226,23 +409,13 @@ func has_finished(level_id: String) -> bool:
 ## most stars of all her rides.
 func finish_level(level_id: String, won: int) -> void:
     stars[level_id] = maxi(won, stars.get(level_id, 0))
-    _store(_progress(index), {"stars": stars})
+    _save()
 
 
 ## Remember that the player has seen the instruction.
 func see_instruction() -> void:
     has_seen_instruction = true
-    _store(_progress(index), {"instruction_seen": true})
-
-
-## Write the values into the section of the settings, keeping the rest.
-func _store(section: String, values: Dictionary) -> void:
-    var settings := ConfigFile.new()
-    settings.load(_path())
-    for key in values:
-        settings.set_value(section, key, values[key])
-    DirAccess.make_dir_recursive_absolute(_path().get_base_dir())
-    settings.save(_path())
+    _save()
 
 
 func _path() -> String:

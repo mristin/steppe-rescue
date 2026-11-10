@@ -273,7 +273,8 @@ static func preview(piece: String, at: int, _looks := {}) -> ImageTexture:
 func _update_texts() -> void:
     var rider_name: String = get_node("/root/Profile").rider_name()
     if replayed:
-        # TRANSLATORS: {rider} is the rider's name; she rode a level again, whose gift she won before.
+        # TRANSLATORS: {rider} is the rider's name; she rode a level again, whose gift
+        # she won before.
         _title.text = tr("Well done, {rider}! This ride gave its gift already.").format(
             {"rider": rider_name}
         )

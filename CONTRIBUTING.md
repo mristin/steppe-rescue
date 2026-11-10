@@ -102,7 +102,7 @@ Open the project in the Godot editor (Import, then select `project.godot`), and 
 The game needs a webcam which supports 640x480.
 Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn.
 
-Start the game with `-- --no-camera` to switch the camera off, with `-- --lang=ru` (or `kk`, `en`) to choose the language, with `-- --new-rider` to create the rider again, and with `-- --settings=user://other.cfg` to keep the language and the rider in another file (the tests do so, to leave yours alone).
+Start the game with `-- --no-camera` to switch the camera off, with `-- --lang=ru` (or `kk`, `en`) to choose the language, with `-- --new-rider` to create the rider again, and with `-- --settings=user://other.cfg` to keep the language in another file and the journeys in `user://other_saves/` (the tests do so, to leave yours alone).
 
 ## Translations
 

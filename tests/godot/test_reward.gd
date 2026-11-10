@@ -31,6 +31,10 @@ func _run() -> void:
     var path: String = root.get_node("Languages").settings_path()
     _check(path != "user://settings.cfg", "the test runs with -- --settings=<its own file>")
     DirAccess.remove_absolute(path)
+    if DirAccess.dir_exists_absolute(profile.saves_dir()):
+        for file in DirAccess.get_files_at(profile.saves_dir()):
+            DirAccess.remove_absolute(profile.saves_dir().path_join(file))
+    profile.start_session("test")
     profile.finery = {}
 
     var rng := RandomNumberGenerator.new()
@@ -65,9 +69,8 @@ func _run() -> void:
     await _frames(3)
     _check(current_scene is LevelSelect, "then the level select")
 
-    var saved := ConfigFile.new()
-    saved.load(path)
-    _check(saved.get_value("progress", "finery", {}).get(piece, 0) == 1, "the finery is saved")
+    var saved: Dictionary = profile.read(profile.session_id)
+    _check(int(saved["progress"]["finery"].get(piece, 0)) == 1, "the finery is saved")
 
     # NOTE (mristin):
     # Riding the level again gives no gift, so that it is no mine of finery.
@@ -109,9 +112,8 @@ func _run() -> void:
     _check(not wardrobe.in_worn_panel("earrings"), "and they move to the other panel")
     _check(not profile.dressed()["finery"].has("earrings"), "and does not wear them")
     _check(profile.dressed()["finery"].has("saddle"), "but still the saddle")
-    saved = ConfigFile.new()
-    saved.load(path)
-    _check("earrings" in saved.get_value("progress", "taken_off", []), "what she took off is saved")
+    saved = profile.read(profile.session_id)
+    _check("earrings" in saved["progress"]["taken_off"], "what she took off is saved")
     wardrobe.toggle("earrings")
     _check(profile.wears("earrings"), "she puts them on again")
     var all_but_home := {}

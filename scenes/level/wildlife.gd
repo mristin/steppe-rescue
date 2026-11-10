@@ -399,7 +399,15 @@ func _draw_sky() -> void:
         var shadow := Color(0, 0, 0, clampf(0.3 - creature.altitude / 1000.0, 0.08, 0.3))
         var nearer := 1.0 + creature.altitude / 450.0
         _paint(_sky, creature.kind, frame, creature.position, creature.heading, shadow)
-        _paint(_sky, creature.kind, frame, creature.position + lift, creature.heading, Color.WHITE, nearer)
+        _paint(
+            _sky,
+            creature.kind,
+            frame,
+            creature.position + lift,
+            creature.heading,
+            Color.WHITE,
+            nearer
+        )
 
 
 ## Draw the painting of the kind in the frame on the item, its middle at the

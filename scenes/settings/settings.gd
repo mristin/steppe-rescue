@@ -54,7 +54,7 @@ func _ready() -> void:
         func() -> void: Flow.open(get_tree(), Flow.LANGUAGE_SELECT, Flow.SETTINGS)
     )
     _rider = _button(Rect2(left + 160, _PANEL.position.y + 150, 290, 48))
-    _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.RIDERS, Flow.SETTINGS))
+    _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.SESSIONS, Flow.SETTINGS))
     _wardrobe = _button(Rect2(left + 160, _PANEL.position.y + 220, 290, 48))
     _wardrobe.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.SETTINGS))
     _sound = _button(Rect2(left + 160, _PANEL.position.y + 290, 290, 48))
@@ -105,14 +105,15 @@ func _update_texts() -> void:
     _title.text = tr("Settings")
     # TRANSLATORS: The label of the row with the language of the game.
     _row_labels[0].text = tr("Language")
-    # TRANSLATORS: The label of the row with the name of the rider, which opens the creator.
-    _row_labels[1].text = tr("Rider")
+    # TRANSLATORS: The label of the row with the journey (a saved game) and its rider,
+    # which opens the journeys.
+    _row_labels[1].text = tr("Journey")
     var languages := get_node("/root/Languages")
     for language in languages.languages:
         if language["code"] == languages.current():
             _language.text = language["name"]
     var profile := get_node("/root/Profile")
-    _rider.text = "%s · %s" % [profile.rider_name(), profile.horse_name()]
+    _rider.text = "%s · %s" % [profile.session_name, profile.rider_name()]
     # TRANSLATORS: The label of the row which opens the wardrobe of the finery.
     _row_labels[2].text = tr("Wardrobe")
     # TRANSLATORS: The button which opens the wardrobe, to choose what to wear.

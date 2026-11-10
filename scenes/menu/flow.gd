@@ -2,12 +2,13 @@ class_name Flow
 extends RefCounted
 
 ## Lead the player through the screens (see section 6 of DESIGN.md): from the
-## intro, Play goes on through the language (the first time), the creator of
-## the rider and her horse (the first time), the instruction (the first time)
+## intro, Play goes on through the language (the first time), the journeys
+## (once each start; a new journey is named first), the creator of the rider
+## and her horse (once each journey), the instruction (the first time)
 ## and the request for room around her (once each start, with the camera on)
 ## to the next level, and the end of a level to the reward; Levels opens the
 ## level select, How to Play the instruction, and Settings the settings, where
-## the language and the rider can be changed.
+## the language and the journey can be changed.
 
 const INTRO := "res://scenes/intro/intro.tscn"
 const LANGUAGE_SELECT := "res://scenes/language_select/language_select.tscn"
@@ -19,7 +20,8 @@ const LEVEL := "res://scenes/level/level.tscn"
 const REWARD := "res://scenes/reward/reward.tscn"
 const FREE_SPACE := "res://scenes/free_space/free_space.tscn"
 const WARDROBE := "res://scenes/wardrobe/wardrobe.tscn"
-const RIDERS := "res://scenes/riders/riders.tscn"
+const SESSIONS := "res://scenes/sessions/sessions.tscn"
+const SESSION_NAME := "res://scenes/session_name/session_name.tscn"
 
 ## Whether the player is on her way from Play to the level (else she opened a
 ## screen from a menu, and goes back to it when done).
@@ -31,9 +33,8 @@ static var back := INTRO
 ## The path of the level to play (see [LevelList]); empty for the next one.
 static var level := ""
 
-## Whether the riders who share the computer chose who rides since the game
-## started.
-static var rider_asked := false
+## Whether the players chose their journey since the game started.
+static var session_asked := false
 
 ## Whether the player was asked for room around her since the game started.
 static var room_asked := false
@@ -71,8 +72,11 @@ static func next(tree: SceneTree) -> void:
     var profile := tree.root.get_node("Profile")
     if not tree.root.get_node("Languages").has_chosen:
         tree.change_scene_to_file.call_deferred(LANGUAGE_SELECT)
-    elif not rider_asked and profile.riders().size() > 1:
-        tree.change_scene_to_file.call_deferred(RIDERS)
+    elif not session_asked or profile.session_id == "":
+        if profile.sessions().is_empty():
+            tree.change_scene_to_file.call_deferred(SESSION_NAME)
+        else:
+            tree.change_scene_to_file.call_deferred(SESSIONS)
     elif not profile.has_rider:
         tree.change_scene_to_file.call_deferred(RIDER_CREATOR)
     elif not profile.has_seen_instruction:

@@ -1,12 +1,15 @@
 extends SceneTree
 ## Go through the screens before the level, as a new player does: the intro,
-## Play, the language (Kazakh), the creator of the rider (a new name written
-## on the keys of the screen, a hat and a horse chosen with the arrows,
+## Play, the language (Kazakh), the name of the journey, the creator of the
+## rider (a new name written on the keys of the screen, a hat and a horse
+## chosen with the arrows,
 ## Ready!), the instruction, and the level, which greets the rider by her name
 ## and shows her looks. Then the intro again, whose Play goes straight to the
 ## level, and whose Levels, How to Play and Settings open their screens; the
 ## language changed in the settings goes back to the settings. Finishing the
-## level keeps its stars, and then Play goes to the level select.
+## level keeps its stars, and then Play goes to the level select. A second
+## journey keeps its own rider and progress, and Play asks which journey goes
+## on.
 ##
 ## Run it with `-- --settings=user://<file>`, so that it starts as a new player
 ## and does not change the settings of the player (see the autoload Languages).
@@ -35,6 +38,11 @@ func _run() -> void:
     var path: String = languages.settings_path()
     _check(path != "user://settings.cfg", "the test runs with -- --settings=<its own file>")
     DirAccess.remove_absolute(path)
+    if DirAccess.dir_exists_absolute(profile.saves_dir()):
+        for file in DirAccess.get_files_at(profile.saves_dir()):
+            DirAccess.remove_absolute(profile.saves_dir().path_join(file))
+    profile.session_id = ""
+    Flow.session_asked = false
     languages.has_chosen = false
     profile.has_rider = false
     profile.has_seen_instruction = false
@@ -52,6 +60,21 @@ func _run() -> void:
     select.cards()[2].press()
     await _frames(3)
     _check(languages.current() == "kk", "Kazakh is chosen")
+    _check(current_scene is SessionName, "then the new player names her journey")
+    var naming := current_scene as SessionName
+    _check(naming.written == profile.default_session_name(), "the name starts as the date")
+    var name_keys := {}
+    for key in naming.keyboard().keys():
+        name_keys[key.text] = key
+    _check(
+        name_keys.has("7") and name_keys.has(SessionName.SPACE), "the keys have digits and a space"
+    )
+    for letter in ["Ж", "О", "Л", SessionName.SPACE, "1"]:
+        name_keys[letter].press()
+    _check(naming.written == "Жол 1", "the journey is named: %s" % naming.written)
+    naming.finish()
+    await _frames(3)
+    _check(profile.session_name == "Жол 1", "the journey keeps its name")
     _check(current_scene is RiderCreator, "then the new player creates her rider")
 
     var creator := current_scene as RiderCreator
@@ -123,8 +146,14 @@ func _run() -> void:
     var saved := ConfigFile.new()
     _check(saved.load(path) == OK, "the settings are saved")
     _check(saved.get_value("general", "language", "") == "kk", "the language is saved")
-    _check(saved.get_value("rider", "name", "") == "Әсел", "the name is saved")
-    _check(saved.get_value("progress", "instruction_seen", false), "the instruction is saved")
+    _check(
+        saved.get_value("general", "last_session", "") == profile.session_id,
+        "the journey is remembered"
+    )
+    var journey: Dictionary = profile.read(profile.session_id)
+    _check(journey["name"] == "Жол 1", "the name of the journey is saved")
+    _check(journey["rider"]["name"] == "Әсел", "the name is saved")
+    _check(journey["progress"]["instruction_seen"], "the instruction is saved")
 
     change_scene_to_file(Flow.INTRO)
     await _frames(3)
@@ -170,27 +199,38 @@ func _run() -> void:
     _check(current_scene is Intro, "Back goes to the intro")
 
     # NOTE (mristin):
-    # A second child creates her own rider; then Play asks who rides.
-    _check(profile.riders().size() == 1, "one rider shares the computer")
-    _check(profile.new_rider(), "a new rider starts")
-    _check(not profile.has_rider and profile.index == 1, "the new rider is still to create")
+    # A second journey with its own rider; then Play asks which journey goes on.
+    _check(profile.sessions().size() == 1, "one journey is saved")
+    var first: String = profile.session_id
+    profile.start_session("Дана")
+    _check(not profile.has_rider, "the new journey's rider is still to create")
     profile.save("Дана", "", Looks.preset(Looks.DEFAULT, "4"))
-    _check(profile.riders().size() == 2, "two riders share the computer")
-    Flow.rider_asked = false
+    _check(profile.sessions().size() == 2, "two journeys are saved")
+    Flow.session_asked = false
     Flow.play(self)
     await _frames(3)
-    _check(current_scene is Riders, "Play asks who rides")
-    var riders := current_scene as Riders
-    _check(riders.cards().size() == 2, "a card for each rider")
-    riders.choose(0)
+    _check(current_scene is Sessions, "Play asks which journey goes on")
+    var journeys := current_scene as Sessions
+    _check(journeys.shown()[0]["id"] == profile.session_id, "the last journey continues first")
+    var index_of_first := -1
+    for i in range(journeys.shown().size()):
+        if journeys.shown()[i]["id"] == first:
+            index_of_first = i
+    journeys.choose(index_of_first)
     await _frames(3)
-    _check(profile.index == 0 and profile.rider_name() == "Әсел", "the first rider rides again")
-    _check(profile.has_seen_instruction, "with her own progress")
-    profile.choose_rider(1)
-    _check(profile.rider_name() == "Дана", "the second rider is kept")
-    _check(profile.stars.is_empty(), "with her own stars")
-    profile.choose_rider(0)
-    Flow.rider_asked = true
+    _check(
+        profile.session_id == first and profile.rider_name() == "Әсел", "the first journey goes on"
+    )
+    _check(profile.has_seen_instruction, "with its own progress")
+    var second := ""
+    for session in profile.sessions():
+        if session["id"] != first:
+            second = session["id"]
+    profile.choose_session(second)
+    _check(profile.rider_name() == "Дана", "the second journey keeps its rider")
+    _check(profile.stars.is_empty(), "and its own stars")
+    profile.choose_session(first)
+    Flow.session_asked = true
 
     # NOTE (mristin):
     # Finishing every level keeps the stars, opens the next level, and sends

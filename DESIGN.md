@@ -297,8 +297,11 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 ## 9. Saving
 
-* The game remembers the language, the rider and the horse, the stars of each level, and the finery won and worn.
-* Several players can share a computer: the start screen lists the riders, each with her name and picture, and "New rider".
+* **Journeys** (sessions, like the voyages of Bird Dog): a journey is one playthrough with its name, its rider and her horse, the stars of each level, the finery won and worn, and the levels whose gift was chosen. The players keep as many journeys as they like, so several children can share a computer, and a class can start afresh.
+* **Choosing:** on the way from Play (once each start), "Your journeys" offers **Continue** the last journey (it shows its name, its rider and her stars), **+ New journey**, and the three other most recent journeys; Change rider opens the creator for the rider of the current one. The settings open the same screen. Without any journey, Play goes straight to naming the first one.
+* **Naming:** a new journey is named first; the name starts as the date and the time (e.g., "2026-11-10 14:05"), so that OK is enough, and the first key replaces it. The big keys on the screen have the letters of the language, the digits, "-", ":" and a space. Then its rider is created.
+* **The files:** every journey is JSON in `user://saves/<id>.json`, with a format version (so that later versions can convert old saves), the name, the times it was created and updated, the rider and the progress. The id is the date and the time of its creation. A save is written to a temporary file first and then renamed, so that a crash never destroys the last good save; it is written whenever something changes. `user://settings.cfg` keeps the language and the last journey. The riders of the older versions, kept in the settings, became journeys once.
+* The language is remembered for the computer, not per journey.
 * A level in progress is not saved: a level is short enough to finish in one go.
 
 ## 10. Languages and text
@@ -432,7 +435,7 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
 * **The hint for turning** (section 5) shows also when the rider runs into the same obstacle a second time: the small figure pulls the reins under a curved arrow.
 * **The wild animals** are paintings (see below).
 
-* **The riders who share a computer** (section 9, `scenes/riders/`): each child has her own rider, with her own looks, stars, finery and progress. When more than one shares the computer, Play first asks "Who rides today?" (once each start), with a card for each rider (her painted picture, her name and her stars) and "+ New"; the settings open the same choice, where Change rider opens the creator.
+* **The journeys** (section 9, `scenes/sessions/`, `scenes/session_name/`, `Profile`): each journey has its own name, rider, stars, finery and progress, saved as JSON; Play first asks which journey goes on (once each start), and a new journey is named, then its rider is created.
 * **The finery on the painted rider and horse**: at home and in the creator, the pieces she wears are laid over the painted pair (the saddle cloth, the saddle, the stirrups, the breastplate, the bridle and the owl-feather tassel on the horse; the owl feathers, the belt, the bracelets and the boots on the girl; see `Reward.dress`). The coat and the braided mane show only on their cards, the earrings only in the camera picture.
 * **The decorations of the home** are painted (`assets/pictures/finery/carpet_1.png`, `door_1.png`, `dombra_1.png`).
 

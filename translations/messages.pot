@@ -105,8 +105,8 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr ""
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/riders/riders.gd scenes/settings/settings.gd
-#: scenes/wardrobe/wardrobe.gd
+#: scenes/level_select/level_select.gd scenes/session_name/session_name.gd
+#: scenes/sessions/sessions.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
 msgid "Back"
 msgstr ""
 
@@ -156,7 +156,7 @@ msgid "Straight ahead"
 msgstr ""
 
 #. The default name of the rider, a girl, in your alphabet.
-#: scenes/profile/profile.gd scenes/riders/riders.gd
+#: scenes/profile/profile.gd scenes/sessions/sessions.gd
 msgid "Aigerim"
 msgstr ""
 
@@ -169,7 +169,7 @@ msgstr ""
 msgid "Press Esc again to quit."
 msgstr ""
 
-#. {rider} is the rider's name; she rode a level again, whose gift she won before.
+#. {rider} is the rider's name; she rode a level again, whose gift
 #: scenes/reward/reward.gd
 msgid "Well done, {rider}! This ride gave its gift already."
 msgstr ""
@@ -570,18 +570,32 @@ msgctxt "mane"
 msgid "grey"
 msgstr ""
 
-#. The title of the screen where the children choose who rides.
-#: scenes/riders/riders.gd
-msgid "Who rides today?"
+#. The title of the screen where the players name a new journey (a saved game).
+#: scenes/session_name/session_name.gd
+msgid "Name your journey"
 msgstr ""
 
-#. The card which starts a new rider; keep it short.
-#: scenes/riders/riders.gd
-msgid "+ New"
+#: scenes/session_name/session_name.gd
+msgid "OK"
 msgstr ""
 
-#. The button which opens the creator for the current rider.
-#: scenes/riders/riders.gd
+#. The title of the screen where the players choose their journey (a saved game).
+#: scenes/sessions/sessions.gd
+msgid "Your journeys"
+msgstr ""
+
+#. The button which goes on with the last journey.
+#: scenes/sessions/sessions.gd
+msgid "Continue"
+msgstr ""
+
+#. The button which starts a new journey (a new saved game).
+#: scenes/sessions/sessions.gd
+msgid "+ New journey"
+msgstr ""
+
+#. The button which opens the creator for the rider of the current journey.
+#: scenes/sessions/sessions.gd
 msgid "Change rider"
 msgstr ""
 
@@ -594,9 +608,9 @@ msgstr ""
 msgid "Language"
 msgstr ""
 
-#. The label of the row with the name of the rider, which opens the creator.
+#. The label of the row with the journey (a saved game) and its rider,
 #: scenes/settings/settings.gd
-msgid "Rider"
+msgid "Journey"
 msgstr ""
 
 #. The button which opens the wardrobe, to choose what to wear.

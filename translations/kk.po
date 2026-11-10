@@ -128,8 +128,8 @@ msgid "I saw {animals} west of {landmark@of}."
 msgstr "{landmark@of} батыс жағында {animals} көрдім."
 
 #. The button which goes back to the previous screen.
-#: scenes/level_select/level_select.gd scenes/riders/riders.gd scenes/settings/settings.gd
-#: scenes/wardrobe/wardrobe.gd
+#: scenes/level_select/level_select.gd scenes/session_name/session_name.gd
+#: scenes/sessions/sessions.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
 #, fuzzy
 msgid "Back"
 msgstr "Артқа"
@@ -191,7 +191,7 @@ msgid "Straight ahead"
 msgstr "Тура алға"
 
 #. The default name of the rider, a girl, in your alphabet.
-#: scenes/profile/profile.gd scenes/riders/riders.gd
+#: scenes/profile/profile.gd scenes/sessions/sessions.gd
 #, fuzzy
 msgid "Aigerim"
 msgstr "Айгерім"
@@ -207,10 +207,11 @@ msgstr "Тұлпар"
 msgid "Press Esc again to quit."
 msgstr "Шығу үшін Esc пернесін тағы бір рет бас."
 
-#. {rider} is the rider's name; she rode a level again, whose gift she won before.
+#. {rider} is the rider's name; she rode a level again, whose gift
 #: scenes/reward/reward.gd
+#, fuzzy
 msgid "Well done, {rider}! This ride gave its gift already."
-msgstr ""
+msgstr "Жарайсың, {rider}! Бұл сапардың сыйлығы бұрын берілген."
 
 #: scenes/reward/reward.gd
 #, fuzzy
@@ -693,20 +694,37 @@ msgctxt "mane"
 msgid "grey"
 msgstr "сұр"
 
-#. The title of the screen where the children choose who rides.
-#: scenes/riders/riders.gd
+#. The title of the screen where the players name a new journey (a saved game).
+#: scenes/session_name/session_name.gd
 #, fuzzy
-msgid "Who rides today?"
-msgstr "Бүгін кім шабады?"
+msgid "Name your journey"
+msgstr "Сапарыңа ат қой"
 
-#. The card which starts a new rider; keep it short.
-#: scenes/riders/riders.gd
+#: scenes/session_name/session_name.gd
 #, fuzzy
-msgid "+ New"
-msgstr "+ Жаңа"
+msgid "OK"
+msgstr "Жарайды"
 
-#. The button which opens the creator for the current rider.
-#: scenes/riders/riders.gd
+#. The title of the screen where the players choose their journey (a saved game).
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Your journeys"
+msgstr "Сенің сапарларың"
+
+#. The button which goes on with the last journey.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Continue"
+msgstr "Жалғастыру"
+
+#. The button which starts a new journey (a new saved game).
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "+ New journey"
+msgstr "+ Жаңа сапар"
+
+#. The button which opens the creator for the rider of the current journey.
+#: scenes/sessions/sessions.gd
 #, fuzzy
 msgid "Change rider"
 msgstr "Шабандозды өзгерту"
@@ -722,11 +740,11 @@ msgstr "Камераның алдына тұр."
 msgid "Language"
 msgstr "Тіл"
 
-#. The label of the row with the name of the rider, which opens the creator.
+#. The label of the row with the journey (a saved game) and its rider,
 #: scenes/settings/settings.gd
 #, fuzzy
-msgid "Rider"
-msgstr "Шабандоз"
+msgid "Journey"
+msgstr "Сапар"
 
 #. The button which opens the wardrobe, to choose what to wear.
 #: scenes/settings/settings.gd
@@ -790,13 +808,15 @@ msgstr "Камера істен шықты. Пернетақтаны қолда�
 
 #. The wardrobe: the title of the panel of the finery which she wears.
 #: scenes/wardrobe/wardrobe.gd
+#, fuzzy
 msgid "Wearing"
-msgstr ""
+msgstr "Киюлі"
 
 #. The wardrobe: the title of the panel of the finery which she won, but took off.
 #: scenes/wardrobe/wardrobe.gd
+#, fuzzy
 msgid "Not wearing"
-msgstr ""
+msgstr "Киілмеген"
 
 #. In the wardrobe, before the rider won any finery.
 #: scenes/wardrobe/wardrobe.gd
@@ -1151,6 +1171,18 @@ msgstr "киіз үй мен"
 msgctxt "between"
 msgid "the yurt"
 msgstr "киіз үйдің"
+
+#, fuzzy
+#~ msgid "Who rides today?"
+#~ msgstr "Бүгін кім шабады?"
+
+#, fuzzy
+#~ msgid "+ New"
+#~ msgstr "+ Жаңа"
+
+#, fuzzy
+#~ msgid "Rider"
+#~ msgstr "Шабандоз"
 
 #, fuzzy
 #~ msgid "The Steppe Rescue"

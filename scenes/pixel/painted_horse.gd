@@ -64,13 +64,14 @@ static func draw(
     item.draw_texture_rect(picture, Rect2((ground - shown * ANCHOR).round(), shown), false, tint)
 
 
-## Draw the horse rearing up on its hind legs, [param amount] of the way up
-## (0 stands, 1 is the highest), so that it stands at [param ground]: the
-## painted frame of the rearing if there is one (assets/pictures/horse/
-## rear_<frame>.png), else the standing horse tipped back around its hind
-## hooves.
-static func draw_rear(item: CanvasItem, amount: float, ground: Vector2, small := false) -> void:
-    var frame := clampi(roundi(amount * (REAR_FRAMES - 1)), 0, REAR_FRAMES - 1)
+## Draw the horse rearing up on its hind legs, [param progress] through the
+## rearing (0 starts, 0.5 is the highest, 1 stands again), so that it stands
+## at [param ground]: the painted frame of the rearing if there is one
+## (assets/pictures/horse/rear_<frame>.png), else the standing horse tipped
+## back around its hind hooves.
+static func draw_rear(item: CanvasItem, progress: float, ground: Vector2, small := false) -> void:
+    var amount := sin(clampf(progress, 0.0, 1.0) * PI)
+    var frame := clampi(roundi(progress * (REAR_FRAMES - 1)), 0, REAR_FRAMES - 1)
     var path := "res://assets/pictures/horse/%srear_%d.png" % ["small/" if small else "", frame]
     if ResourceLoader.exists(path):
         if not _cache.has(path):

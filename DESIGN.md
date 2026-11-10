@@ -169,6 +169,7 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 * Both wrists must be clearly above the head (0.4 of the width of the shoulders above the eyes and ears) for 0.15 s, so that a hand brushing the hair does not brake; one hand up does nothing.
 * It is the way to stop quickly, e.g., next to a person or a lost animal; the horse also stops by itself when the player stands still.
 * Down on the keyboard brakes, too.
+* **The pictures:** the painted girl raising both hands above her head (`assets/pictures/girl/hands_up_*.png`), the bay horse rearing up from the side in five frames (`assets/pictures/horse/rear_*.png`), in How to Play, and each of the four horses rearing up seen from above (`assets/pictures/top_down/horses/<preset>/rear.png`), in the level.
 
 ### Turning: reaching across the head
 

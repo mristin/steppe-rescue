@@ -151,9 +151,9 @@ func finish() -> void:
 
 ## What the rider does at the time of the animation: how deep she squats, in
 ## [0, 1], how far she pulls the reins, in [-1, 1] (positive to the left),
-## how far her hands are up above her head (the brake), in [0, 1], how far the
-## horse rears, in [0, 1], whether she sits on the horse, and the speed which
-## the horse goes to.
+## how far her hands are up above her head (the brake), in [0, 1], how far
+## the horse is through its rearing, in [0, 1] (0 when it does not rear),
+## whether she sits on the horse, and the speed which the horse goes to.
 static func pose(at: float) -> Dictionary:
     var result := {
         "squat": 0.0,
@@ -167,7 +167,7 @@ static func pose(at: float) -> Dictionary:
     if at >= BRAKE:
         result["hands_up"] = minf(1.0, (at - BRAKE) / 0.4)
         if at < BRAKE + _REAR_SECONDS:
-            result["rear"] = sin((at - BRAKE) / _REAR_SECONDS * PI)
+            result["rear"] = (at - BRAKE) / _REAR_SECONDS
         return result
     if (at >= SQUAT and at < STOP) or at >= GALLOP_AGAIN:
         var part: Array = _BRISK if at >= GALLOP_AGAIN else _SQUATS[0]
@@ -214,6 +214,61 @@ func caption(at: float) -> String:
             return line[1]
     # TRANSLATORS: In How to Play: raising both hands above the head is the brake.
     return tr("Both hands up above your head: your horse rears up and stops at once!")
+
+
+func _draw() -> void:
+    draw_texture_rect(_background, Rect2(Vector2.ZERO, Vector2(960, 540)), false)
+    draw_texture(Ornaments.panel(Vector2(888, 66)), Vector2(36, 15))
+    draw_texture(
+        Ornaments.panel(_speed_bar.size + Vector2(28, 16)), _speed_bar.position - Vector2(14, 8)
+    )
+    var now := pose(time)
+
+    # NOTE (mristin):
+    # The frame of the camera picture, where the rider stands as the player
+    # does, seen in the mirror.
+    draw_texture(Ornaments.panel(_FRAME.size), _FRAME.position)
+    var inside := _FRAME.grow(-12)
+    draw_rect(inside, Palette.SKY_LIGHT)
+    draw_rect(Rect2(inside.position.x, inside.end.y - 40, inside.size.x, 40), Palette.GRASS_LIGHT)
+    var feet := Vector2(inside.get_center().x, inside.end.y - 18)
+
+    if time >= REACH and time < GALLOP_AGAIN:
+        _draw_turning(now)
+    else:
+        _draw_running(now)
+
+    # NOTE (mristin):
+    # She rides in, then jumps off the saddle into the frame, getting bigger as
+    # she comes.
+    if now["riding"]:
+        return
+    var hop := clampf((time - DISMOUNT) / 0.8, 0.0, 1.0)
+    var from := _HORSE_GROUND + Vector2(10, -80)
+    var at := from.lerp(feet, hop) + Vector2(0, -sin(hop * PI) * 40.0)
+    var painted := PaintedGirl.squat(0)
+    var reach: float = now["reach"]
+    var hands_up: float = now["hands_up"]
+    var shrink := 1.0
+    if hands_up > 0.0:
+        var raised := PaintedGirl.hands_up(hands_up)
+        if raised != null:
+            painted = raised
+            # NOTE (mristin):
+            # Her raised hands reach higher than the frame; she steps back a
+            # little.
+            shrink = 0.9
+        else:
+            _draw_hands_up(at, hands_up)
+    elif reach != 0.0:
+        painted = PaintedGirl.reins(PaintedGirl.reins_frame(reach))
+    elif now["squat"] > 0.0 or now["phase"] > 0.0:
+        painted = PaintedGirl.squat(PaintedGirl.squat_frame(now["phase"]))
+    # NOTE (mristin):
+    # A frame has two pixels of the screen per logical pixel, like the pixel
+    # art; it grows from small as she jumps off the horse.
+    var size := painted.get_size() * 0.5 * lerpf(0.3, 1.0, hop) * shrink
+    draw_texture_rect(painted, Rect2((at - Vector2(size.x * 0.5, size.y)).round(), size), false)
 
 
 ## Until the girl with her hands up is painted, two golden arrows rise over

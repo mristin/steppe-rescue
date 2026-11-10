@@ -66,7 +66,7 @@ static func draw_rider(
         # bit wider, its hind legs stay, and the girl leans back and comes
         # nearer to us.
         var painted := "horses/%s/%srear" % [steed, prefix]
-        if rear > 0.3 and ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
+        if ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
             horse = _load(painted)
         else:
             wide = Vector2(HORSE_WIDTH * (1.0 + 0.15 * rear), 1.0 - 0.25 * rear)

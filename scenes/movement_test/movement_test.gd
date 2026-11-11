@@ -44,14 +44,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-    var speed: float = _service.GetSpeed()
+    var speed: float = _service.GetSpeed(0)
     _speed_bar.speed = speed
 
-    var turn: float = _service.GetTurn()
+    var turn: float = _service.GetTurn(0)
     _turn_gauge.turn = turn
 
-    var count: int = _service.GetSquatCount()
-    _depth_plot.add(delta, _service.GetSquatDepth(), count != _last_count)
+    var count: int = _service.GetSquatCount(0)
+    _depth_plot.add(delta, _service.GetSquatDepth(0), count != _last_count)
     _last_count = count
 
     _update_texts()
@@ -59,11 +59,11 @@ func _process(delta: float) -> void:
 
 func _update_texts() -> void:
     _title.text = tr("Movement test")
-    _gait_label.text = _gait_name(_service.GetGait())
-    _turn_label.text = _turn_name(_service.GetTurn())
+    _gait_label.text = _gait_name(_service.GetGait(0))
+    _turn_label.text = _turn_name(_service.GetTurn(0))
     _depth_label.text = tr("Squat depth")
     # TRANSLATORS: {count} is the number of the squats so far.
-    _squats_label.text = tr("Squats: {count}").format({"count": _service.GetSquatCount()})
+    _squats_label.text = tr("Squats: {count}").format({"count": _service.GetSquatCount(0)})
     _status_label.text = _status_text()
     _keys_label.text = tr("Space: squat · ←/→: turn · L: language · Esc: quit")
 

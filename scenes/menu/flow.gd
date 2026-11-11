@@ -3,8 +3,9 @@ extends RefCounted
 
 ## Lead the player through the screens (see section 6 of DESIGN.md): from the
 ## intro, Play goes on through the language (the first time), the journeys
-## (once each start; a new journey is named first), the creator of the rider
-## and her horse (once each journey), the instruction (the first time)
+## (once each start; a new journey is named first, then the players choose
+## whether one or two ride), the creator of the rider and her horse (once for
+## each player of the journey), the instruction (the first time)
 ## and the request for room around her (once each start, with the camera on)
 ## to the next level, and the end of a level to the reward; Levels opens the
 ## level select, How to Play the instruction, and Settings the settings, where
@@ -22,6 +23,7 @@ const FREE_SPACE := "res://scenes/free_space/free_space.tscn"
 const WARDROBE := "res://scenes/wardrobe/wardrobe.tscn"
 const SESSIONS := "res://scenes/sessions/sessions.tscn"
 const SESSION_NAME := "res://scenes/session_name/session_name.tscn"
+const PLAYER_COUNT := "res://scenes/player_count/player_count.tscn"
 
 ## Whether the player is on her way from Play to the level (else she opened a
 ## screen from a menu, and goes back to it when done).
@@ -45,11 +47,19 @@ static var reward_stars := 0
 ## The id of the level just finished, for the reward; empty in the tests.
 static var reward_level := ""
 
+## The player who chooses her gift now (see [Reward]): with two players, they
+## choose one after the other.
+static var reward_player := 0
+
+## The player whose wardrobe opens (see [Wardrobe]).
+static var wardrobe_player := 0
+
 
 ## Go on from the end of a level with the stars to the reward.
 static func reward(tree: SceneTree, stars: int, level_id := "") -> void:
     reward_stars = stars
     reward_level = level_id
+    reward_player = 0
     open(tree, REWARD)
 
 
@@ -77,7 +87,9 @@ static func next(tree: SceneTree) -> void:
             tree.change_scene_to_file.call_deferred(SESSION_NAME)
         else:
             tree.change_scene_to_file.call_deferred(SESSIONS)
-    elif not profile.has_rider:
+    elif profile.players == 0:
+        tree.change_scene_to_file.call_deferred(PLAYER_COUNT)
+    elif not profile.has_riders():
         tree.change_scene_to_file.call_deferred(RIDER_CREATOR)
     elif not profile.has_seen_instruction:
         tree.change_scene_to_file.call_deferred(INSTRUCTION)

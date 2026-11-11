@@ -17,42 +17,51 @@ namespace SteppeRescue.Vision
         public int Width { get; init; }
         public int Height { get; init; }
 
-        /// <summary>The head of the player, or null if not found.</summary>
-        public BoundingBox? Head { get; init; }
+        /// <summary>The head of the (first) player, or null if not found.</summary>
+        public BoundingBox? Head => Heads.Count > 0 ? Heads[0] : null;
 
-        /// <summary>The landmarks of the player's face, or null if not found.</summary>
-        public FaceLandmarks? Face { get; init; }
+        /// <summary>The landmarks of the (first) player's face, or null if not found.</summary>
+        public FaceLandmarks? Face => Faces.Count > 0 ? Faces[0] : null;
 
-        /// <summary>How many heads the detector found; -1 when we only followed the face.</summary>
+        /// <summary>The head of each player, or null for a player whose head was not found.</summary>
+        public IReadOnlyList<BoundingBox?> Heads { get; init; } = Array.Empty<BoundingBox?>();
+
+        /// <summary>The landmarks of the face of each player, or null if not found.</summary>
+        public IReadOnlyList<FaceLandmarks?> Faces { get; init; } = Array.Empty<FaceLandmarks?>();
+
+        /// <summary>How many heads the detector found; -1 when we only followed the faces.</summary>
         public int HeadCount { get; init; }
 
         /// <summary>
         /// The hands the head detector found in this frame, in frame pixels; null
-        /// when the detector did not run (we only followed the face).
+        /// when the detector did not run (we only followed the faces).
         /// </summary>
         public IReadOnlyList<BoundingBox>? Hands { get; init; }
 
-        /// <summary>How long the heads and the face took, in milliseconds.</summary>
+        /// <summary>How long the heads and the faces took, in milliseconds.</summary>
         public double InferenceMs { get; init; }
     }
 
     /// <summary>
-    /// Find the player's face in every frame, fast enough for the looks to stick
-    /// to it: YOLOX finds the heads in the whole frame, we pick the player's
-    /// head, and YuNet finds the landmarks of the face in it.
+    /// Find the players' faces in every frame, fast enough for the looks to
+    /// stick to them: YOLOX finds the heads in the whole frame, we pick the head
+    /// of each player, and YuNet finds the landmarks of the face in it.
     /// </summary>
     /// <remarks>
     /// <para>
     /// YOLOX is the slow part (about 15 ms on a school laptop, against 1.5 ms of
-    /// YuNet on a head crop). Once we found the face, we therefore follow it with
-    /// YuNet alone, in a crop around where it was in the previous frame, and run
-    /// YOLOX only when the face is lost, and every <see cref="RecheckEvery"/> to
-    /// make sure we still follow the player's head.
+    /// YuNet on a head crop). Once we found the faces, we therefore follow them
+    /// with YuNet alone, each in a crop around where it was in the previous
+    /// frame, and run YOLOX only when a face is lost, and every
+    /// <see cref="RecheckEvery"/> to make sure we still follow the players'
+    /// heads.
     /// </para>
     /// <para>
     /// The pose estimator is too slow to run on every frame, so it runs on its
     /// own thread, and the face tracker runs next to it. The pose tells us,
-    /// through the hint, which of the heads belongs to the player.
+    /// through the hints, which of the heads belongs to which player. With two
+    /// players, each player's head is in their own half of the frame (see
+    /// <see cref="PlayerSplit"/>).
     /// </para>
     /// <para>The instance is not thread-safe; use it from a single thread only.</para>
     /// </remarks>
@@ -64,26 +73,32 @@ namespace SteppeRescue.Vision
         private readonly YoloxHeadDetector _heads;
         private readonly YuNetFaceLandmarker _faces;
         private readonly List<Detection> _found = new();
+        private readonly List<Detection> _half = new();
 
-        /// <summary>Run the head detector at least this often while following the face, in seconds.</summary>
+        /// <summary>Run the head detector at least this often while following the faces, in seconds.</summary>
         public double RecheckEvery = 0.25;
 
         /// <summary>
         /// Run the head detector on every frame, for its hands (e.g., for the
-        /// cursor of the menus), instead of following the face with YuNet alone.
+        /// cursor of the menus), instead of following the faces with YuNet alone.
         /// </summary>
         public volatile bool WantHands;
 
-        /// <summary>Follow the face in a square of this many face sizes around it.</summary>
+        /// <summary>Follow a face in a square of this many face sizes around it.</summary>
         public float FollowScale = 1.6f;
 
-        private BoundingBox? _previous;
-        private double _previousAt = double.NaN;
+        /// <summary>What we know of the face of one player.</summary>
+        private sealed class PlayerTrack
+        {
+            public BoundingBox? Previous;
+            public double PreviousAt = double.NaN;
 
-        /// <summary>The square around the face we follow, or null if we follow none.</summary>
-        private BoundingBox? _following;
+            /// <summary>The square around the face we follow, or null if we follow none.</summary>
+            public BoundingBox? Following;
+        }
+
+        private readonly PlayerTrack[] _tracks = { new(), new() };
         private double _detectedAt = double.NaN;
-        private int _headCount;
 
         /// <param name="headModel">The bytes of the YOLOX-Body-Head-Hand model.</param>
         /// <param name="faceModel">The bytes of the YuNet model.</param>
@@ -101,62 +116,105 @@ namespace SteppeRescue.Vision
             }
         }
 
-        /// <summary>Find the player's face in the frame.</summary>
+        /// <summary>Find the face of the single player in the frame.</summary>
         /// <param name="frame">The camera frame.</param>
         /// <param name="hintX">The x of the player's head from the pose, if known.</param>
         /// <param name="hintY">The y of the player's head from the pose, if known.</param>
         public FaceSnapshot Track(Frame frame, float? hintX = null, float? hintY = null)
         {
-            var stopwatch = Stopwatch.StartNew();
+            return TrackAll(frame, new (float X, float Y)?[] { Hint(hintX, hintY) });
+        }
 
-            if (!WantHands && _following != null && frame.Timestamp - _detectedAt < RecheckEvery)
+        private static (float X, float Y)? Hint(float? x, float? y)
+        {
+            return x != null && y != null ? (x.Value, y.Value) : null;
+        }
+
+        /// <summary>Find the faces of the players (as many as the hints) in the frame.</summary>
+        /// <param name="frame">The camera frame.</param>
+        /// <param name="hints">The head of each player from the pose, if known.</param>
+        public FaceSnapshot TrackAll(Frame frame, IReadOnlyList<(float X, float Y)?> hints)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            int count = Math.Clamp(hints.Count, 1, PlayerSplit.MaxPlayers);
+            var heads = new BoundingBox?[count];
+            var faces = new FaceLandmarks?[count];
+
+            bool allFollowed = !WantHands && frame.Timestamp - _detectedAt < RecheckEvery;
+            for (int i = 0; i < count && allFollowed; i++)
             {
-                var followed = _faces.DetectOne(frame, _following.Value);
-                if (followed != null)
+                var track = _tracks[i];
+                var followed = track.Following != null ? _faces.DetectOne(frame, track.Following.Value) : null;
+                if (followed == null)
                 {
-                    var square = followed.Box.ExpandToSquare(FollowScale);
-                    _following = square;
-                    _previous = square;
-                    _previousAt = frame.Timestamp;
-                    return Snapshot(frame, square, followed, -1, null, stopwatch);
+                    allFollowed = false;
+                    break;
                 }
+
+                var square = followed.Box.ExpandToSquare(FollowScale);
+                track.Following = square;
+                track.Previous = square;
+                track.PreviousAt = frame.Timestamp;
+                heads[i] = square;
+                faces[i] = followed;
+            }
+
+            if (allFollowed)
+            {
+                return Snapshot(frame, heads, faces, -1, null, stopwatch);
             }
 
             _heads.Detect(frame, _found);
-            _headCount = _found.Count;
             _detectedAt = frame.Timestamp;
 
-            float? x = hintX;
-            float? y = hintY;
-            if ((x == null || y == null) && _previous != null && frame.Timestamp - _previousAt <= FollowFor)
+            for (int i = 0; i < count; i++)
             {
-                x = _previous.Value.CenterX;
-                y = _previous.Value.CenterY;
+                var track = _tracks[i];
+                float? x = i < hints.Count ? hints[i]?.X : null;
+                float? y = i < hints.Count ? hints[i]?.Y : null;
+                if ((x == null || y == null) && track.Previous != null
+                    && frame.Timestamp - track.PreviousAt <= FollowFor)
+                {
+                    x = track.Previous.Value.CenterX;
+                    y = track.Previous.Value.CenterY;
+                }
+
+                _half.Clear();
+                foreach (var detection in _found)
+                {
+                    if (PlayerSplit.PlayerOf(detection.Box.CenterX, frame.Width, count) == i)
+                    {
+                        _half.Add(detection);
+                    }
+                }
+
+                var head = Pick(_half, x, y);
+                FaceLandmarks? face = null;
+                if (head != null)
+                {
+                    face = _faces.DetectOne(frame, head.Value);
+                    track.Previous = head;
+                    track.PreviousAt = frame.Timestamp;
+                }
+
+                track.Following = face?.Box.ExpandToSquare(FollowScale);
+                heads[i] = head;
+                faces[i] = face;
             }
 
-            var head = Pick(_found, x, y);
-
-            FaceLandmarks? face = null;
-            if (head != null)
-            {
-                face = _faces.DetectOne(frame, head.Value);
-                _previous = head;
-                _previousAt = frame.Timestamp;
-            }
-
-            _following = face?.Box.ExpandToSquare(FollowScale);
             var hands = new List<BoundingBox>(_heads.Hands.Count);
             foreach (var hand in _heads.Hands)
             {
                 hands.Add(hand.Box);
             }
-            return Snapshot(frame, head, face, _headCount, hands, stopwatch);
+
+            return Snapshot(frame, heads, faces, _found.Count, hands, stopwatch);
         }
 
         private static FaceSnapshot Snapshot(
             Frame frame,
-            BoundingBox? head,
-            FaceLandmarks? face,
+            BoundingBox?[] heads,
+            FaceLandmarks?[] faces,
             int headCount,
             IReadOnlyList<BoundingBox>? hands,
             Stopwatch stopwatch
@@ -167,8 +225,8 @@ namespace SteppeRescue.Vision
                 Timestamp = frame.Timestamp,
                 Width = frame.Width,
                 Height = frame.Height,
-                Head = head,
-                Face = face,
+                Heads = heads,
+                Faces = faces,
                 HeadCount = headCount,
                 Hands = hands,
                 InferenceMs = stopwatch.Elapsed.TotalMilliseconds,

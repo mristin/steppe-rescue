@@ -75,15 +75,15 @@ func _run() -> void:
     # NOTE (mristin):
     # Close the conversation with Grandmother, and let the horse stop again.
     await _wait(1.5)
-    service.SquatByKeyboard()
+    service.SquatByKeyboard(0)
     await _wait(6.0)
     _check(level.talking_to() == null, "Grandmother lets the rider go")
 
     level.needs.water = 0.0
     for i in range(8):
-        service.SquatByKeyboard()
+        service.SquatByKeyboard(0)
         await _wait(0.6)
-    _check(service.GetGait() == 3, "the squats ask for a gallop")
+    _check(service.GetGait(0) == 3, "the squats ask for a gallop")
     _check(rider.gait() == 1, "a thirsty horse only walks, got the gait %d" % rider.gait())
     _check(rider.speed > 0.0, "a thirsty horse never stops")
 

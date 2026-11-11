@@ -8,11 +8,19 @@ extends Node2D
 ## thanks her and she gets her stars, which the profile keeps; the next squat
 ## goes on to the reward.
 ##
+## With two players, they ride together on a split screen (see section 6 of
+## DESIGN.md, "Two players"; [LevelPlayer]): each rider has her own horse,
+## her own followers and her own view with its HUD, and talks to the people on
+## her own, in her half; the clues are shared on the maps of both, and so are
+## the stars. The mission is over when all the animals are home, whoever
+## brought them.
+##
 ## The level is the one chosen in [member Flow.level], else [member map_scene].
 ##
-## Keys: Space or Up is a squat, Left and Right turn, C opens and closes the
-## map, L switches the language, R rides the level again, Enter goes on after
-## the end, Escape twice quits.
+## Keys: Space or W (the first player) and Up (the second player, or the
+## first, alone) is a squat, A and D (or Left and Right) turn, S (or Down)
+## brakes; C opens and closes the maps, L switches the language, R rides the
+## level again, Enter goes on after the end, Escape twice quits.
 
 ## The rider talks to a person who is this close, in pixels...
 const TALK_DISTANCE := 34.0
@@ -44,8 +52,14 @@ const STILL_SECONDS := 3.0
 ## The animals run into the pen when the rider is this close to its gate.
 const GATE_DISTANCE := 60.0
 
+## The riders of two players start this far apart, in pixels.
+const START_APART := 24.0
+
 ## The level to play.
 @export var map_scene: PackedScene
+
+## How many players ride (1 or 2); 0 takes it from the profile.
+@export_range(0, 2) var player_count := 0
 
 var map: LevelMap
 var animals: Array[Animal] = []
@@ -53,61 +67,40 @@ var animals: Array[Animal] = []
 ## Whether all the animals are home.
 var finished := false
 
-## How long the rider took, in seconds, from her first stride.
+## How long the riders took, in seconds, from the first stride.
 var elapsed := 0.0
 
-## The water and the food of the horse.
-var needs := HorseNeeds.new()
+## The water and the food of the first rider's horse.
+var needs: HorseNeeds:
+    get:
+        return _players[0].needs
 
-## How many times the rider braked, to see when she brakes again.
-var _brakes := 0
 var _service: Node = null
 var _people: Array[Person] = []
 var _grandmother: Person = null
-var _followers: Array[Animal] = []
-var _trail := PackedVector2Array()
 var _revealed: Array[Clue] = []
 var _started := false
-var _edge_time := 0.0
-
-## How often the rider ran into each obstacle, by its index (see
-## [member Rider.blocked_by]), and the one she touches now.
-var _bumps: Dictionary = {}
-var _touching := -1
-
-## How long the hint to turn still shows, in seconds.
-var _turn_hint_time := 0.0
-
-var _coach: Coach
+var _players: Array[LevelPlayer] = []
 var _wildlife: Wildlife
-var _still_time := 0.0
-var _squats_seen := 0
-
-var _talking: Person = null
-var _talked_to: Person = null
-var _talk_time := 0.0
-var _talk_squats := 0
+var _finish_squats: Array[int] = []
+var _finish_time := 0.0
 
 @onready var _world: Node2D = $World
 @onready var _animals: Node2D = $World/Animals
-@onready var _rider: Rider = $World/Rider
-@onready var _camera: Camera2D = $World/Rider/Camera
+@onready var _views: CanvasLayer = $Views
+@onready var _hud: CanvasLayer = $Hud
 @onready var _slots: Slots = $Hud/Slots
-@onready var _hearing: Hearing = $Hud/Hearing
-@onready var _map_view: MapView = $Hud/MapView
-@onready var _speed_bar: SpeedBar = $Hud/SpeedBar
-@onready var _needs_bars: NeedsBars = $Hud/NeedsBars
 @onready var _camera_panel: CameraPanel = $Hud/CameraPanel
-@onready var _conversation: Conversation = $Hud/Conversation
 @onready var _status_label: Label = $Hud/StatusLabel
 @onready var _quit_hint: QuitHint = $Hud/QuitHint
-@onready var _edge_label: Label = $Hud/EdgeLabel
 
 
 func _ready() -> void:
     _service = get_node("/root/Vision").service
+    var profile := get_node("/root/Profile")
+    var count := player_count if player_count > 0 else clampi(profile.players, 1, 2)
+    _service.SetPlayerCount(count)
     _service.ResetRiding()
-    _brakes = _service.GetBrakeCount()
     get_node("/root/Sounds").wind(true)
 
     if Flow.level != "":
@@ -121,49 +114,144 @@ func _ready() -> void:
     _world.move_child(_wildlife, 1)
 
     var start := map.start()
-    _rider.position = start.position
-    _rider.heading = start.rotation
-    _rider.set_obstacles(map.solids(), map.size)
     _wildlife.populate(
         map.size, map.solids(), [start.position, map.home().position], hash(map.title)
     )
-    _trail.append(_rider.position)
-    _camera.limit_left = 0
-    _camera.limit_top = 0
-    _camera.limit_right = int(map.size.x)
-    _camera.limit_bottom = int(map.size.y)
 
-    var count := 0
+    var animal_count := 0
     for herd in map.herds():
         for spot in herd.spots():
             var animal := Animal.new()
-            animal.setup(herd.animal, herd, herd.position + spot, count)
+            animal.setup(herd.animal, herd, herd.position + spot, animal_count)
             _animals.add_child(animal)
             animals.append(animal)
-            count += 1
+            animal_count += 1
 
     _people = map.people()
     for person in _people:
         if person.portrait == "grandmother":
             _grandmother = person
 
-    _slots.animals = animals
-    _map_view.map = map
-    _speed_bar.thresholds = _service.GetGaitThresholds()
-    _rider.looks = get_node("/root/Profile").looks
-    _needs_bars.needs = needs
-    _coach = Coach.new()
-    _coach.position = _camera_panel.position - Vector2(68, 0)
-    _coach.size = Vector2(64, _camera_panel.size.y)
-    $Hud.add_child(_coach)
+    # NOTE (mristin):
+    # Two riders start side by side, the first player's on the left, as she
+    # stands in the camera picture.
+    var side := Vector2.RIGHT.rotated(start.rotation)
+    for i in range(count):
+        var player := LevelPlayer.new(i, count > 1)
+        player.rider = $World/Rider if i == 0 else Rider.new()
+        if i > 0:
+            player.rider.name = "Rider%d" % (i + 1)
+            _world.add_child(player.rider)
+        player.rider.set_obstacles(map.solids(), map.size)
+        var offset := (i - (count - 1) * 0.5) * START_APART
+        player.rider.position = player.rider.slide(start.position + side * offset)
+        player.rider.heading = start.rotation
+        player.rider.looks = profile.rider(i).dressed()
+        player.trail.append(player.rider.position)
+        player.brakes = _service.GetBrakeCount(i)
+        var bubble := NeedsBubble.new()
+        bubble.needs = player.needs
+        player.rider.add_child(bubble)
+        _players.append(player)
 
-    var bubble := NeedsBubble.new()
-    bubble.needs = needs
-    _rider.add_child(bubble)
+    for player in _players:
+        player.show_world(_world, null if player.index == 0 else _players[0], _views)
+        _build_hud(player)
+    get_viewport().size_changed.connect(_fit_views)
+    _fit_views()
+
+    _slots.animals = animals
+    if count > 1:
+        _camera_panel.position = Vector2(368, 364)
+        _camera_panel.size = Vector2(224, 168)
+        _status_label.position = Vector2(240, 342)
+        _status_label.size = Vector2(480, 18)
+        _status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        var divider := ColorRect.new()
+        divider.color = Palette.OUTLINE
+        divider.position = Vector2(479, 0)
+        divider.size = Vector2(2, 540)
+        divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        _hud.add_child(divider)
+        _hud.move_child(divider, 0)
+    for player in _players:
+        _build_coach(player)
+        # NOTE (mristin):
+        # Grandmother sends every rider out.
+        if _grandmother != null:
+            _talk(player, _grandmother)
+    _update_views()
 
 
 func _exit_tree() -> void:
     get_node("/root/Sounds").wind(false)
+
+
+## Put the HUD of the rider into her part of the screen.
+func _build_hud(player: LevelPlayer) -> void:
+    var two := player.half
+    player.hearing = Hearing.new()
+    _add(player.hearing, player.rect, 0)
+
+    player.speed_bar = SpeedBar.new()
+    player.speed_bar.thresholds = _service.GetGaitThresholds()
+    _add(player.speed_bar, player.place(Rect2(8, 482, 288 if two else 300, 50)))
+
+    player.needs_bars = NeedsBars.new()
+    player.needs_bars.needs = player.needs
+    _add(
+        player.needs_bars, player.place(Rect2(8, 430, 160, 48) if two else Rect2(324, 484, 160, 48))
+    )
+
+    player.map_view = MapView.new()
+    player.map_view.map = map
+    if two:
+        player.map_view.small_rect = player.place(Rect2(8, 8, 160, 120))
+        player.map_view.large_rect = player.place(Rect2(16, 40, 448, 460))
+    _add(player.map_view, player.map_view.small_rect)
+
+    player.conversation = Conversation.new()
+    _add(
+        player.conversation,
+        player.place(Rect2(8, 136, 464, 100) if two else Rect2(8, 40, 600, 100))
+    )
+
+    player.edge_label = Label.new()
+    player.edge_label.visible = false
+    player.edge_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _add(player.edge_label, Rect2(player.rect.position.x, 330, player.rect.size.x, 18))
+
+
+## The small figure of the rider, next to the camera picture: at its left for
+## the first player, at its right for the second.
+func _build_coach(player: LevelPlayer) -> void:
+    player.coach = Coach.new()
+    var width := 60.0 if player.half else 64.0
+    var x := _camera_panel.position.x - width - 4.0
+    if player.index == 1:
+        x = _camera_panel.position.x + _camera_panel.size.x + 4.0
+    player.coach.position = Vector2(x, _camera_panel.position.y)
+    player.coach.size = Vector2(width, _camera_panel.size.y)
+    _hud.add_child(player.coach)
+
+
+## Put the control of the HUD at the rectangle, over the others (or at the
+## index among them).
+func _add(control: Control, rect: Rect2, at := -1) -> void:
+    control.position = rect.position
+    control.size = rect.size
+    control.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _hud.add_child(control)
+    if at >= 0:
+        _hud.move_child(control, at)
+
+
+## Render the views at the scale of the screen, so that the paintings keep
+## their fine pixels.
+func _fit_views() -> void:
+    var scale := roundi(get_viewport().get_stretch_transform().get_scale().x)
+    for player in _players:
+        player.set_scale(maxi(1, scale))
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -172,7 +260,9 @@ func _unhandled_input(event: InputEvent) -> void:
             KEY_ESCAPE:
                 _quit_hint.press()
             KEY_C:
-                _map_view.large = not _map_view.large
+                var large := not _players[0].map_view.large
+                for player in _players:
+                    player.map_view.large = large
             KEY_R:
                 get_tree().reload_current_scene()
             KEY_L:
@@ -183,47 +273,64 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
+    if finished:
+        _update_thanks(delta)
+    for player in _players:
+        _ride(player, delta)
+    if _started and not finished:
+        elapsed += delta
+
+    _update_animals(delta)
+    var others: Array = []
+    for i in range(1, _players.size()):
+        others.append([_players[i].rider.position, _players[i].rider.gait()])
+    _wildlife.update(delta, _players[0].rider.position, _players[0].rider.gait(), others)
+    _update_views()
+    _update_hud()
+
+
+## Ride the horse of the player for a moment: her squats, her brake and her
+## reins, unless she talks to somebody.
+func _ride(player: LevelPlayer, delta: float) -> void:
+    var rider := player.rider
     # NOTE (mristin):
     # A tired horse walks however fast the player squats (see [HorseNeeds]),
     # so the gait is the slower of the squats and the horse.
-    var gait: int = mini(_service.GetGait(), _rider.gait())
-    _update_conversation(delta, gait)
+    var gait: int = mini(_service.GetGait(player.index), rider.gait())
+    if not finished:
+        _update_conversation(player, delta, gait)
 
-    var brakes: int = _service.GetBrakeCount()
-    if brakes > _brakes:
-        _brakes = brakes
+    var brakes: int = _service.GetBrakeCount(player.index)
+    if brakes > player.brakes:
+        player.brakes = brakes
         # NOTE (mristin):
         # A walking or trotting horse halts within a stride; only a galloping
         # one, stopped hard, rears up (the rider's gait is still the one
         # before the brake).
-        if _rider.gait() == 3:
-            _rider.rear()
-    var standing := _talking != null or finished
-    var speed: float = 0.0 if standing else needs.cap(_service.GetSpeed())
-    _rider.ride(delta, speed, 0.0 if standing else _service.GetTurn())
-    needs.update(delta, speed, map.at_fresh_water(_rider.position), map.on_pasture(_rider.position))
-    if _rider.speed > 0.0:
+        if rider.gait() == 3:
+            rider.rear()
+    var standing := player.talking != null or finished
+    var speed: float = 0.0 if standing else player.needs.cap(_service.GetSpeed(player.index))
+    rider.ride(delta, speed, 0.0 if standing else _service.GetTurn(player.index))
+    player.needs.update(
+        delta, speed, map.at_fresh_water(rider.position), map.on_pasture(rider.position)
+    )
+    player.speed_bar.speed = speed
+    if rider.speed > 0.0:
         _started = true
 
     # NOTE (mristin):
     # The edge of the steppe blocks the horse like a wall, and Grandmother's
     # word reminds the rider to stay near.
-    _edge_time = EDGE_SECONDS if _rider.at_edge else maxf(0.0, _edge_time - delta)
+    player.edge_time = EDGE_SECONDS if rider.at_edge else maxf(0.0, player.edge_time - delta)
+    note_bumps(delta, player.index)
+    player.edge_label.visible = player.edge_time > 0.0
+    player.edge_label.text = tr("Don't ride too far away!")
 
-    note_bumps(delta)
-    _edge_label.visible = _edge_time > 0.0
-    _edge_label.text = tr("Don't ride too far away!")
-    if _started and not finished:
-        elapsed += delta
-    if _trail[_trail.size() - 1].distance_to(_rider.position) >= 3.0:
-        _trail.append(_rider.position)
-        if _trail.size() > 1500:
-            _trail = _trail.slice(500)
-
-    _update_animals(delta, gait)
-    _wildlife.update(delta, _rider.position, _rider.gait())
-
-    _update_hud(speed)
+    if player.trail[player.trail.size() - 1].distance_to(rider.position) >= 3.0:
+        player.trail.append(rider.position)
+        if player.trail.size() > 1500:
+            player.trail = player.trail.slice(500)
 
 
 ## How many stars the ride earned so far: three within the par time of the
@@ -236,18 +343,34 @@ func stars() -> int:
     return 1
 
 
-## The person the rider talks to now, or null.
-func talking_to() -> Person:
-    return _talking
+## How many players ride.
+func players() -> int:
+    return _players.size()
 
 
-## The clues which the rider heard so far.
+## The person the player talks to now, or null.
+func talking_to(player := 0) -> Person:
+    return _players[player].talking
+
+
+## The clues which the riders heard so far.
 func revealed() -> Array[Clue]:
     return _revealed
 
 
-func rider() -> Rider:
-    return _rider
+## The rider of the player.
+func rider(player := 0) -> Rider:
+    return _players[player].rider
+
+
+## The animals which follow the rider of the player.
+func followers(player := 0) -> Array[Animal]:
+    return _players[player].followers
+
+
+## The view and the HUD of the player, for the tests.
+func view(player := 0) -> LevelPlayer:
+    return _players[player]
 
 
 ## The wild creatures of the steppe.
@@ -255,48 +378,62 @@ func wildlife() -> Wildlife:
     return _wildlife
 
 
-func _update_conversation(delta: float, gait: int) -> void:
-    var squats: int = _service.GetSquatCount()
-    if finished:
-        _talk_time += delta
-        if _talk_time >= THANKS_SECONDS and squats > _talk_squats:
-            _leave()
-        return
-    if _talking != null:
-        _talk_time += delta
-        if _talk_time >= TALK_SECONDS and squats > _talk_squats:
-            _talked_to = _talking
-            _talking = null
-            _conversation.close()
+func _update_conversation(player: LevelPlayer, delta: float, gait: int) -> void:
+    var squats: int = _service.GetSquatCount(player.index)
+    if player.talking != null:
+        player.talk_time += delta
+        if player.talk_time >= TALK_SECONDS and squats > player.talk_squats:
+            player.talked_to = player.talking
+            player.talking = null
+            player.conversation.close()
         return
 
-    if _talked_to != null:
-        if _rider.position.distance_to(_talked_to.position) > TALK_AGAIN_DISTANCE:
-            _talked_to = null
+    if player.talked_to != null:
+        if player.rider.position.distance_to(player.talked_to.position) > TALK_AGAIN_DISTANCE:
+            player.talked_to = null
 
     if gait > 1:
         return
     for person in _people:
-        if person != _talked_to and _rider.position.distance_to(person.position) < TALK_DISTANCE:
-            _talk(person)
+        if (
+            person != player.talked_to
+            and player.rider.position.distance_to(person.position) < TALK_DISTANCE
+        ):
+            _talk(player, person)
             return
 
 
-func _talk(person: Person) -> void:
-    _talking = person
-    _talk_time = 0.0
-    _talk_squats = _service.GetSquatCount()
+## After Grandmother's thanks, the next squat of any rider goes on.
+func _update_thanks(delta: float) -> void:
+    _finish_time += delta
+    for player in _players:
+        player.talk_time = _finish_time
+    if _finish_time < THANKS_SECONDS:
+        return
+    for player in _players:
+        if _service.GetSquatCount(player.index) > _finish_squats[player.index]:
+            _leave()
+            return
+
+
+## Let the player talk to the person, in her own part of the screen; what
+## the person tells goes on the maps of all the riders.
+func _talk(player: LevelPlayer, person: Person) -> void:
+    player.talking = person
+    player.talk_time = 0.0
+    player.talk_squats = _service.GetSquatCount(player.index)
     for clue in person.clues:
         if clue not in _revealed:
             _revealed.append(clue)
-    _show_conversation()
+    _show_conversation(player)
 
 
-## Show (again, e.g., in another language) what the person says now.
-func _show_conversation() -> void:
-    if _talking == null:
+## Show (again, e.g., in another language) what the person says now to the
+## player, by her name.
+func _show_conversation(player: LevelPlayer) -> void:
+    if player.talking == null:
         return
-    var rider_name: String = get_node("/root/Profile").rider_name()
+    var rider_name: String = get_node("/root/Profile").rider_name(player.index)
     var lines: Array[Dictionary] = []
     if finished:
         lines.append({"text": Grammar.format(tr(map.thanks), {"rider": rider_name})})
@@ -307,10 +444,12 @@ func _show_conversation() -> void:
         lines.append({"icons": icons})
         lines.append({"text": tr("R: ride again · Esc: quit")})
     else:
-        lines.append({"text": Grammar.format(tr(_talking.greeting), {"rider": rider_name})})
-        for clue in _talking.clues:
+        lines.append({"text": Grammar.format(tr(player.talking.greeting), {"rider": rider_name})})
+        for clue in player.talking.clues:
             lines.append({"icons": _clue_icons(clue), "text": map.clue_text(clue)})
-    _conversation.open(Icons.portrait(_talking.portrait), tr(_talking.speaker), lines)
+    player.conversation.open(
+        Icons.portrait(player.talking.portrait), tr(player.talking.speaker), lines
+    )
 
 
 ## The pictures of a clue: the animals, then the landmarks.
@@ -325,14 +464,11 @@ func _clue_icons(clue: Clue) -> Array:
     return icons
 
 
-func _update_animals(delta: float, gait: int) -> void:
+func _update_animals(delta: float) -> void:
     for animal in animals:
         match animal.state:
             Animal.State.LOST:
-                _update_lost(animal, delta, gait)
-            Animal.State.FOLLOWING:
-                var target := _trail_point(FOLLOW_SPACING * (_followers.find(animal) + 1))
-                animal.walk_to(target, animal.kind.speed, delta)
+                _update_lost(animal, delta)
             Animal.State.ENTERING:
                 if animal.walk_to(animal.spot, animal.kind.speed, delta) < 2.0:
                     animal.state = Animal.State.HOME
@@ -340,58 +476,66 @@ func _update_animals(delta: float, gait: int) -> void:
                 animal.graze(delta)
 
     var home := map.home()
-    if not _followers.is_empty() and _rider.position.distance_to(home.gate()) < GATE_DISTANCE:
-        var pen := home.pen().grow(-12.0)
-        for animal in _followers:
-            animal.state = Animal.State.ENTERING
-            var spot := pen.position + Vector2(randf(), randf()) * pen.size
-            animal.settle(spot.round(), 10.0)
-        _followers.clear()
+    for player in _players:
+        for i in range(player.followers.size()):
+            var animal := player.followers[i]
+            animal.walk_to(player.trail_point(FOLLOW_SPACING * (i + 1)), animal.kind.speed, delta)
+        if (
+            not player.followers.is_empty()
+            and player.rider.position.distance_to(home.gate()) < GATE_DISTANCE
+        ):
+            var pen := home.pen().grow(-12.0)
+            for animal in player.followers:
+                animal.state = Animal.State.ENTERING
+                var spot := pen.position + Vector2(randf(), randf()) * pen.size
+                animal.settle(spot.round(), 10.0)
+            player.followers.clear()
 
     if not finished and animals.all(func(a: Animal) -> bool: return a.state == Animal.State.HOME):
         _finish()
 
 
-func _update_lost(animal: Animal, delta: float, gait: int) -> void:
-    var distance := animal.position.distance_to(_rider.position)
-    if animal.kind.shy and gait >= 2 and distance < SCARE_DISTANCE:
-        animal.flee_from(_rider.position)
-        animal.near_time = 0.0
-    elif distance < Animal.JOIN_DISTANCE:
+## A lost animal flees from a rider who gallops at it, if it is shy, and
+## joins the nearest rider who stays near it.
+func _update_lost(animal: Animal, delta: float) -> void:
+    var nearest: LevelPlayer = null
+    var nearest_distance := INF
+    for player in _players:
+        var distance := animal.position.distance_to(player.rider.position)
+        var gait: int = mini(_service.GetGait(player.index), player.rider.gait())
+        if animal.kind.shy and gait >= 2 and distance < SCARE_DISTANCE:
+            animal.flee_from(player.rider.position)
+            animal.near_time = 0.0
+            animal.graze(delta)
+            return
+        if distance < nearest_distance:
+            nearest = player
+            nearest_distance = distance
+    if nearest != null and nearest_distance < Animal.JOIN_DISTANCE:
         animal.near_time += delta
         if animal.near_time >= Animal.JOIN_SECONDS:
             animal.state = Animal.State.FOLLOWING
             animal.heart_time = Animal.HEART_SECONDS
             get_node("/root/Sounds").play("chime")
-            _followers.append(animal)
+            nearest.followers.append(animal)
     else:
         animal.near_time = maxf(0.0, animal.near_time - delta)
     animal.graze(delta)
 
 
-## The point on the rider's trail this far behind her.
-func _trail_point(distance: float) -> Vector2:
-    var previous := _rider.position
-    var remaining := distance
-    for i in range(_trail.size() - 1, -1, -1):
-        var segment := previous.distance_to(_trail[i])
-        if segment >= remaining and segment > 0.0:
-            return previous.lerp(_trail[i], remaining / segment)
-        remaining -= segment
-        previous = _trail[i]
-    return previous
-
-
 func _finish() -> void:
     finished = true
     get_node("/root/Sounds").play("tune")
-    _map_view.large = false
     get_node("/root/Profile").finish_level(level_id(), stars())
-    _talk_time = 0.0
-    _talk_squats = _service.GetSquatCount()
-    if _grandmother != null:
-        _talking = _grandmother
-        _show_conversation()
+    _finish_time = 0.0
+    _finish_squats.clear()
+    for player in _players:
+        player.map_view.large = false
+        player.talk_time = 0.0
+        _finish_squats.append(_service.GetSquatCount(player.index))
+        if _grandmother != null:
+            player.talking = _grandmother
+            _show_conversation(player)
 
 
 ## The id of the level (see [LevelList]).
@@ -404,9 +548,26 @@ func _leave() -> void:
     Flow.reward(get_tree(), stars(), level_id())
 
 
-func _update_hud(speed: float) -> void:
-    _speed_bar.speed = speed
+## Let every view look at its rider, and the steppe draw what they show.
+func _update_views() -> void:
+    var seen: Array[Rect2] = []
+    for player in _players:
+        var view := player.view_transform(player.center(map.size))
+        player.viewport.canvas_transform = view
+        player.hearing.view = view
+        seen.append(player.seen(map.size))
+    _wildlife.views = seen
 
+
+func _update_hud() -> void:
+    for player in _players:
+        _update_player_hud(player)
+    _camera_panel.visible = _service.IsRunning()
+    _status_label.text = VisionStatus.new().text(_service, false)
+
+
+func _update_player_hud(player: LevelPlayer) -> void:
+    var at := player.rider.position
     var heard: Array[Dictionary] = []
     for herd in map.herds():
         var nearest: Animal = null
@@ -414,16 +575,13 @@ func _update_hud(speed: float) -> void:
             if animal.herd == herd and animal.is_lost():
                 if (
                     nearest == null
-                    or (
-                        animal.position.distance_to(_rider.position)
-                        < nearest.position.distance_to(_rider.position)
-                    )
+                    or animal.position.distance_to(at) < nearest.position.distance_to(at)
                 ):
                     nearest = animal
         if nearest == null:
             continue
-        var distance := nearest.position.distance_to(_rider.position)
-        if distance < Hearing.RADIUS and not _hearing.on_screen(nearest.position):
+        var distance := nearest.position.distance_to(at)
+        if distance < Hearing.RADIUS and not player.hearing.on_screen(nearest.position):
             (
                 heard
                 . append(
@@ -434,67 +592,73 @@ func _update_hud(speed: float) -> void:
                     }
                 )
             )
-    _hearing.heard = heard
-    _hearing.rider_at = _rider.position
+    player.hearing.heard = heard
+    player.hearing.rider_at = at
 
-    _map_view.rider_at = _rider.position
-    _map_view.rider_heading = _rider.heading
-    _map_view.clues = _revealed
+    var map_view := player.map_view
+    map_view.rider_at = at
+    map_view.rider_heading = player.rider.heading
+    map_view.has_partner = _players.size() > 1
+    if map_view.has_partner:
+        var partner := _players[1 - player.index].rider
+        map_view.partner_at = partner.position
+        map_view.partner_heading = partner.heading
+    map_view.clues = _revealed
     for clue in _revealed:
         var herd := map.herd_of(clue)
-        _map_view.found[clue] = (
+        map_view.found[clue] = (
             herd != null
             and not animals.any(func(a: Animal) -> bool: return a.herd == herd and a.is_lost())
         )
 
-    _camera_panel.visible = _service.IsRunning()
-    _update_coach(get_process_delta_time())
-    _status_label.text = VisionStatus.new().text(_service, false)
+    _update_coach(player, get_process_delta_time())
 
 
 ## Let the small figure show what the game waits for: a squat when the horse
 ## stands still or a conversation waits for one, the reins pulled after the
 ## edge of the steppe or the second run into the same obstacle, else the echo
 ## of the player's squats.
-func _update_coach(delta: float) -> void:
-    _still_time = _still_time + delta if _rider.speed <= 0.0 else 0.0
-    var squats: int = _service.GetSquatCount()
-    if squats > _squats_seen:
-        _coach.echo()
-    _squats_seen = squats
-    var waiting := _talk_time >= (THANKS_SECONDS if finished else TALK_SECONDS)
-    if _talking != null or finished:
-        _coach.mode = Coach.Mode.SQUAT if waiting else Coach.Mode.STAND
-    elif _edge_time > 0.0 or _turn_hint_time > 0.0:
-        _coach.mode = Coach.Mode.REACH
-    elif _still_time >= STILL_SECONDS:
-        _coach.mode = Coach.Mode.SQUAT
+func _update_coach(player: LevelPlayer, delta: float) -> void:
+    var coach := player.coach
+    player.still_time = player.still_time + delta if player.rider.speed <= 0.0 else 0.0
+    var squats: int = _service.GetSquatCount(player.index)
+    if squats > player.squats_seen:
+        coach.echo()
+    player.squats_seen = squats
+    var waiting := player.talk_time >= (THANKS_SECONDS if finished else TALK_SECONDS)
+    if player.talking != null or finished:
+        coach.mode = Coach.Mode.SQUAT if waiting else Coach.Mode.STAND
+    elif player.edge_time > 0.0 or player.turn_hint_time > 0.0:
+        coach.mode = Coach.Mode.REACH
+    elif player.still_time >= STILL_SECONDS:
+        coach.mode = Coach.Mode.SQUAT
     else:
-        _coach.mode = Coach.Mode.STAND
+        coach.mode = Coach.Mode.STAND
 
 
-## Count the runs into the obstacles: running into the same obstacle a
-## second time shows how to turn (see section 5 of DESIGN.md); a touch counts
-## once, until she leaves it.
-func note_bumps(delta: float) -> void:
-    var blocked := _rider.blocked_by if _rider.speed > 0.0 else -1
-    if blocked >= 0 and blocked != _touching:
-        _bumps[blocked] = int(_bumps.get(blocked, 0)) + 1
-        if _bumps[blocked] >= 2:
-            _turn_hint_time = EDGE_SECONDS
-    _touching = blocked
-    _turn_hint_time = maxf(0.0, _turn_hint_time - delta)
+## Count the runs of the player's rider into the obstacles: running into the
+## same obstacle a second time shows how to turn (see section 5 of DESIGN.md);
+## a touch counts once, until she leaves it.
+func note_bumps(delta: float, index := 0) -> void:
+    var player := _players[index]
+    var blocked := player.rider.blocked_by if player.rider.speed > 0.0 else -1
+    if blocked >= 0 and blocked != player.touching:
+        player.bumps[blocked] = int(player.bumps.get(blocked, 0)) + 1
+        if player.bumps[blocked] >= 2:
+            player.turn_hint_time = EDGE_SECONDS
+    player.touching = blocked
+    player.turn_hint_time = maxf(0.0, player.turn_hint_time - delta)
 
 
-## Whether the hint to turn shows, after the rider ran into the same
-## obstacle twice.
-func turn_hint() -> bool:
-    return _turn_hint_time > 0.0
+## Whether the hint to turn shows for the player, after her rider ran into
+## the same obstacle twice.
+func turn_hint(player := 0) -> bool:
+    return _players[player].turn_hint_time > 0.0
 
 
-## What the small figure next to the camera picture does now.
-func coach_mode() -> Coach.Mode:
-    return _coach.mode
+## What the small figure of the player next to the camera picture does now.
+func coach_mode(player := 0) -> Coach.Mode:
+    return _players[player].coach.mode
 
 
 func _next_language() -> void:
@@ -502,4 +666,5 @@ func _next_language() -> void:
     var codes: Array[String] = languages.codes()
     var index := codes.find(languages.current())
     languages.choose(codes[(index + 1) % codes.size()])
-    _show_conversation()
+    for player in _players:
+        _show_conversation(player)

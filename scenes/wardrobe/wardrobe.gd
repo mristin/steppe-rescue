@@ -9,6 +9,10 @@ extends Control
 ## home show at home as she chooses them (see [method Reward.draw_home]);
 ## what she wears also shows over her face in the camera picture.
 ##
+## With two players, each has her own wardrobe (see
+## [member Flow.wardrobe_player]), with the hand cursor of her half of the
+## camera picture.
+##
 ## Keys: Escape goes back.
 
 ## The panel of what she wears, and the panel of what she does not.
@@ -22,6 +26,9 @@ const _GAP := 4.0
 const _COLUMNS := 5
 const _SMALL_COLUMNS := 7
 
+## The player (0 or 1) whose wardrobe this is.
+var player := 0
+
 var _cards: Array[DwellButton] = []
 var _pieces: Array[String] = []
 var _worn_title: Label
@@ -34,15 +41,17 @@ func _ready() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
     texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
     var profile := get_node("/root/Profile")
+    player = clampi(Flow.wardrobe_player, 0, profile.riders.size() - 1)
+    var finery: Dictionary = profile.rider(player).finery
 
     _worn_title = _label(_WORN)
     _not_worn_title = _label(_NOT_WORN)
     _empty = _label(Rect2(_WORN.position + Vector2(0, 90), _WORN.size))
 
     for piece in Finery.PIECES:
-        if not profile.finery.has(piece):
+        if not finery.has(piece):
             continue
-        var at: int = profile.finery[piece]
+        var at: int = finery[piece]
         if not Finery.has_picture(piece, at):
             continue
         var card := DwellButton.new()
@@ -60,7 +69,9 @@ func _ready() -> void:
     add_child(_back)
 
     _arrange()
-    add_child(HandCursor.new())
+    var cursor := HandCursor.new()
+    cursor.player = player if profile.players > 1 else -1
+    add_child(cursor)
     _update_texts()
 
 
@@ -82,10 +93,10 @@ func _arrange() -> void:
     var profile := get_node("/root/Profile")
     var totals := {true: 0, false: 0}
     for piece in _pieces:
-        totals[profile.wears(piece)] += 1
+        totals[profile.rider(player).wears(piece)] += 1
     var counts := {true: 0, false: 0}
     for i in range(_cards.size()):
-        var worn: bool = profile.wears(_pieces[i])
+        var worn: bool = profile.rider(player).wears(_pieces[i])
         var panel := _WORN if worn else _NOT_WORN
         var small: bool = totals[worn] > 2 * _COLUMNS
         var card_size := _SMALL_CARD if small else _CARD
@@ -99,7 +110,7 @@ func _arrange() -> void:
                 18 + (n % columns) * (card_size.x + _GAP), 46 + (n / columns) * (card_size.y + _GAP)
             )
         )
-        var at: int = profile.finery[_pieces[i]]
+        var at: int = profile.rider(player).finery[_pieces[i]]
         _cards[i].picture = Painting.fitted(
             Finery.PICTURES % [_pieces[i], at], card_size - Vector2(16, 14)
         )
@@ -120,7 +131,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## Take the piece off, or put it on.
 func toggle(piece: String) -> void:
     var profile := get_node("/root/Profile")
-    profile.wear(piece, not profile.wears(piece))
+    profile.wear(piece, not profile.rider(player).wears(piece), player)
     _arrange()
     queue_redraw()
 
@@ -145,6 +156,9 @@ func in_worn_panel(piece: String) -> bool:
 func _update_texts() -> void:
     # TRANSLATORS: The wardrobe: the title of the panel of the finery which she wears.
     _worn_title.text = tr("Wearing")
+    var profile := get_node("/root/Profile")
+    if profile.players > 1:
+        _worn_title.text = "%s · %s" % [profile.rider_name(player), _worn_title.text]
     # TRANSLATORS: The wardrobe: the title of the panel of the finery which she won, but took off.
     _not_worn_title.text = tr("Not wearing")
     # TRANSLATORS: In the wardrobe, before the rider won any finery.
@@ -153,6 +167,6 @@ func _update_texts() -> void:
 
 
 func _draw() -> void:
-    Reward.draw_home(self, get_node("/root/Profile"), true)
+    Reward.draw_home(self, get_node("/root/Profile"), true, player)
     draw_texture(Ornaments.panel(_WORN.size), _WORN.position)
     draw_texture(Ornaments.panel(_NOT_WORN.size), _NOT_WORN.position)

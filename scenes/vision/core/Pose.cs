@@ -150,6 +150,46 @@ namespace SteppeRescue.Vision
         }
     }
 
+    /// <summary>
+    /// Assign the persons to the players by the half of the picture, as in Bird
+    /// Dog and Ergo Chaos: with two players, each plays in their own half.
+    /// </summary>
+    /// <remarks>
+    /// The players see the picture mirrored, so player 0, who plays the left
+    /// half of the screen, stands in the right half of the (not mirrored) frame.
+    /// </remarks>
+    public static class PlayerSplit
+    {
+        /// <summary>The most players who play together.</summary>
+        public const int MaxPlayers = 2;
+
+        /// <summary>The player whose half holds the point of the (not mirrored) frame.</summary>
+        public static int PlayerOf(float x, int frameWidth, int playerCount)
+        {
+            if (playerCount <= 1)
+            {
+                return 0;
+            }
+
+            float mirrored = 1f - x / Math.Max(1, frameWidth);
+            return mirrored < 0.5f ? 0 : 1;
+        }
+
+        /// <summary>
+        /// The middle of the part of the frame of the player, as a fraction of the
+        /// width of the (not mirrored) frame.
+        /// </summary>
+        public static float MiddleOf(int player, int playerCount)
+        {
+            if (playerCount <= 1)
+            {
+                return 0.5f;
+            }
+
+            return player == 0 ? 0.75f : 0.25f;
+        }
+    }
+
     /// <summary>Pick the player among the persons in the frame.</summary>
     public static class PlayerSelection
     {
@@ -160,8 +200,26 @@ namespace SteppeRescue.Vision
         /// </summary>
         public static Pose? Pick(IReadOnlyList<Pose> poses, float threshold, int frameWidth)
         {
+            return Pick(poses, threshold, frameWidth, 0, 1);
+        }
+
+        /// <summary>
+        /// Pick the player among the persons whose heads are in the player's
+        /// half of the frame (or anywhere, with one player): the one with the
+        /// largest unit, preferring the one near the middle of the half; null if
+        /// no person there has a head.
+        /// </summary>
+        public static Pose? Pick(
+            IReadOnlyList<Pose> poses,
+            float threshold,
+            int frameWidth,
+            int player,
+            int playerCount
+        )
+        {
             Pose? best = null;
             float bestScore = float.NegativeInfinity;
+            float middle = PlayerSplit.MiddleOf(player, playerCount) * frameWidth;
             foreach (var pose in poses)
             {
                 var head = pose.Head(threshold);
@@ -171,10 +229,15 @@ namespace SteppeRescue.Vision
                     continue;
                 }
 
+                if (PlayerSplit.PlayerOf(head.Value.X, frameWidth, playerCount) != player)
+                {
+                    continue;
+                }
+
                 // NOTE (mristin):
-                // We penalize the distance from the center a little, so that a
+                // We penalize the distance from the middle a little, so that a
                 // parent standing next to the child does not steal the horse.
-                float offCenter = MathF.Abs(head.Value.X - frameWidth * 0.5f) / frameWidth;
+                float offCenter = MathF.Abs(head.Value.X - middle) / frameWidth;
                 float score = unit.Value * (1f - 0.5f * offCenter);
                 if (score > bestScore)
                 {

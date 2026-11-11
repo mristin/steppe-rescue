@@ -19,12 +19,21 @@ extends Control
 ##
 ## Behind the buttons, the player sees herself dimly, mirrored, so that her
 ## hand in the picture lies right under the bird (see [constant _REACH]).
+##
+## With two players, a screen of one player (e.g., the creator of her rider)
+## sets [member player]: then only the hands in her half of the camera picture
+## move the birds, and her half maps onto the whole screen (see section 6 of
+## DESIGN.md, "Two players").
 
 ## The part of the camera picture, normalized, which maps onto the whole
 ## screen, so that the player reaches every corner without stretching. Its
 ## bottom follows the shoulders of the player (see [member reach]), so that
 ## the bottom of the screen is reached with the hand still raised.
 const _REACH := Rect2(0.15, 0.1, 0.7, 0.6)
+
+## The part of the camera picture which maps onto the whole screen for the
+## player of the left half; the right half is the same, moved by a half.
+const _HALF_REACH := Rect2(0.04, 0.1, 0.42, 0.6)
 
 ## The bottom of the screen lies this far below the shoulders, in the
 ## normalized picture: just within a raised hand.
@@ -88,6 +97,10 @@ static var held := false
 ## The part of the camera picture which maps onto the screen now.
 static var reach := _REACH
 
+## The player (0 or 1) whose hands alone move the birds, with two players;
+## -1 for the hands of everybody. Set it before the cursor enters the tree.
+var player := -1
+
 var _service: Node = null
 var _hands: Array[Hand] = []
 var _mirror: Control = null
@@ -111,6 +124,10 @@ func _ready() -> void:
     _service = vision.service if vision != null else null
     if _service != null:
         _service.SetWantHands(true)
+    # NOTE (mristin):
+    # The height of the reach follows the shoulders across the screens.
+    var base := _base_reach()
+    reach = Rect2(base.position.x, reach.position.y, base.size.x, reach.size.y)
     by_hand = false
     at = get_viewport().get_mouse_position()
     _add_mirror.call_deferred()
@@ -132,6 +149,20 @@ func _process(delta: float) -> void:
     by_hand = not birds.is_empty()
     at = birds[0] if by_hand else get_viewport().get_mouse_position()
     queue_redraw()
+
+
+## Whether the cursor follows only the hands of one player, in her half of
+## the camera picture.
+func _in_half() -> bool:
+    return player >= 0 and _service != null and _service.GetPlayerCount() > 1
+
+
+## The part of the camera picture which maps onto the screen, before it
+## follows the shoulders.
+func _base_reach() -> Rect2:
+    if not _in_half():
+        return _REACH
+    return Rect2(_HALF_REACH.position + Vector2(0.5 * player, 0.0), _HALF_REACH.size)
 
 
 ## The bird glides towards its hand, and sticks to the button under it.
@@ -247,14 +278,17 @@ func _follow_hands() -> void:
     if _service == null or not _service.IsRunning():
         _hands.clear()
         return
-    var keypoints: Array = _service.GetKeypoints()
-    var scores: Array = _service.GetKeypointScores()
+    var keypoints: Array = _service.GetKeypoints(maxi(0, player))
+    var scores: Array = _service.GetKeypointScores(maxi(0, player))
     if keypoints.size() > _RIGHT_SHOULDER:
         _follow_shoulders(keypoints, scores)
     var lowest := reach.end.y + _BELOW_REACH
     var now := Time.get_ticks_msec() / 1000.0
     var found: Array[Vector2] = []
+    var half := _in_half()
     for hand in _service.GetHands():
+        if half and int(hand.x >= 0.5) != player:
+            continue
         if hand.y <= lowest:
             found.append(hand)
     # NOTE (mristin):

@@ -6,7 +6,8 @@ extends Control
 ## sound, on a felt panel with a row for each,
 ## next to the camera picture, big, in which she sees herself dressed as her
 ## rider (see [CameraPanel]), so that she can check that the camera sees her;
-## without the camera, her rider stands there instead.
+## without the camera, her rider stands there instead. With two players, each
+## opens her own wardrobe.
 ##
 ## Keys: Escape goes back to the intro.
 
@@ -16,6 +17,7 @@ const _CAMERA := Rect2(32, 112, 352, 264)
 var _language: DwellButton
 var _rider: DwellButton
 var _wardrobe: DwellButton
+var _second_wardrobe: DwellButton
 var _sound: DwellButton
 var _back: DwellButton
 var _title: Label
@@ -55,8 +57,12 @@ func _ready() -> void:
     )
     _rider = _button(Rect2(left + 160, _PANEL.position.y + 150, 290, 48))
     _rider.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.SESSIONS, Flow.SETTINGS))
-    _wardrobe = _button(Rect2(left + 160, _PANEL.position.y + 220, 290, 48))
-    _wardrobe.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.SETTINGS))
+    var two: bool = get_node("/root/Profile").players > 1
+    _wardrobe = _button(Rect2(left + 160, _PANEL.position.y + 220, 142 if two else 290, 48))
+    _wardrobe.pressed.connect(func() -> void: _open_wardrobe(0))
+    _second_wardrobe = _button(Rect2(left + 308, _PANEL.position.y + 220, 142, 48))
+    _second_wardrobe.visible = two
+    _second_wardrobe.pressed.connect(func() -> void: _open_wardrobe(1))
     _sound = _button(Rect2(left + 160, _PANEL.position.y + 290, 290, 48))
     _sound.pressed.connect(
         func() -> void:
@@ -85,7 +91,10 @@ func _process(_delta: float) -> void:
         _camera.visible = status == "Running"
         queue_redraw()
     if status == "Running":
-        _status.text = "" if _service.HasPlayer() else tr("Step in front of the camera.")
+        var seen := true
+        for i in range(_service.GetPlayerCount()):
+            seen = seen and _service.HasPlayer(i)
+        _status.text = "" if seen else tr("Step in front of the camera.")
     else:
         _status.text = VisionStatus.new().text(_service, false)
 
@@ -96,9 +105,16 @@ func _unhandled_input(event: InputEvent) -> void:
             Flow.open(get_tree(), Flow.INTRO)
 
 
-## The buttons, for the tests: the language, the rider and Back.
+## The buttons, for the tests: the language, the rider, Back, the wardrobe,
+## the sound and the wardrobe of the second player.
 func buttons() -> Array[DwellButton]:
-    return [_language, _rider, _back, _wardrobe, _sound]
+    return [_language, _rider, _back, _wardrobe, _sound, _second_wardrobe]
+
+
+## Open the wardrobe of the player.
+func _open_wardrobe(player: int) -> void:
+    Flow.wardrobe_player = player
+    Flow.open(get_tree(), Flow.WARDROBE, Flow.SETTINGS)
 
 
 func _update_texts() -> void:
@@ -113,11 +129,20 @@ func _update_texts() -> void:
         if language["code"] == languages.current():
             _language.text = language["name"]
     var profile := get_node("/root/Profile")
-    _rider.text = "%s · %s" % [profile.session_name, profile.rider_name()]
+    var riders: String = profile.rider_name(0)
+    if profile.players > 1:
+        # TRANSLATORS: The names of the two riders who ride together, e.g., "Aigerim and Dana".
+        riders = tr("{first} and {second}").format(
+            {"first": riders, "second": profile.rider_name(1)}
+        )
+    _rider.text = "%s · %s" % [profile.session_name, riders]
     # TRANSLATORS: The label of the row which opens the wardrobe of the finery.
     _row_labels[2].text = tr("Wardrobe")
     # TRANSLATORS: The button which opens the wardrobe, to choose what to wear.
     _wardrobe.text = tr("Choose what to wear")
+    if profile.players > 1:
+        _wardrobe.text = profile.rider_name(0)
+        _second_wardrobe.text = profile.rider_name(1)
     # TRANSLATORS: The label of the row with the sound on or off.
     _row_labels[3].text = tr("Sound")
     _sound.text = tr("On", "sound") if get_node("/root/Sounds").enabled else tr("Off", "sound")
@@ -156,7 +181,7 @@ func _draw() -> void:
     draw_rect(
         Rect2(_CAMERA.position.x, _CAMERA.end.y - 40, _CAMERA.size.x, 40), Palette.GRASS_LIGHT
     )
-    var rider := Painting.rider(get_node("/root/Profile").looks.get("rider", "1"))
+    var rider := Painting.rider(get_node("/root/Profile").rider(0).looks.get("rider", "1"))
     var feet := Vector2(_CAMERA.get_center().x, _CAMERA.end.y - 8)
     var shown := rider.get_size() * 0.85
     draw_texture_rect(rider, Rect2((feet - Vector2(shown.x * 0.5, shown.y)).round(), shown), false)

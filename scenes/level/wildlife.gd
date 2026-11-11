@@ -102,6 +102,10 @@ class Creature:
 static var _paintings: Dictionary = {}
 
 var creatures: Array[Creature] = []
+
+## The parts of the steppe which the views of the riders show (see [Level]);
+## empty for the view of the viewport.
+var views: Array[Rect2] = []
 var _bounds := Rect2()
 var _solids: Array[Vector3] = []
 var _rng := RandomNumberGenerator.new()
@@ -152,24 +156,36 @@ func populate(
 
 
 ## Live for [param delta] seconds while the rider is at [param rider_at]
-## riding at the gait (0 stands, 1 walks, 2 trots, 3 gallops).
-func update(delta: float, rider_at: Vector2, gait: int) -> void:
+## riding at the gait (0 stands, 1 walks, 2 trots, 3 gallops); with two
+## players, [param others] holds the other rider as [code][at, gait][/code],
+## and each creature heeds the rider nearer to it.
+func update(delta: float, rider_at: Vector2, gait: int, others: Array = []) -> void:
     _time += delta
-    var alarm := 1.0 + 0.35 * maxi(0, gait - 1)
+    var first_alarm := 1.0 + 0.35 * maxi(0, gait - 1)
     for creature in creatures:
+        var alarm := first_alarm
+        var near := rider_at
+        for other in others:
+            var at: Vector2 = other[0]
+            if (
+                creature.position.distance_squared_to(at)
+                < creature.position.distance_squared_to(near)
+            ):
+                near = at
+                alarm = 1.0 + 0.35 * maxi(0, int(other[1]) - 1)
         match creature.kind:
             "eagle", "falcon":
                 _circle(creature, delta)
             "swallow":
                 _swoop(creature, delta)
             "marmot":
-                _burrow(creature, delta, rider_at, alarm)
+                _burrow(creature, delta, near, alarm)
             "lark":
-                _lark(creature, delta, rider_at, alarm)
+                _lark(creature, delta, near, alarm)
             "locust":
-                _locust(creature, delta, rider_at, alarm)
+                _locust(creature, delta, near, alarm)
             _:
-                _runner(creature, delta, rider_at, alarm)
+                _runner(creature, delta, near, alarm)
     queue_redraw()
     _sky.queue_redraw()
 
@@ -366,7 +382,7 @@ func _free_spot(keep_away: Array[Vector2]) -> Vector2:
 func _draw() -> void:
     var seen := _seen()
     for creature in creatures:
-        if not seen.has_point(creature.position):
+        if not _in(seen, creature.position):
             continue
         if creature.kind == "marmot":
             _paint(self, "burrow", 0, creature.position, 0.0)
@@ -381,9 +397,9 @@ func _draw() -> void:
 
 
 func _draw_sky() -> void:
-    var seen := _seen().grow(_ALTITUDES["eagle"][1] * 0.7)
+    var seen := _seen(_ALTITUDES["eagle"][1] * 0.7)
     for creature in creatures:
-        if creature.on_ground() or not seen.has_point(creature.position):
+        if creature.on_ground() or not _in(seen, creature.position):
             continue
         var frame := int(creature.stride * (2.0 if creature.kind == "eagle" else 8.0)) % 2
         var lift := Vector2(-0.3, -0.6) * creature.altitude
@@ -431,7 +447,21 @@ func _paint(
     item.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
-## The part of the steppe on the screen, with a margin.
-func _seen() -> Rect2:
-    var view := get_canvas_transform().affine_inverse() * get_viewport_rect()
-    return view.grow(48.0)
+## The parts of the steppe on the screen (see [member views]), with a margin
+## and [param more].
+func _seen(more := 0.0) -> Array[Rect2]:
+    var result: Array[Rect2] = []
+    if views.is_empty():
+        result.append(get_canvas_transform().affine_inverse() * get_viewport_rect())
+    result.append_array(views)
+    for i in range(result.size()):
+        result[i] = result[i].grow(48.0 + more)
+    return result
+
+
+## Whether the point is in any of the rectangles.
+static func _in(rects: Array[Rect2], at: Vector2) -> bool:
+    for rect in rects:
+        if rect.has_point(at):
+            return true
+    return false

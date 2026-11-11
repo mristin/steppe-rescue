@@ -10,6 +10,11 @@ extends Control
 ## more splendid pieces (see [method Finery.offer]). A level gives its gift
 ## only once: riding it again shows the home without cards.
 ##
+## With two players, each has her own wardrobe, so each chooses her own gift,
+## one after the other, at her own home, with the hand cursor of her half of
+## the camera picture (see [member Flow.reward_player]); Go on leads the first
+## to the gift of the second.
+##
 ## Keys: 1, 2 and 3 choose a card, Enter goes on, Escape goes on, too.
 
 ## The painting of the home, the yurt at sunset, behind the rider.
@@ -74,6 +79,9 @@ var stars := 0
 ## Whether the level gave its gift before.
 var replayed := false
 
+## The player (0 or 1) who chooses her gift.
+var player := 0
+
 var _cards: Array[DwellButton] = []
 var _subtitles: Array[Label] = []
 var _title: Label
@@ -88,9 +96,10 @@ func _ready() -> void:
     texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
     _rng.randomize()
     var profile := get_node("/root/Profile")
+    player = clampi(Flow.reward_player, 0, profile.riders.size() - 1)
     stars = Flow.reward_stars
     replayed = profile.was_rewarded(Flow.reward_level)
-    offered = [] if replayed else Finery.offer(profile.finery, stars, _rng)
+    offered = [] if replayed else Finery.offer(profile.rider(player).finery, stars, _rng)
 
     _title = Label.new()
     _title.position = Vector2(420, 34)
@@ -109,7 +118,7 @@ func _ready() -> void:
         var card := DwellButton.new()
         card.position = Vector2(left + i * (_CARD.x + 12.0), _CARDS_TOP)
         card.size = _CARD
-        card.picture = preview(piece, at, profile.dressed())
+        card.picture = preview(piece, at, profile.rider(player).dressed())
         card.pressed.connect(func() -> void: choose(i))
         add_child(card)
         _cards.append(card)
@@ -137,12 +146,12 @@ func _ready() -> void:
     _wardrobe.position = Vector2(810, 448)
     _wardrobe.size = Vector2(130, 44)
     _wardrobe.visible = _go_on.visible
-    _wardrobe.pressed.connect(
-        func() -> void: Flow.open(get_tree(), Flow.WARDROBE, Flow.LEVEL_SELECT)
-    )
+    _wardrobe.pressed.connect(open_wardrobe)
     add_child(_wardrobe)
 
-    add_child(HandCursor.new())
+    var cursor := HandCursor.new()
+    cursor.player = player if profile.players > 1 else -1
+    add_child(cursor)
     _update_texts()
 
 
@@ -172,8 +181,12 @@ func choose(index: int) -> void:
     if chosen != "" or index < 0 or index >= offered.size():
         return
     chosen = offered[index][0]
-    get_node("/root/Profile").win(chosen)
-    get_node("/root/Profile").reward(Flow.reward_level)
+    var profile := get_node("/root/Profile")
+    profile.win(chosen, player)
+    # NOTE (mristin):
+    # The level has given its gifts once the last player chose hers.
+    if not _more_players():
+        profile.reward(Flow.reward_level)
     for i in range(_cards.size()):
         _cards[i].visible = i == index
         _subtitles[i].visible = i == index
@@ -185,9 +198,31 @@ func choose(index: int) -> void:
     _update_texts()
 
 
-## Go on to the level select.
+## Go on to the gift of the next player, or to the level select.
 func go_on() -> void:
-    Flow.open(get_tree(), Flow.LEVEL_SELECT)
+    Flow.open(get_tree(), _next_screen())
+
+
+## Open the wardrobe of the player; then go on as Go on does.
+func open_wardrobe() -> void:
+    Flow.wardrobe_player = player
+    Flow.open(get_tree(), Flow.WARDROBE, _next_screen())
+
+
+## Whether another player chooses her gift after this one (not when the
+## level gave its gifts before).
+func _more_players() -> bool:
+    return not replayed and player + 1 < get_node("/root/Profile").players
+
+
+## The screen after this one: the gift of the next player, or the level
+## select, once the level has given its gifts.
+func _next_screen() -> String:
+    if _more_players():
+        Flow.reward_player = player + 1
+        return Flow.REWARD
+    get_node("/root/Profile").reward(Flow.reward_level)
+    return Flow.LEVEL_SELECT
 
 
 ## The cards, for the tests.
@@ -196,20 +231,21 @@ func cards() -> Array[DwellButton]:
 
 
 ## Draw the home on the item: the yurt at sunset, with the decorations of the
-## home which the rider wears (see [Finery]), and the painted rider standing
-## in front of her painted horse; with [param spotlight], the home is dimmed
-## and the rider and her horse stand in a golden light (the wardrobe).
-static func draw_home(item: CanvasItem, profile: Node, spotlight := false) -> void:
+## home which the rider of the player wears (see [Finery]), and the painted
+## rider standing in front of her painted horse; with [param spotlight], the
+## home is dimmed and the rider and her horse stand in a golden light (the
+## wardrobe).
+static func draw_home(item: CanvasItem, profile: Node, spotlight := false, player := 0) -> void:
     item.draw_texture(Painting.texture(HOME), Vector2.ZERO)
     if spotlight:
         _draw_spotlight(item)
     for piece in _DECORATIONS:
-        if profile.wears(piece) and Finery.has_picture(piece, 1):
+        if profile.rider(player).wears(piece) and Finery.has_picture(piece, 1):
             var at: Rect2 = _DECORATIONS[piece]
             item.draw_texture_rect(
                 Painting.fitted(Finery.PICTURES % [piece, 1], at.size), at, false
             )
-    var looks: Dictionary = profile.dressed()
+    var looks: Dictionary = profile.rider(player).dressed()
     var horse := Painting.horse(looks.get("steed", "1"))
     var horse_shown := horse.get_size() * 0.8
     var horse_rect := Rect2(
@@ -271,7 +307,7 @@ static func preview(piece: String, at: int, _looks := {}) -> ImageTexture:
 
 
 func _update_texts() -> void:
-    var rider_name: String = get_node("/root/Profile").rider_name()
+    var rider_name: String = get_node("/root/Profile").rider_name(player)
     if replayed:
         # TRANSLATORS: {rider} is the rider's name; she rode a level again, whose gift
         # she won before.
@@ -320,7 +356,7 @@ func piece_name(piece: String, at: int) -> String:
 
 
 func _draw() -> void:
-    draw_home(self, get_node("/root/Profile"))
+    draw_home(self, get_node("/root/Profile"), false, player)
     draw_texture(Ornaments.panel(Vector2(540, 70)), Vector2(410, 14))
     var star := Icons.star(2.0)
     for i in range(3):

@@ -100,7 +100,8 @@ Godot scans every directory of the project, and would otherwise try to import th
 
 Open the project in the Godot editor (Import, then select `project.godot`), and press F5.
 The game needs a webcam which supports 640x480.
-Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn.
+Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn, Down brakes.
+With two players, the first rides with W (or Space), A, D and S, and the second with Up, Left, Right and Down.
 
 Start the game with `-- --no-camera` to switch the camera off, with `-- --lang=ru` (or `kk`, `en`) to choose the language, with `-- --new-rider` to create the rider again, and with `-- --settings=user://other.cfg` to keep the language in another file and the journeys in `user://other_saves/` (the tests do so, to leave yours alone).
 

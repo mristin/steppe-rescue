@@ -52,6 +52,15 @@ var selected := false:
         selected = value
         queue_redraw()
 
+## Whether the button can not be pressed now (e.g., the painted rider whom
+## the other player chose): it is dim, and neither the hand nor the mouse
+## clicks it.
+var disabled := false:
+    set(value):
+        disabled = value
+        modulate = Color(1, 1, 1, 0.4) if disabled else Color.WHITE
+        queue_redraw()
+
 ## How far the hand has held still, in [0, 1].
 var progress := 0.0
 
@@ -71,7 +80,7 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _process(delta: float) -> void:
-    if is_visible_in_tree() and _hand_inside():
+    if is_visible_in_tree() and not disabled and _hand_inside():
         progress += delta / DWELL_SECONDS
         if progress >= 1.0:
             progress = 0.0
@@ -83,6 +92,8 @@ func _process(delta: float) -> void:
 
 ## Click the button.
 func press() -> void:
+    if disabled:
+        return
     var sounds := get_node_or_null("/root/Sounds")
     if sounds != null:
         sounds.play("click")

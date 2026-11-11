@@ -1,15 +1,16 @@
 extends SceneTree
 ## Go through the screens before the level, as a new player does: the intro,
-## Play, the language (Kazakh), the name of the journey, the creator of the
-## rider (a new name written on the keys of the screen, a hat and a horse
-## chosen with the arrows,
-## Ready!), the instruction, and the level, which greets the rider by her name
-## and shows her looks. Then the intro again, whose Play goes straight to the
-## level, and whose Levels, How to Play and Settings open their screens; the
-## language changed in the settings goes back to the settings. Finishing the
-## level keeps its stars, and then Play goes to the level select. A second
-## journey keeps its own rider and progress, and Play asks which journey goes
-## on.
+## Play, the language (Kazakh), the name of the journey, one rider, the creator
+## of the rider (a new name written on the keys of the screen, a hat and a horse
+## chosen with the arrows, Ready!), the instruction, and the level, which greets
+## the rider by her name and shows her looks. Then the intro again, whose Play
+## goes straight to the level, and whose Levels, How to Play and Settings open
+## their screens; the language changed in the settings goes back to the
+## settings. Finishing the level keeps its stars, and then Play goes to the
+## level select. A second journey keeps its own rider and progress, and Play
+## asks which journey goes on. A third journey of two players creates two
+## riders, who can not ride the same, and both ride in the level, each greeted
+## by her own name.
 ##
 ## Run it with `-- --settings=user://<file>`, so that it starts as a new player
 ## and does not change the settings of the player (see the autoload Languages).
@@ -32,6 +33,70 @@ func _frames(count: int) -> void:
         await process_frame
 
 
+## A journey of two players: each creates her rider, the second can not ride
+## the painted rider nor the horse of the first, and both ride in the level,
+## each greeted in her own half by her own name.
+func _check_two_players(profile: Node) -> void:
+    profile.start_session("Екеуміз")
+    Flow.session_asked = true
+    Flow.play(self)
+    await _frames(3)
+    _check(current_scene is PlayerCount, "a new journey asks how many ride")
+    (current_scene as PlayerCount).choose(2)
+    await _frames(3)
+    _check(profile.players == 2, "two riders ride")
+    var first := current_scene as RiderCreator
+    _check(first != null and first.player == 0, "the first player creates her rider first")
+    first.choose_rider("2")
+    first.choose_horse("3")
+    first.finish()
+    await _frames(3)
+    var second := current_scene as RiderCreator
+    _check(second != null and second.player == 1, "then the second player creates hers")
+    _check(second.looks["rider"] != "2", "she does not start on the rider of the first")
+    _check(second.looks["steed"] != "3", "nor on her horse")
+    second.choose_rider("2")
+    second.choose_horse("3")
+    _check(second.looks["rider"] != "2", "she can not choose the rider of the first")
+    _check(second.looks["steed"] != "3", "nor her horse")
+    for i in range(3):
+        second.randomize_looks()
+        _check(
+            second.looks["rider"] != "2" and second.looks["steed"] != "3",
+            "Random never chooses them either"
+        )
+    second.choose_rider("4")
+    second.finish()
+    await _frames(3)
+    _check(profile.has_riders(), "both riders are kept")
+    _check(profile.rider(1).looks["rider"] == "4", "with their own looks")
+    _check(profile.rider_name(1) == "Дана", "the second rider has her own default name")
+    _check(current_scene is Instruction, "then they see how to ride")
+    (current_scene as Instruction).finish()
+    await _frames(3)
+    _check(current_scene is Level, "then the level starts")
+    var level := current_scene as Level
+    _check(level.players() == 2, "both ride in the level")
+    _check(level.rider(0).looks["rider"] == "2", "the first rides her rider")
+    _check(level.rider(1).looks["rider"] == "4", "the second rides hers")
+    await _frames(10)
+    for i in range(2):
+        var said := ""
+        for label in level.view(i).conversation.find_children("*", "Label", true, false):
+            said += (label as Label).text + "\n"
+        _check(
+            profile.rider_name(i) in said,
+            "Grandmother greets each rider by her name in her half: %s" % said
+        )
+    _check(
+        (
+            level.view(0).conversation.position.x < 480.0
+            and level.view(1).conversation.position.x >= 480.0
+        ),
+        "each conversation is in the half of its rider"
+    )
+
+
 func _run() -> void:
     var languages := root.get_node("Languages")
     var profile := root.get_node("Profile")
@@ -44,7 +109,6 @@ func _run() -> void:
     profile.session_id = ""
     Flow.session_asked = false
     languages.has_chosen = false
-    profile.has_rider = false
     profile.has_seen_instruction = false
     profile.stars = {}
 
@@ -75,6 +139,10 @@ func _run() -> void:
     naming.finish()
     await _frames(3)
     _check(profile.session_name == "Жол 1", "the journey keeps its name")
+    _check(current_scene is PlayerCount, "then the players choose how many ride")
+    (current_scene as PlayerCount).cards()[0].press()
+    await _frames(3)
+    _check(profile.players == 1, "one rider rides")
     _check(current_scene is RiderCreator, "then the new player creates her rider")
 
     var creator := current_scene as RiderCreator
@@ -113,9 +181,9 @@ func _run() -> void:
     creator.finish()
     await _frames(3)
 
-    _check(profile.has_rider, "the rider is kept")
+    _check(profile.has_riders(), "the rider is kept")
     _check(profile.rider_name() == "Әсел", "the rider's name is kept")
-    _check(profile.horse_name() == "Тұлпар", "the horse keeps its default name in Kazakh")
+    _check(profile.rider().horse_name() == "Тұлпар", "the horse keeps its default name in Kazakh")
     _check(current_scene is Instruction, "then the new player sees how to ride")
     var instruction := current_scene as Instruction
     _check(Instruction.pose(9.0)["squat"] > 0.0, "the rider squats in the instruction")
@@ -159,7 +227,7 @@ func _run() -> void:
     )
     var journey: Dictionary = profile.read(profile.session_id)
     _check(journey["name"] == "Жол 1", "the name of the journey is saved")
-    _check(journey["rider"]["name"] == "Әсел", "the name is saved")
+    _check(journey["riders"][0]["name"] == "Әсел", "the name is saved")
     _check(journey["progress"]["instruction_seen"], "the instruction is saved")
 
     change_scene_to_file(Flow.INTRO)
@@ -210,7 +278,7 @@ func _run() -> void:
     _check(profile.sessions().size() == 1, "one journey is saved")
     var first: String = profile.session_id
     profile.start_session("Дана")
-    _check(not profile.has_rider, "the new journey's rider is still to create")
+    _check(not profile.has_riders(), "the new journey's rider is still to create")
     profile.save("Дана", "", Looks.preset(Looks.DEFAULT, "4"))
     _check(profile.sessions().size() == 2, "two journeys are saved")
     Flow.session_asked = false
@@ -252,6 +320,8 @@ func _run() -> void:
     Flow.play(self)
     await _frames(3)
     _check(current_scene is LevelSelect, "then Play goes to the level select")
+
+    await _check_two_players(profile)
 
     DirAccess.remove_absolute(path)
     if _failures.is_empty():

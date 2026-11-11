@@ -17,8 +17,15 @@ namespace SteppeRescue.Vision
         public int Width { get; init; }
         public int Height { get; init; }
 
-        /// <summary>The pose of the player, or null if nobody is in the picture.</summary>
-        public Pose? Player { get; init; }
+        /// <summary>The pose of the (first) player, or null if nobody is in the picture.</summary>
+        public Pose? Player => Players.Count > 0 ? Players[0] : null;
+
+        /// <summary>
+        /// The pose of each player, or null for a player who is not in the
+        /// picture; with two players, each in their own half of the picture (see
+        /// <see cref="PlayerSplit"/>).
+        /// </summary>
+        public IReadOnlyList<Pose?> Players { get; init; } = Array.Empty<Pose?>();
 
         /// <summary>How many persons the pose estimator found.</summary>
         public int PersonCount { get; init; }
@@ -27,7 +34,7 @@ namespace SteppeRescue.Vision
         public double InferenceMs { get; init; }
     }
 
-    /// <summary>Run the pose estimator on a frame and pick the player.</summary>
+    /// <summary>Run the pose estimator on a frame and pick the players.</summary>
     /// <remarks>
     /// <para>
     /// The face runs separately in <see cref="FaceTracker"/>, since the pose is
@@ -49,18 +56,24 @@ namespace SteppeRescue.Vision
             _poses = new RtmoPoseEstimator(poseModel, threads);
         }
 
-        public VisionSnapshot Process(Frame frame)
+        /// <summary>Find the poses of the players (1 or 2) in the frame.</summary>
+        public VisionSnapshot Process(Frame frame, int playerCount = 1)
         {
             var stopwatch = Stopwatch.StartNew();
             _poses.Estimate(frame, _found);
-            var player = PlayerSelection.Pick(_found, KeypointThreshold, frame.Width);
+            int count = Math.Clamp(playerCount, 1, PlayerSplit.MaxPlayers);
+            var players = new Pose?[count];
+            for (int i = 0; i < count; i++)
+            {
+                players[i] = PlayerSelection.Pick(_found, KeypointThreshold, frame.Width, i, count);
+            }
 
             return new VisionSnapshot
             {
                 Timestamp = frame.Timestamp,
                 Width = frame.Width,
                 Height = frame.Height,
-                Player = player,
+                Players = players,
                 PersonCount = _found.Count,
                 InferenceMs = stopwatch.Elapsed.TotalMilliseconds,
             };

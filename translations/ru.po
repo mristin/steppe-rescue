@@ -202,14 +202,44 @@ msgstr "Поворот направо"
 msgid "Straight ahead"
 msgstr "Прямо"
 
+#. The title of the screen where the players choose whether one or two ride.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "How many riders?"
+msgstr "Сколько всадниц?"
+
+#. The card for a single player.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "1 · One rider"
+msgstr "1 · Одна всадница"
+
+#. The card for two players, who ride together on a split screen.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "2 · Two riders"
+msgstr "2 · Две всадницы"
+
+#. The default name of the second rider, a girl, in your alphabet.
+#: scenes/profile/rider_profile.gd scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Dana"
+msgstr "Дана"
+
 #. The default name of the rider, a girl, in your alphabet.
-#: scenes/profile/profile.gd scenes/sessions/sessions.gd
+#: scenes/profile/rider_profile.gd scenes/sessions/sessions.gd
 #, fuzzy
 msgid "Aigerim"
 msgstr "Айгерим"
 
+#. The second rider's default horse name, Жұлдыз ("star"), in your alphabet.
+#: scenes/profile/rider_profile.gd
+#, fuzzy
+msgid "Zhuldyz"
+msgstr "Жулдыз"
+
 #. The default name of the horse, Тұлпар, in your alphabet.
-#: scenes/profile/profile.gd
+#: scenes/profile/rider_profile.gd
 #, fuzzy
 msgid "Tulpar"
 msgstr "Тулпар"
@@ -388,6 +418,12 @@ msgstr "Напиши кличку своего коня"
 #, fuzzy
 msgid "Done"
 msgstr "Готово"
+
+#. In the creator of two players: whose rider it is ({number} is 1 or 2).
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Player {number}"
+msgstr "Игрок {number}"
 
 #: scenes/rider_creator/rider_creator.gd
 #, fuzzy
@@ -740,6 +776,12 @@ msgstr "+ Новое путешествие"
 #, fuzzy
 msgid "Change rider"
 msgstr "Изменить наездницу"
+
+#. The names of the two riders who ride together, e.g., "Aigerim and Dana".
+#: scenes/sessions/sessions.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "{first} and {second}"
+msgstr "{first} и {second}"
 
 #: scenes/settings/settings.gd scenes/vision/vision_status.gd
 #, fuzzy

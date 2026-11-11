@@ -3,6 +3,7 @@
 **The Steppe Rescue is a riding and searching game for children of about seven-ten, played by doing squats in front of a webcam.**
 You are a girl from a small aul (a village of yurts) in the steppe near Astana. The animals of the aul have wandered off: sheep, horses and camels. You ride out on your horse, ask the people you meet where they saw the animals, find them, and lead them home.
 Nobody fights and nothing can hurt you. You win by riding, listening and being kind.
+One child rides alone, or two ride together, side by side on a split screen, as friends who search for the same animals.
 
 Each level takes about ten minutes, and most of it is riding. Every stride of the horse is a squat, so riding means exercising.
 
@@ -203,7 +204,7 @@ In the level, the game never writes "do squats" or "pull the reins". It shows th
 
 ### Fallbacks
 
-* **Keyboard** for development and testing: Space or ↑ is one squat (tapping faster makes the horse faster), ← and → turn, ↓ brakes.
+* **Keyboard** for development and testing: Space or ↑ is one squat (tapping faster makes the horse faster), ← and → turn, ↓ brakes. With two players, the first rides with W (or Space), A, D and S, and the second with the arrows.
 * **Mouse** in the menus.
 * Without a camera, the game offers the keyboard mode.
 
@@ -219,7 +220,7 @@ In the level, the game never writes "do squats" or "pull the reins". It shows th
 
 1. **The intro screen:** the painting of the rider and her horse, with the title "The Steppe Rescue" and "Find the lost animals and bring them home!" painted in, and the buttons Play, Levels, Settings and How to Play. The buttons are drawn by the game, so they can be translated; the painted title stays in English (open question 7).
 2. **Choose the language:** English, Русский, Қазақша, as three big cards with the name of each language in itself (no flags). The choice is remembered.
-3. **Create the rider and the horse** (the first time only).
+3. **One or two riders?** (for a new journey; see "Two players" below), and **create the rider and the horse** of every player (once for each journey).
 4. **The instruction** (the first time only, and from the menu "How to Play").
 5. **The level select.**
 6. **The level** and the **reward** at its end.
@@ -263,6 +264,19 @@ The camera picture in the corner of the screen shows the player, mirrored, **dre
   * the edge icons of the animals the rider hears.
 * **The conversations** open when the rider stops next to a person: the portrait, the greeting, and the clue with its pictures. The clue is drawn on the map at the same time. Riding on closes the conversation.
 * **The landscape** has things to ride around: lakes, rivers (crossed only at fords), groves and fences. The horse slides along them and never gets stuck.
+
+### Two players
+
+Two children can ride together, as in Bird Dog and Ergo Chaos. **It is a game of friends, not a race:** they search for the same animals, and the mission is over when all the animals are home, whoever brought them.
+
+* **How many:** a new journey asks "How many riders?" right after its name, with two big cards, "1 · One rider" and "2 · Two riders" (`scenes/player_count/`). The journey keeps the answer; a journey of one player stays one, and two stay two.
+* **The camera** is split down the middle: the player on the left of the mirrored picture is the first player, the one on the right the second (`PlayerSplit` in C#). Each has her own squats, reins, brake and face overlay; in her half, the vision follows the person closest to the camera.
+* **Each her own rider:** the players create their riders one after the other, each on the whole screen ("Player 1", "Player 2"), with the hand cursor of her own half of the camera picture. **They never ride the same:** the painted rider and the painted horse which the first player chose are dim in the creator of the second, with the first player's name on the rider, and can not be chosen (nor by Random). The second rider is called Dana and her horse Zhuldyz (Жұлдыз, "star") by default.
+* **Each her own wardrobe:** each rider wins her own finery and chooses what she wears. At the end of a level, each player chooses her own gift, one after the other, at her own home; the level has given its gifts once both chose. The settings open the wardrobe of each rider.
+* **The split screen** in the level: each player has a half of the screen (480 × 540), as in Bird Dog. Two SubViewports show the one steppe (they share its World2D), each following its own rider (`LevelPlayer`). Each half has its own small map (in its outer top corner, showing the partner in indigo), speed bar, water and food, the edge icons of what *she* hears, and the warning at the edge of the steppe. The slots of the animals, shared, stay at the top in the middle, and the camera picture sits at the bottom in the middle, with a line down its middle; the small figure of each player stands on her side of it. The panels of the right half are mirrored.
+* **The conversations are separate:** a rider who stops next to a person talks to them in her own half, by her own name, and her own squat closes it; the other rider rides on meanwhile. Grandmother sends both out at the start and thanks each by her name at the end. What a person tells goes on the maps of both, since they search together.
+* **The animals** join the rider who stays near them and follow her; each rider brings her own followers home. A galloping rider scares the shy horses, whichever rider she is.
+* **The stars** are shared: the time runs from the first stride of either rider.
 
 ### The level select
 
@@ -309,10 +323,10 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 ## 9. Saving
 
-* **Journeys** (sessions, like the voyages of Bird Dog): a journey is one playthrough with its name, its rider and her horse, the stars of each level, the finery won and worn, and the levels whose gift was chosen. The players keep as many journeys as they like, so several children can share a computer, and a class can start afresh.
+* **Journeys** (sessions, like the voyages of Bird Dog): a journey is one playthrough with its name, how many players ride (1 or 2), the rider and her horse of each player with her own finery won and worn, the stars of each level, and the levels whose gifts were chosen. The players keep as many journeys as they like, so several children can share a computer, and a class can start afresh.
 * **Choosing:** on the way from Play (once each start), "Your journeys" offers **Continue** the last journey (it shows its name, its rider and her stars), **+ New journey**, and the three other most recent journeys; Change rider opens the creator for the rider of the current one. The settings open the same screen. Without any journey, Play goes straight to naming the first one.
-* **Naming:** a new journey is named first; the name starts as the date and the time (e.g., "2026-11-10 14:05"), so that OK is enough, and the first key replaces it. The big keys on the screen have the letters of the language, the digits, "-", ":" and a space. Then its rider is created.
-* **The files:** every journey is JSON in `user://saves/<id>.json`, with a format version (so that later versions can convert old saves), the name, the times it was created and updated, the rider and the progress. The id is the date and the time of its creation. A save is written to a temporary file first and then renamed, so that a crash never destroys the last good save; it is written whenever something changes. `user://settings.cfg` keeps the language and the last journey. The riders of the older versions, kept in the settings, became journeys once.
+* **Naming:** a new journey is named first; the name starts as the date and the time (e.g., "2026-11-10 14:05"), so that OK is enough, and the first key replaces it. The big keys on the screen have the letters of the language, the digits, "-", ":" and a space. Then the players choose whether one or two ride, and their riders are created.
+* **The files:** every journey is JSON in `user://saves/<id>.json`, with a format version (so that later versions can convert old saves), the name, the times it was created and updated, the number of players, the riders (each with her finery) and the progress. Format 1 had a single rider with her finery in the progress; it is read as a journey of one player. The id is the date and the time of its creation. A save is written to a temporary file first and then renamed, so that a crash never destroys the last good save; it is written whenever something changes. `user://settings.cfg` keeps the language and the last journey. The riders of the older versions, kept in the settings, became journeys once.
 * The language is remembered for the computer, not per journey.
 * A level in progress is not saved: a level is short enough to finish in one go.
 
@@ -364,7 +378,7 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
   * `Reins`: from the head axis and the wrists, it gives the turn in [-1, 1] (negative to the left).
   * `FaceTracker`: the head detector and the face landmarks together, on every frame. Once it found the face, it follows it with the face landmarks alone in a crop around where it was (about 3 ms instead of 25 ms), and runs the head detector only when the face is lost and four times a second, to check that it still follows the player's head.
   * `FaceAnchor`: from the face landmarks, the anchor of the overlay (the point between the eyes, the distance between the eyes, and the tilt), smoothed, held briefly and faded out when the face is lost.
-  * `VisionService` (the only part which depends on Godot) runs the camera, the pose on one background thread and the face on another, and offers plain getters to GDScript.
+  * `VisionService` (the only part which depends on Godot) runs the camera, the pose on one background thread and the face on another, and offers plain getters to GDScript, each for one player (with two players, `PlayerSplit` gives each her half of the picture, and `FaceTracker` follows a face in each half).
 * **The scenes** (GDScript):
   * `intro`, `language_select`, `rider_select`,
   * `rider_creator` (with the on-screen keyboard),
@@ -464,7 +478,7 @@ The tutorial level, "The lamb by the spring" (section 4), to test the whole loop
 ## 17. Open questions
 
 1. **Only a girl?** The story is about a girl. Should the player also be able to choose a boy rider?
-2. **Two players?** One player for now. A second player on a split screen (as a second rider) could come later.
+2. **Two players?** Built (section 6, "Two players"). Still open: should the free space ask for a wider room (about 4 × 2 m) with two players?
 3. **The menus:** is holding the cursor still for 3 s good enough, or should a fist be needed for a click?
 4. **The clues on the map:** should a clue be drawn automatically on the map (as described above), or should the child remember it?
 5. **Stars by time:** or no stars at all, so that there is no pressure?

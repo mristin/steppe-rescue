@@ -20,6 +20,10 @@ var heard: Array[Dictionary] = []
 ## Where the rider is in the level.
 var rider_at := Vector2.ZERO
 
+## How the level maps onto this control: the view of the rider (see
+## [LevelPlayer]).
+var view := Transform2D.IDENTITY
+
 var _time := 0.0
 
 
@@ -30,12 +34,12 @@ func _process(delta: float) -> void:
 
 ## Whether the point of the level is on the screen.
 func on_screen(at: Vector2) -> bool:
-    var screen := get_viewport().get_canvas_transform() * at
+    var screen := view * at
     return Rect2(Vector2.ZERO, size).grow(-4.0).has_point(screen)
 
 
 func _draw() -> void:
-    var transform := get_viewport().get_canvas_transform()
+    var transform := view
     var center := transform * rider_at
     var inner := Rect2(Vector2.ONE * _INSET, size - Vector2.ONE * 2.0 * _INSET)
     for sound in heard:

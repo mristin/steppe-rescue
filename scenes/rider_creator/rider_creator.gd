@@ -11,6 +11,12 @@ extends Control
 ## alphabet. Random chooses another rider, and Ready! keeps the rider (see the
 ## autoload Profile) and goes on.
 ##
+## With two players, they create their riders one after the other, each on the
+## whole screen with the hand cursor of her half of the camera picture (see
+## section 6 of DESIGN.md, "Two players"). The two never ride the same: the
+## painted rider and the painted horse which the other player chose are dim,
+## with her name on them, and can not be chosen.
+##
 ## Keys: letters write the chosen name, Backspace takes a letter back, Tab
 ## switches between the names, Enter is Ready!, Escape goes back.
 
@@ -34,7 +40,14 @@ const _RIDER_FEET := Vector2(104, 528)
 const _RIDER_SHOWN := 0.82
 const _HORSE_GROUND := Vector2(296, 512)
 
+## The player whose rider the next creator creates; -1 for the first one
+## still to create (or the first player, when all are created).
+static var start_player := -1
+
 var looks: Dictionary = {}
+
+## The player (0 or 1) whose rider this is.
+var player := 0
 
 ## The names as the player writes them.
 var rider_name := ""
@@ -45,6 +58,8 @@ var horse_name := ""
 var editing := ""
 
 var _camera: CameraPanel
+var _player_label: Label
+var _taken_label: Label
 var _rider_cards: Array[DwellButton] = []
 var _horse_cards: Array[DwellButton] = []
 var _rider_field: DwellButton
@@ -71,11 +86,24 @@ func _ready() -> void:
     _rng.randomize()
 
     var profile := get_node("/root/Profile")
-    looks = Looks.complete(profile.dressed())
-    rider_name = profile.rider_name()
-    horse_name = profile.horse_name()
-    _rider_default = profile.rider_name_written == ""
-    _horse_default = profile.horse_name_written == ""
+    player = start_player
+    if player < 0:
+        # NOTE (mristin):
+        # The first rider still to create, or the first one to change.
+        player = 0
+        for i in range(profile.riders.size()):
+            if not profile.rider(i).created:
+                player = i
+                break
+    player = clampi(player, 0, profile.riders.size() - 1)
+    start_player = -1
+    var mine: RiderProfile = profile.rider(player)
+    looks = Looks.complete(mine.dressed())
+    rider_name = mine.rider_name()
+    horse_name = mine.horse_name()
+    _rider_default = mine.name_written == ""
+    _horse_default = mine.horse_name_written == ""
+    _avoid_taken()
 
     _rider_field = _button(Rect2(16, 14, 330, 46))
     _rider_field.font_size = 16
@@ -165,9 +193,35 @@ func _ready() -> void:
     _camera.position = Vector2(232, 124)
     _camera.size = Vector2(208, 156)
     _camera.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _camera.player = player
     add_child(_camera)
 
-    add_child(HandCursor.new())
+    _player_label = Label.new()
+    _player_label.position = Vector2(16, 122)
+    _player_label.size = Vector2(208, 24)
+    _player_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _player_label.add_theme_font_size_override("font_size", 24)
+    _player_label.add_theme_color_override("font_color", Palette.GOLD)
+    _player_label.add_theme_color_override("font_outline_color", Palette.OUTLINE)
+    _player_label.add_theme_constant_override("outline_size", 6)
+    _player_label.visible = profile.players > 1
+    add_child(_player_label)
+
+    # NOTE (mristin):
+    # The name of the other player over the painted rider whom she chose.
+    _taken_label = Label.new()
+    _taken_label.size = Vector2(_CARD.x, 24)
+    _taken_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    _taken_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    _taken_label.add_theme_color_override("font_color", Palette.FELT)
+    _taken_label.add_theme_color_override("font_outline_color", Palette.OUTLINE)
+    _taken_label.add_theme_constant_override("outline_size", 6)
+    _row_controls.append(_taken_label)
+    add_child(_taken_label)
+
+    var cursor := HandCursor.new()
+    cursor.player = player if profile.players > 1 else -1
+    add_child(cursor)
     _update()
 
 
@@ -203,27 +257,63 @@ func _unhandled_input(event: InputEvent) -> void:
     get_viewport().set_input_as_handled()
 
 
-## Choose the painted rider of the preset.
+## The painted riders ("rider") or horses ("steed") which the other player
+## chose.
+func taken(feature: String) -> Array[String]:
+    var result: Array[String] = []
+    var profile := get_node("/root/Profile")
+    for i in range(profile.riders.size()):
+        if i != player and profile.rider(i).created:
+            result.append(str(profile.rider(i).looks.get(feature, "")))
+    return result
+
+
+## Choose the painted rider of the preset, unless the other player rides her.
 func choose_rider(id: String) -> void:
+    if id in taken("rider"):
+        return
     looks = Looks.preset(looks, id)
     _update()
 
 
-## Choose the painted horse of the preset.
+## Choose the painted horse of the preset, unless the other player rides it.
 func choose_horse(id: String) -> void:
+    if id in taken("steed"):
+        return
     looks = Looks.horse_preset(looks, id)
     _update()
 
 
-## Choose another painted rider and horse at random.
+## Choose another painted rider and horse at random (among those which the
+## other player does not ride).
 func randomize_looks() -> void:
-    var horses := Looks.HORSE_PRESETS.keys()
+    var horses := Looks.HORSE_PRESETS.keys().filter(
+        func(id: String) -> bool: return id not in taken("steed")
+    )
     looks = Looks.horse_preset(looks, horses[_rng.randi_range(0, horses.size() - 1)])
-    var others := Looks.PRESETS.keys().filter(func(id: String) -> bool: return id != looks["rider"])
+    var others := Looks.PRESETS.keys().filter(
+        func(id: String) -> bool: return id != looks["rider"] and id not in taken("rider")
+    )
     choose_rider(others[_rng.randi_range(0, others.size() - 1)])
 
 
-## Keep the rider and her horse and go on.
+## Move away from a painted rider or horse which the other player chose
+## meanwhile, to the first free one.
+func _avoid_taken() -> void:
+    if looks.get("rider", "1") in taken("rider"):
+        for id in Looks.PRESETS:
+            if id not in taken("rider"):
+                looks = Looks.preset(looks, id)
+                break
+    if looks.get("steed", "1") in taken("steed"):
+        for id in Looks.HORSE_PRESETS:
+            if id not in taken("steed"):
+                looks = Looks.horse_preset(looks, id)
+                break
+
+
+## Keep the rider and her horse and go on: to the creator of the next player,
+## or on the way to the level.
 func finish() -> void:
     var profile := get_node("/root/Profile")
     # NOTE (mristin):
@@ -231,7 +321,11 @@ func finish() -> void:
     # language of the game (Aigerim, Айгерим).
     var written_rider := "" if _rider_default else rider_name.strip_edges()
     var written_horse := "" if _horse_default else horse_name.strip_edges()
-    profile.save(written_rider, written_horse, looks)
+    profile.save(written_rider, written_horse, looks, player)
+    if player + 1 < profile.players:
+        start_player = player + 1
+        get_tree().reload_current_scene.call_deferred()
+        return
     Flow.next(get_tree())
 
 
@@ -311,10 +405,20 @@ func _update() -> void:
     # TRANSLATORS: The button which closes the keys after writing a name.
     _done_button.text = tr("Done")
 
+    _taken_label.text = ""
     for i in range(_rider_cards.size()):
-        _rider_cards[i].selected = Looks.PRESETS.keys()[i] == looks.get("rider", "1")
+        var id: String = Looks.PRESETS.keys()[i]
+        _rider_cards[i].selected = id == looks.get("rider", "1")
+        _rider_cards[i].disabled = id in taken("rider")
+        if _rider_cards[i].disabled:
+            _taken_label.text = get_node("/root/Profile").rider_name(1 - player)
+            _taken_label.position = _rider_cards[i].position + Vector2(0, _CARD.y * 0.5 - 12)
     for i in range(_horse_cards.size()):
-        _horse_cards[i].selected = Looks.HORSE_PRESETS.keys()[i] == looks.get("steed", "1")
+        var id: String = Looks.HORSE_PRESETS.keys()[i]
+        _horse_cards[i].selected = id == looks.get("steed", "1")
+        _horse_cards[i].disabled = id in taken("steed")
+    # TRANSLATORS: In the creator of two players: whose rider it is ({number} is 1 or 2).
+    _player_label.text = tr("Player {number}").format({"number": player + 1})
     for feature in _values:
         var value: DwellButton = _values[feature]
         value.text = _option_name(feature, looks[feature])

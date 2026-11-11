@@ -26,6 +26,61 @@ func _frames(count: int) -> void:
         await process_frame
 
 
+## With two players, each chooses her own gift, one after the other, and has
+## her own wardrobe.
+func _check_two_players(profile: Node) -> void:
+    profile.start_session("two")
+    profile.set_players(2)
+    profile.save("", "", Looks.DEFAULT, 0)
+    profile.save("", "", RiderProfile.default_looks(1), 1)
+    _check(profile.has_riders(), "both riders are created")
+
+    Flow.reward(self, 3, "01_the_lamb_by_the_spring")
+    await _frames(3)
+    var first := current_scene as Reward
+    _check(first != null and first.player == 0, "the first player chooses her gift first")
+    var first_piece: String = first.offered[0][0]
+    first.choose(0)
+    _check(not profile.was_rewarded("01_the_lamb_by_the_spring"), "the second still chooses")
+    first.go_on()
+    await _frames(3)
+    var second := current_scene as Reward
+    _check(second != null and second.player == 1, "then the second player chooses hers")
+    _check(not second.cards().is_empty(), "and she is offered gifts, too")
+    var second_piece: String = second.offered[0][0]
+    second.choose(0)
+    _check(profile.was_rewarded("01_the_lamb_by_the_spring"), "the level gave its gifts")
+    _check(profile.rider(0).finery.has(first_piece), "the first rider wins her piece")
+    _check(profile.rider(1).finery.has(second_piece), "the second rider wins hers")
+    _check(
+        first_piece == second_piece or not profile.rider(0).finery.has(second_piece),
+        "each into her own wardrobe"
+    )
+    second.go_on()
+    await _frames(3)
+    _check(current_scene is LevelSelect, "then the level select")
+
+    Flow.wardrobe_player = 1
+    Flow.open(self, Flow.WARDROBE)
+    await _frames(3)
+    var wardrobe := current_scene as Wardrobe
+    _check(wardrobe.player == 1, "the wardrobe of the second rider opens")
+    _check(
+        wardrobe.pieces().size() == 1 and wardrobe.pieces()[0] == second_piece,
+        "with her own finery"
+    )
+    wardrobe.toggle(second_piece)
+    _check(not profile.rider(1).wears(second_piece), "she takes her piece off")
+    _check(
+        first_piece != second_piece or profile.rider(0).wears(first_piece),
+        "which leaves the first rider dressed"
+    )
+
+    var saved: Dictionary = profile.read(profile.session_id)
+    _check(int(saved["players"]) == 2, "the journey keeps two players")
+    _check(saved["riders"].size() == 2, "and both riders")
+
+
 func _run() -> void:
     var profile := root.get_node("Profile")
     var path: String = root.get_node("Languages").settings_path()
@@ -35,7 +90,8 @@ func _run() -> void:
         for file in DirAccess.get_files_at(profile.saves_dir()):
             DirAccess.remove_absolute(profile.saves_dir().path_join(file))
     profile.start_session("test")
-    profile.finery = {}
+    profile.set_players(1)
+    var finery: Dictionary = profile.rider(0).finery
 
     var rng := RandomNumberGenerator.new()
     rng.seed = 7
@@ -60,17 +116,17 @@ func _run() -> void:
         _check(card.picture != null, "each card shows its piece")
     var piece: String = reward.offered[1][0]
     reward.choose(1)
-    _check(profile.finery.get(piece, 0) == 1, "the chosen piece is won")
-    _check(Finery.step(profile.dressed(), piece) == 1, "and worn")
+    _check(finery.get(piece, 0) == 1, "the chosen piece is won")
+    _check(Finery.step(profile.rider().dressed(), piece) == 1, "and worn")
     _check(not reward.cards()[0].visible, "the other cards go")
     reward.choose(0)
-    _check(profile.finery.size() == 1, "only one piece is won")
+    _check(finery.size() == 1, "only one piece is won")
     reward.go_on()
     await _frames(3)
     _check(current_scene is LevelSelect, "then the level select")
 
     var saved: Dictionary = profile.read(profile.session_id)
-    _check(int(saved["progress"]["finery"].get(piece, 0)) == 1, "the finery is saved")
+    _check(int(saved["riders"][0]["finery"].get(piece, 0)) == 1, "the finery is saved")
 
     # NOTE (mristin):
     # Riding the level again gives no gift, so that it is no mine of finery.
@@ -81,14 +137,14 @@ func _run() -> void:
     Flow.reward_level = ""
 
     for each in Finery.PIECES:
-        profile.finery[each] = Finery.PIECES[each]["steps"]
-    _check(Finery.offer(profile.finery, 3, rng).is_empty(), "nothing more when all is won")
+        finery[each] = Finery.PIECES[each]["steps"]
+    _check(Finery.offer(finery, 3, rng).is_empty(), "nothing more when all is won")
     change_scene_to_file(Flow.REWARD)
     await _frames(3)
     _check((current_scene as Reward).cards().is_empty(), "the reward offers nothing more")
 
-    profile.save("", "", profile.dressed())
-    _check(not profile.looks.has("finery"), "the looks are saved without the finery")
+    profile.save("", "", profile.rider().dressed())
+    _check(not profile.rider(0).looks.has("finery"), "the looks are saved without the finery")
 
     Flow.open(self, Flow.RIDER_CREATOR)
     await _frames(3)
@@ -100,22 +156,23 @@ func _run() -> void:
 
     # NOTE (mristin):
     # The wardrobe: she takes a piece off and puts it on again.
-    profile.finery = {"saddle": 1, "earrings": 1}
-    profile.taken_off = []
+    profile.rider(0).finery = {"saddle": 1, "earrings": 1}
+    profile.rider(0).taken_off = []
+    Flow.wardrobe_player = 0
     Flow.open(self, Flow.WARDROBE)
     await _frames(3)
     var wardrobe := current_scene as Wardrobe
     _check(wardrobe.cards().size() == 2, "the wardrobe shows the pieces she won")
     _check(wardrobe.in_worn_panel("earrings"), "what she wears is in the panel of the worn")
     wardrobe.toggle("earrings")
-    _check(not profile.wears("earrings"), "she takes the earrings off")
+    _check(not profile.rider().wears("earrings"), "she takes the earrings off")
     _check(not wardrobe.in_worn_panel("earrings"), "and they move to the other panel")
-    _check(not profile.dressed()["finery"].has("earrings"), "and does not wear them")
-    _check(profile.dressed()["finery"].has("saddle"), "but still the saddle")
+    _check(not profile.rider().dressed()["finery"].has("earrings"), "and does not wear them")
+    _check(profile.rider().dressed()["finery"].has("saddle"), "but still the saddle")
     saved = profile.read(profile.session_id)
-    _check("earrings" in saved["progress"]["taken_off"], "what she took off is saved")
+    _check("earrings" in saved["riders"][0]["taken_off"], "what she took off is saved")
     wardrobe.toggle("earrings")
-    _check(profile.wears("earrings"), "she puts them on again")
+    _check(profile.rider().wears("earrings"), "she puts them on again")
     var all_but_home := {}
     for each in Finery.PIECES:
         if Finery.PIECES[each]["for"] != "home":
@@ -125,6 +182,8 @@ func _run() -> void:
             Finery.has_picture(entry[0], entry[1]),
             "a piece of the home is offered only once it is painted: %s" % entry[0]
         )
+
+    await _check_two_players(profile)
 
     Flow.room_asked = false
     Flow.open(self, Flow.FREE_SPACE)

@@ -2,11 +2,12 @@ extends Node
 
 ## Keep the journeys (sessions) of the players, like the voyages of Bird Dog
 ## (see section 9 of DESIGN.md): a journey is one playthrough with its name,
-## its rider (her name, the name of her horse and their [Looks]) and how far
-## she came: the stars of each level she finished, the [Finery] she won and
-## wears, the levels whose gift she chose, and whether she has seen the
-## instruction. The fields below are those of the current journey (see
-## [method choose_session]).
+## how many players ride together (1 or 2, chosen once for the journey), the
+## rider of each player (see [RiderProfile]: her name, the name of her horse,
+## their [Looks], and her own wardrobe of the [Finery] she won and wears), and
+## how far they came: the stars of each level they finished, the levels whose
+## gift they chose, and whether they have seen the instruction. The fields
+## below are those of the current journey (see [method choose_session]).
 ##
 ## Every journey is a JSON file in the directory of the saves next to the
 ## settings (see [method saves_dir]), written to a temporary file first and
@@ -18,8 +19,8 @@ extends Node
 ## Start the game with `-- --new-rider` to create the rider again.
 
 ## The format of the saves; bump it and convert the old files on load when it
-## changes.
-const FORMAT := 1
+## changes. Format 1 had a single rider, with her finery in the progress.
+const FORMAT := 2
 
 ## The longest name, in letters.
 const MAX_NAME := 12
@@ -39,34 +40,22 @@ var session_name := ""
 ## When the current journey was created.
 var created := ""
 
-## Whether the player created her rider already.
-var has_rider := false
+## How many players ride together in the journey: 1 or 2; 0 while a new
+## journey has not chosen yet.
+var players := 0
 
-## The name of the rider as the player wrote it; empty for the default name in
-## the language of the game (see [method rider_name]).
-var rider_name_written := ""
-
-## The name of the horse as the player wrote it; empty for the default name.
-var horse_name_written := ""
-
-## The looks of the rider and her horse.
-var looks: Dictionary = Looks.DEFAULT.duplicate()
+## The rider of each player (see [RiderProfile]), as many as [member players].
+var riders: Array[RiderProfile] = [RiderProfile.new(0)]
 
 ## The most stars won in each finished level, by the id of the level (see
 ## [LevelList]).
 var stars: Dictionary = {}
 
-## Whether the player has seen the instruction (see [Instruction]).
+## Whether the players have seen the instruction (see [Instruction]).
 var has_seen_instruction := false
 
-## The finery which the rider won: the step of each piece (see [Finery]).
-var finery: Dictionary = {}
-
-## The pieces of the finery which she won but took off in the wardrobe.
-var taken_off: Array = []
-
-## The ids of the levels whose gift she chose: a level gives its gift once, so
-## that riding it again is no mine of finery.
+## The ids of the levels whose gifts they chose: a level gives its gifts once,
+## so that riding it again is no mine of finery.
 var rewarded: Array = []
 
 
@@ -76,7 +65,8 @@ func _ready() -> void:
     if last != "":
         choose_session(last)
     if "--new-rider" in OS.get_cmdline_user_args():
-        has_rider = false
+        for each in riders:
+            each.created = false
 
 
 ## The name of a new journey before the player changes it: the date and the
@@ -98,11 +88,41 @@ func saves_dir() -> String:
     return settings.get_basename() + "_saves"
 
 
-## Start a new journey with the name and a rider still to create, and save it.
+## Start a new journey with the name, and save it; how many players ride,
+## and their riders, are still to choose (see [method set_players]).
 func start_session(new_name: String) -> void:
     _new_session(new_name)
     _from_data({})
     _save()
+
+
+## Let as many players ride together in the journey (1 or 2), each with her
+## own rider (the new ones still to create), and save it.
+func set_players(count: int) -> void:
+    players = clampi(count, 1, 2)
+    while riders.size() < players:
+        riders.append(RiderProfile.new(riders.size()))
+    riders.resize(players)
+    _tell_vision()
+    _save()
+
+
+## Tell the vision how many players ride, so that it splits the camera
+## picture between them.
+func _tell_vision() -> void:
+    var vision := get_node_or_null("/root/Vision")
+    if vision != null and vision.service != null:
+        vision.service.SetPlayerCount(maxi(1, players))
+
+
+## The rider of the player (0 or 1).
+func rider(player := 0) -> RiderProfile:
+    return riders[clampi(player, 0, riders.size() - 1)]
+
+
+## Whether every player created her rider.
+func has_riders() -> bool:
+    return players > 0 and riders.all(func(each: RiderProfile) -> bool: return each.created)
 
 
 ## Give the current data a new journey: its id, its name and when it was
@@ -140,8 +160,8 @@ func choose_session(id: String) -> bool:
 
 
 ## The saved journeys, the most recently played first, each with "id",
-## "name", "updated", "rider" (her name as written, empty for the default),
-## "looks" and "stars" (in all the levels).
+## "name", "updated", "riders" (each a dictionary with "name", as written,
+## empty for the default, and "looks") and "stars" (in all the levels).
 func sessions() -> Array[Dictionary]:
     var result: Array[Dictionary] = []
     if not DirAccess.dir_exists_absolute(saves_dir()):
@@ -153,7 +173,11 @@ func sessions() -> Array[Dictionary]:
         var data: Variant = read(id)
         if data == null:
             continue
-        var rider: Dictionary = data.get("rider", {})
+        var shown: Array[Dictionary] = []
+        for each in _riders_of(data):
+            shown.append(
+                {"name": str(each.get("name", "")), "looks": Looks.complete(each.get("looks", {}))}
+            )
         var total := 0
         for level in data.get("progress", {}).get("stars", {}).values():
             total += int(level)
@@ -164,8 +188,7 @@ func sessions() -> Array[Dictionary]:
                     "id": id,
                     "name": data.get("name", id),
                     "updated": data.get("updated", ""),
-                    "rider": rider.get("name", ""),
-                    "looks": Looks.complete(rider.get("looks", {})),
+                    "riders": shown,
                     "stars": total,
                 }
             )
@@ -202,49 +225,57 @@ func read(id: String) -> Variant:
 
 ## The journey as plain data, for its save.
 func to_data() -> Dictionary:
+    var saved_riders: Array[Dictionary] = []
+    for each in riders:
+        saved_riders.append(each.to_data())
     return {
         "format": FORMAT,
         "id": session_id,
         "name": session_name,
         "created": created,
         "updated": Time.get_datetime_string_from_system(),
-        "rider":
-        {
-            "created": has_rider,
-            "name": rider_name_written,
-            "horse_name": horse_name_written,
-            "looks": looks,
-        },
+        "players": players,
+        "riders": saved_riders,
         "progress":
         {
             "stars": stars,
             "instruction_seen": has_seen_instruction,
-            "finery": finery,
-            "taken_off": taken_off,
             "rewarded": rewarded,
         },
     }
 
 
-func _from_data(data: Dictionary) -> void:
-    var rider: Dictionary = data.get("rider", {})
+## The riders of the saved data, as plain data; a save of format 1 has one
+## rider, with her finery in the progress.
+static func _riders_of(data: Dictionary) -> Array:
+    if data.has("riders"):
+        return data["riders"]
+    if not data.has("rider"):
+        return []
     var progress: Dictionary = data.get("progress", {})
-    has_rider = bool(rider.get("created", false))
-    rider_name_written = str(rider.get("name", ""))
-    horse_name_written = str(rider.get("horse_name", ""))
-    looks = Looks.complete(rider.get("looks", {}))
+    var single: Dictionary = data["rider"].duplicate()
+    single["finery"] = progress.get("finery", {})
+    single["taken_off"] = progress.get("taken_off", [])
+    return [single]
+
+
+func _from_data(data: Dictionary) -> void:
+    var progress: Dictionary = data.get("progress", {})
+    var saved_riders := _riders_of(data)
+    players = clampi(int(data.get("players", saved_riders.size())), 0, 2)
+    riders.clear()
+    for i in range(maxi(1, players)):
+        var each := RiderProfile.new(i)
+        if i < saved_riders.size():
+            each.from_data(saved_riders[i])
+        riders.append(each)
     stars = {}
     var saved_stars: Dictionary = progress.get("stars", {})
     for level in saved_stars:
         stars[level] = int(saved_stars[level])
     has_seen_instruction = bool(progress.get("instruction_seen", false))
-    var saved_finery: Dictionary = progress.get("finery", {})
-    var won := {}
-    for piece in saved_finery:
-        won[piece] = int(saved_finery[piece])
-    finery = Finery.complete(won)
-    taken_off = progress.get("taken_off", []).duplicate()
     rewarded = progress.get("rewarded", []).duplicate()
+    _tell_vision()
 
 
 ## Save the current journey; without one (e.g., in the tests), start one.
@@ -290,11 +321,11 @@ func _migrate() -> void:
     var current := int(settings.get_value("general", "rider", 0))
     var current_id := ""
     for i in range(_OLD_RIDERS):
-        var rider := "rider" if i == 0 else "rider_%d" % i
+        var section := "rider" if i == 0 else "rider_%d" % i
         var progress := "progress" if i == 0 else "progress_%d" % i
-        if not settings.get_value(rider, "created", false):
+        if not settings.get_value(section, "created", false):
             break
-        var written: String = settings.get_value(rider, "name", "")
+        var written: String = settings.get_value(section, "name", "")
         start_session(written if written != "" else default_session_name())
         _from_data(
             {
@@ -302,8 +333,8 @@ func _migrate() -> void:
                 {
                     "created": true,
                     "name": written,
-                    "horse_name": settings.get_value(rider, "horse_name", ""),
-                    "looks": settings.get_value(rider, "looks", {}),
+                    "horse_name": settings.get_value(section, "horse_name", ""),
+                    "looks": settings.get_value(section, "looks", {}),
                 },
                 "progress":
                 {
@@ -326,73 +357,53 @@ func _migrate() -> void:
     session_id = ""
 
 
-## The name of the rider, by default Aigerim in the alphabet of the language.
-func rider_name() -> String:
-    if rider_name_written != "":
-        return rider_name_written
-    # TRANSLATORS: The default name of the rider, a girl, in your alphabet.
-    return tr("Aigerim")
+## The name of the player's rider, by default Aigerim (or Dana) in the
+## alphabet of the language.
+func rider_name(player := 0) -> String:
+    return rider(player).rider_name()
 
 
-## The name of the horse, by default Tulpar (the winged horse of the legends).
-func horse_name() -> String:
-    if horse_name_written != "":
-        return horse_name_written
-    # TRANSLATORS: The default name of the horse, Тұлпар, in your alphabet.
-    return tr("Tulpar")
-
-
-## Keep the rider and remember her for the next start.
-func save(a_rider_name: String, a_horse_name: String, a_looks: Dictionary) -> void:
-    rider_name_written = a_rider_name.strip_edges().left(MAX_NAME)
-    horse_name_written = a_horse_name.strip_edges().left(MAX_NAME)
-    looks = Looks.complete(a_looks)
-    looks.erase("finery")
-    has_rider = true
+## Keep the player's rider and remember her for the next start.
+func save(a_rider_name: String, a_horse_name: String, a_looks: Dictionary, player := 0) -> void:
+    var each := rider(player)
+    each.name_written = a_rider_name.strip_edges().left(MAX_NAME)
+    each.horse_name_written = a_horse_name.strip_edges().left(MAX_NAME)
+    each.looks = Looks.complete(a_looks)
+    each.looks.erase("finery")
+    each.created = true
+    if players == 0:
+        players = 1
     _save()
 
 
-## The looks of the rider dressed in the finery she wears, to draw her.
-func dressed() -> Dictionary:
-    var result := looks.duplicate()
-    var worn := {}
-    for piece in finery:
-        if piece not in taken_off:
-            worn[piece] = finery[piece]
-    result["finery"] = worn
-    return result
-
-
-## Whether she wears the piece which she won.
-func wears(piece: String) -> bool:
-    return finery.has(piece) and piece not in taken_off
-
-
-## Put on (or take off) the piece which she won, in the wardrobe, and
-## remember it.
-func wear(piece: String, on: bool) -> void:
+## Put on (or take off) the piece which the player's rider won, in her
+## wardrobe, and remember it.
+func wear(piece: String, on: bool, player := 0) -> void:
+    var each := rider(player)
     if on:
-        taken_off.erase(piece)
-    elif piece not in taken_off:
-        taken_off.append(piece)
+        each.taken_off.erase(piece)
+    elif piece not in each.taken_off:
+        each.taken_off.append(piece)
     _save()
 
 
-## Win the next step of the piece of finery, and remember it.
-func win(piece: String) -> void:
+## Win the next step of the piece of finery for the player's rider, and
+## remember it.
+func win(piece: String, player := 0) -> void:
     if not Finery.PIECES.has(piece):
         return
-    finery[piece] = mini(int(finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
-    taken_off.erase(piece)
+    var each := rider(player)
+    each.finery[piece] = mini(int(each.finery.get(piece, 0)) + 1, Finery.PIECES[piece]["steps"])
+    each.taken_off.erase(piece)
     _save()
 
 
-## Whether she chose the gift of the level already.
+## Whether they chose the gifts of the level already.
 func was_rewarded(level_id: String) -> bool:
     return level_id in rewarded
 
 
-## Remember that she chose the gift of the level.
+## Remember that they chose the gifts of the level.
 func reward(level_id: String) -> void:
     if level_id == "" or level_id in rewarded:
         return

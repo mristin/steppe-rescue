@@ -6,6 +6,10 @@ extends Control
 ## [method FrontView.painted_overlay]) are drawn over her head, following the
 ## landmarks of her face.
 ##
+## With two players, each is dressed as her own rider, and a line down the
+## middle of the picture parts their halves (see section 6 of DESIGN.md, "Two
+## players").
+##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
 ##
@@ -32,9 +36,13 @@ const _KEYPOINT_THRESHOLD := 0.5
 ## Draw the key points, the axis of the head and the reaching hands.
 @export var show_skeleton := false
 
-## The looks to dress the player in; empty for those of the profile, in her
-## finery (e.g., the creator shows the looks while they are chosen).
+## The looks to dress the [member player] in; empty for those of the
+## profile, in her finery (e.g., the creator shows the looks while they are
+## chosen).
 var looks: Dictionary = {}
+
+## The only player to dress up (0 or 1); -1 dresses up every player.
+var player := -1
 
 var _service: Node = null
 
@@ -61,17 +69,25 @@ func _draw() -> void:
     if _service == null:
         return
 
-    if show_skeleton:
-        _draw_skeleton()
+    var count: int = _service.GetPlayerCount()
+    for i in range(count):
+        if player >= 0 and i != player:
+            continue
+        if show_skeleton:
+            _draw_skeleton(i)
+        _draw_overlay(i)
 
-    _draw_overlay()
+    if count > 1:
+        var middle := roundf(size.x * 0.5)
+        draw_rect(Rect2(middle - 2, 0, 4, size.y), Palette.OUTLINE)
+        draw_rect(Rect2(middle - 1, 0, 2, size.y), Palette.GOLD)
 
     draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE, false, 2.0)
 
 
-func _draw_skeleton() -> void:
-    var points: Array = _service.GetKeypoints()
-    var scores: Array = _service.GetKeypointScores()
+func _draw_skeleton(index: int) -> void:
+    var points: Array = _service.GetKeypoints(index)
+    var scores: Array = _service.GetKeypointScores(index)
     if points.is_empty():
         return
 
@@ -95,7 +111,7 @@ func _draw_skeleton() -> void:
         for y in range(0, int(size.y), 4):
             draw_rect(Rect2(head_x, y, 1, 2), Palette.GOLD)
 
-    var across: Vector2 = _service.GetHandsAcross()
+    var across: Vector2 = _service.GetHandsAcross(index)
     for wrist in [[_LEFT_WRIST, across.x], [_RIGHT_WRIST, across.y]]:
         if seen.call(wrist[0]):
             var color := Palette.CRIMSON if wrist[1] > 0.0 else Palette.EMERALD_LIGHT
@@ -108,8 +124,8 @@ func _draw_skeleton() -> void:
             draw_rect(Rect2(center.round() - Vector2(1, 1), Vector2(2, 2)), Palette.GOLD)
 
 
-func _draw_overlay() -> void:
-    var anchor: Dictionary = _service.GetFaceAnchor()
+func _draw_overlay(index: int) -> void:
+    var anchor: Dictionary = _service.GetFaceAnchor(index)
     var alpha: float = anchor["alpha"]
     if alpha <= 0.0:
         return
@@ -122,7 +138,11 @@ func _draw_overlay() -> void:
     # The painted hair and hat of the rider, scaled smoothly to the eyes; a
     # rider without a painting is pixelated anew at the distance of the eyes
     # (in whole pixels, so that only a few sizes are cached).
-    var dressed: Dictionary = looks if not looks.is_empty() else get_node("/root/Profile").dressed()
+    var dressed: Dictionary = (
+        looks
+        if not looks.is_empty() and index == maxi(player, 0)
+        else get_node("/root/Profile").rider(index).dressed()
+    )
     var unit := maxf(3.0, roundf(eyes))
     var texture: Texture2D = FrontView.painted_overlay(dressed)
     if texture == null:

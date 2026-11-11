@@ -6,6 +6,8 @@ extends Control
 ## area with the picture of the animals. It never shows the animals themselves.
 ##
 ## The map sits small in a corner; the player opens it [member large] with C.
+## With two players, each has her own map in her half of the screen, which
+## shows her partner, too (in indigo).
 
 ## The small map, in the coordinates of the screen.
 const SMALL := Rect2(792, 8, 160, 120)
@@ -41,6 +43,15 @@ var map: LevelMap
 var rider_at := Vector2.ZERO
 var rider_heading := 0.0
 
+## Whether a partner rides, too, and where she is and her heading.
+var has_partner := false
+var partner_at := Vector2.ZERO
+var partner_heading := 0.0
+
+## Where the map sits small and large, in the coordinates of the screen.
+var small_rect := SMALL
+var large_rect := LARGE
+
 ## The clues which the rider heard so far.
 var clues: Array[Clue] = []
 
@@ -66,7 +77,7 @@ func _process(delta: float) -> void:
 
 
 func _place() -> void:
-    var rect := LARGE if large else SMALL
+    var rect := large_rect if large else small_rect
     position = rect.position
     size = rect.size
 
@@ -107,16 +118,22 @@ func _draw() -> void:
     for clue in clues:
         _draw_clue(clue, to_map, scale)
 
+    if has_partner:
+        _draw_rider(to_map.call(partner_at), partner_heading, Palette.INDIGO, Palette.OUTLINE)
     var blink := fposmod(_time, 1.0) < 0.7 or not large
     if blink:
-        var at: Vector2 = to_map.call(rider_at)
-        var dot := 2.0 if large else 1.0
-        draw_rect(Rect2(at - Vector2.ONE * dot, Vector2.ONE * (2.0 * dot + 1.0)), Palette.CRIMSON)
-        var nose := at + Vector2.UP.rotated(rider_heading) * (4.0 + 2.0 * dot)
-        draw_line(at, nose.round(), Palette.CRIMSON_DARK, 1.0)
+        _draw_rider(to_map.call(rider_at), rider_heading, Palette.CRIMSON, Palette.CRIMSON_DARK)
 
     if large:
         _draw_compass(Vector2(size.x - 16, 18))
+
+
+## A rider on the map: a dot with a line to where she heads.
+func _draw_rider(at: Vector2, heading: float, color: Color, nose_color: Color) -> void:
+    var dot := 2.0 if large else 1.0
+    draw_rect(Rect2(at - Vector2.ONE * dot, Vector2.ONE * (2.0 * dot + 1.0)), color)
+    var nose := at + Vector2.UP.rotated(heading) * (4.0 + 2.0 * dot)
+    draw_line(at, nose.round(), nose_color, 1.0)
 
 
 ## The river as a band across the map, broken by its fords.

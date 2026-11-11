@@ -77,7 +77,7 @@ var _rider_on_horse: Texture2D
 
 func _ready() -> void:
     set_anchors_preset(Control.PRESET_FULL_RECT)
-    _looks = get_node("/root/Profile").dressed()
+    _looks = get_node("/root/Profile").rider().dressed()
     _background = load(BACKGROUND)
     PaintedTopDown.prepare(self)
     _rider_on_horse = load(RIDER_ON_HORSE)

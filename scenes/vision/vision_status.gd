@@ -11,7 +11,7 @@ func text(service: Node, timing: bool) -> String:
     if status == "Running":
         if not timing:
             return ""
-        if not service.HasPlayer():
+        if not service.HasPlayer(0):
             return tr("Step in front of the camera.")
         # TRANSLATORS: {pose} and {face} are the milliseconds to find the body and the face.
         return tr("I see you! (body {pose} ms, face {face} ms)").format(

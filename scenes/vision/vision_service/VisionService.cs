@@ -7,7 +7,7 @@ using System.Threading;
 using SteppeRescue.Vision;
 
 /// <summary>
-/// Capture the webcam, find the player's pose and face on background threads,
+/// Capture the webcam, find the players' poses and faces on background threads,
 /// and turn them into the riding: the speed from the squats, the turn from the
 /// hands, and the anchor of the looks over the face.
 /// </summary>
@@ -27,8 +27,17 @@ using SteppeRescue.Vision;
 /// and the <see cref="FaceAnchorFilter"/> in <see cref="_Process"/>.
 /// </para>
 /// <para>
-/// The keyboard works with or without the camera: Space (or Up) is a squat,
-/// and Left and Right turn. The game (GDScript) uses only the plain getters.
+/// One or two players ride together (see <see cref="SetPlayerCount"/>). With
+/// two, each plays in their own half of the camera picture, as in Bird Dog
+/// and Ergo Chaos: the player on the left of the mirrored picture is player 0,
+/// the one on the right player 1 (see <see cref="PlayerSplit"/>). Each has
+/// their own squats, reins, brake and face.
+/// </para>
+/// <para>
+/// The keyboard works with or without the camera. Player 0: Space or W is a
+/// squat, A and D turn, S brakes. Player 1: Up is a squat, Left and Right
+/// turn, Down brakes; with a single player, the arrows ride player 0, too.
+/// The game (GDScript) uses only the plain getters, which take the player.
 /// </para>
 /// </remarks>
 public partial class VisionService : Node
@@ -79,10 +88,14 @@ public partial class VisionService : Node
     /// <summary>The camera image (not mirrored), for the preview; null without a camera.</summary>
     public CameraTexture? CameraTexture { get; private set; }
 
-    public readonly SquatMeter Squats = new();
-    public readonly Reins Reins = new();
-    public readonly Brake Brake = new();
-    public readonly FaceAnchorFilter Face = new();
+    /// <summary>How many players ride together: 1 or 2.</summary>
+    public int PlayerCount { get; private set; } = 1;
+
+    /// <summary>The squats, the reins, the brake and the face of each player.</summary>
+    public readonly SquatMeter[] Squats = { new(), new() };
+    public readonly Reins[] Reins = { new(), new() };
+    public readonly Brake[] Brakes = { new(), new() };
+    public readonly FaceAnchorFilter[] Faces = { new(), new() };
 
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private double _gameTime;
@@ -149,9 +162,16 @@ public partial class VisionService : Node
     private readonly FrameSlot _poseSlot = new();
     private readonly FrameSlot _faceSlot = new();
 
-    private float _keyboardTurn;
-    private bool _keyboardBraking;
-    private bool _keyboardTurning;
+    /// <summary>The keys of each player: the squat, left, right and the brake.</summary>
+    private static readonly Key[][] _keys =
+    {
+        new[] { Key.W, Key.A, Key.D, Key.S },
+        new[] { Key.Up, Key.Left, Key.Right, Key.Down },
+    };
+
+    private readonly float[] _keyboardTurn = new float[2];
+    private readonly bool[] _keyboardBraking = new bool[2];
+    private readonly bool[] _keyboardTurning = new bool[2];
 
     public override void _Ready()
     {
@@ -196,65 +216,104 @@ public partial class VisionService : Node
         if (face != null && !ReferenceEquals(face, _consumedFace))
         {
             _consumedFace = face;
-            if (face.Face != null)
+            for (int i = 0; i < face.Faces.Count && i < Faces.Length; i++)
             {
-                Face.Observe(face.Timestamp, FaceAnchor.FromLandmarks(face.Face, face.Width));
+                var landmarks = face.Faces[i];
+                if (landmarks != null)
+                {
+                    Faces[i].Observe(face.Timestamp, FaceAnchor.FromLandmarks(landmarks, face.Width));
+                }
             }
         }
 
-        _keyboardTurning = false;
-        if (Input.IsKeyPressed(Key.Left))
+        for (int i = 0; i < PlayerSplit.MaxPlayers; i++)
         {
-            _keyboardTurn = -1f;
-            _keyboardTurning = true;
+            UpdateKeyboard(i, now);
+            Squats[i].Update(now);
+            Brakes[i].Update(now);
+            if (Brakes[i].Pulled)
+            {
+                Squats[i].Halt(delta);
+            }
+
+            Reins[i].Update(now);
+            Faces[i].Update(now);
         }
-        else if (Input.IsKeyPressed(Key.Right))
+    }
+
+    /// <summary>Turn and brake the player with the keys held down.</summary>
+    private void UpdateKeyboard(int player, double now)
+    {
+        bool Held(int which)
         {
-            _keyboardTurn = 1f;
-            _keyboardTurning = true;
+            if (Input.IsKeyPressed(_keys[player][which]))
+            {
+                return true;
+            }
+
+            // NOTE (mristin):
+            // A single player rides with the arrows, too.
+            return player == 0 && PlayerCount == 1 && Input.IsKeyPressed(_keys[1][which]);
+        }
+
+        _keyboardTurning[player] = false;
+        if (Held(1))
+        {
+            _keyboardTurn[player] = -1f;
+            _keyboardTurning[player] = true;
+        }
+        else if (Held(2))
+        {
+            _keyboardTurn[player] = 1f;
+            _keyboardTurning[player] = true;
         }
 
         // NOTE (mristin):
-        // Down (or the tests) brakes like both hands above the head.
-        if (Input.IsKeyPressed(Key.Down))
+        // The brake key (or the tests) brakes like both hands above the head.
+        bool braking = Held(3);
+        if (braking)
         {
-            Brake.Hold(now);
+            Brakes[player].Hold(now);
         }
-        else if (_keyboardBraking)
+        else if (_keyboardBraking[player])
         {
-            Brake.LetGo();
-        }
-
-        _keyboardBraking = Input.IsKeyPressed(Key.Down);
-
-        Squats.Update(now);
-        Brake.Update(now);
-        if (Brake.Pulled)
-        {
-            Squats.Halt(delta);
+            Brakes[player].LetGo();
         }
 
-        Reins.Update(now);
-        Face.Update(now);
+        _keyboardBraking[player] = braking;
     }
 
     public override void _UnhandledInput(InputEvent @event)
     {
-        if (@event is InputEventKey key && key.Pressed && !key.Echo
-            && (key.Keycode == Key.Space || key.Keycode == Key.Up))
+        if (@event is not InputEventKey key || !key.Pressed || key.Echo)
         {
-            SquatByKeyboard();
+            return;
+        }
+
+        if (key.Keycode == Key.Space || key.Keycode == Key.W)
+        {
+            SquatByKeyboard(0);
+        }
+        else if (key.Keycode == Key.Up)
+        {
+            SquatByKeyboard(PlayerCount > 1 ? 1 : 0);
         }
     }
 
     private void Consume(VisionSnapshot snapshot)
     {
-        var player = snapshot.Player;
-        if (player == null)
+        for (int i = 0; i < snapshot.Players.Count && i < PlayerSplit.MaxPlayers; i++)
         {
-            return;
+            var player = snapshot.Players[i];
+            if (player != null)
+            {
+                ConsumePlayer(i, player, snapshot.Timestamp);
+            }
         }
+    }
 
+    private void ConsumePlayer(int index, Pose player, double t)
+    {
         const float threshold = 0.5f;
         var head = player.Head(threshold);
         var unit = player.Unit(threshold);
@@ -263,21 +322,21 @@ public partial class VisionService : Node
             return;
         }
 
-        double t = snapshot.Timestamp;
-        Squats.Observe(t, head.Value.Y, unit.Value);
+        Squats[index].Observe(t, head.Value.Y, unit.Value);
 
         float? leftWrist = player.Has(BodyPart.LeftWrist, threshold) ? player[BodyPart.LeftWrist].X : null;
         float? rightWrist = player.Has(BodyPart.RightWrist, threshold) ? player[BodyPart.RightWrist].X : null;
-        Reins.Observe(t, head.Value.X, unit.Value, leftWrist, rightWrist);
+        Reins[index].Observe(t, head.Value.X, unit.Value, leftWrist, rightWrist);
 
         float? leftWristY = player.Has(BodyPart.LeftWrist, threshold) ? player[BodyPart.LeftWrist].Y : null;
         float? rightWristY = player.Has(BodyPart.RightWrist, threshold) ? player[BodyPart.RightWrist].Y : null;
-        Brake.Observe(t, head.Value.Y, unit.Value, leftWristY, rightWristY);
+        Brakes[index].Observe(t, head.Value.Y, unit.Value, leftWristY, rightWristY);
     }
 
     // NOTE (mristin):
     // The getters below are the API for GDScript. The positions are normalized to
-    // [0, 1] of the *mirrored* camera picture, as the player sees herself.
+    // [0, 1] of the *mirrored* camera picture, as the players see themselves.
+    // Every getter about the riding takes the player: 0, or 1 with two players.
 
     public string GetStatus() => Status.ToString();
 
@@ -287,50 +346,83 @@ public partial class VisionService : Node
 
     public Texture2D? GetCameraTexture() => CameraTexture;
 
-    /// <summary>The speed of the horse in [0, 1].</summary>
-    public float GetSpeed() => Squats.Speed;
+    /// <summary>Set how many players ride together (1 or 2), and forget their riding.</summary>
+    public void SetPlayerCount(int count)
+    {
+        int clamped = Math.Clamp(count, 1, PlayerSplit.MaxPlayers);
+        if (clamped == PlayerCount)
+        {
+            return;
+        }
 
-    /// <summary>The gait of the horse: 0 stands, 1 walks, 2 trots, 3 gallops.</summary>
-    public int GetGait() => (int)Squats.Gait;
+        PlayerCount = clamped;
+        ResetRiding();
+    }
+
+    public int GetPlayerCount() => PlayerCount;
+
+    private static int Index(int player) => Math.Clamp(player, 0, PlayerSplit.MaxPlayers - 1);
+
+    /// <summary>The speed of the player's horse in [0, 1].</summary>
+    public float GetSpeed(int player) => Squats[Index(player)].Speed;
+
+    /// <summary>The gait of the player's horse: 0 stands, 1 walks, 2 trots, 3 gallops.</summary>
+    public int GetGait(int player) => (int)Squats[Index(player)].Gait;
 
     /// <summary>The speeds from which the horse walks, trots and gallops.</summary>
     public Vector3 GetGaitThresholds() => new(SquatMeter.WalkFrom, SquatMeter.TrotFrom, SquatMeter.GallopFrom);
 
     /// <summary>How deep the player is in the squat now, in [0, 1].</summary>
-    public float GetSquatDepth() => Squats.Depth;
+    public float GetSquatDepth(int player) => Squats[Index(player)].Depth;
 
-    public int GetSquatCount() => Squats.Count;
+    public int GetSquatCount(int player) => Squats[Index(player)].Count;
 
     /// <summary>The turn in [-1, 1]: negative turns left, positive turns right.</summary>
-    public float GetTurn()
+    public float GetTurn(int player)
     {
-        return _keyboardTurning ? _keyboardTurn : Reins.Turn;
+        int i = Index(player);
+        return _keyboardTurning[i] ? _keyboardTurn[i] : Reins[i].Turn;
     }
 
     /// <summary>Whether the player brakes now, both hands above her head.</summary>
-    public bool IsBraking() => Brake.Pulled;
+    public bool IsBraking(int player) => Brakes[Index(player)].Pulled;
 
     /// <summary>How many times the player braked.</summary>
-    public int GetBrakeCount() => Brake.Count;
+    public int GetBrakeCount(int player) => Brakes[Index(player)].Count;
 
     /// <summary>Brake from the tests, as if both hands were up for a moment.</summary>
-    public void BrakeByKeyboard() => Brake.Hold(Now);
+    public void BrakeByKeyboard(int player) => Brakes[Index(player)].Hold(Now);
 
-    /// <summary>How far each hand reaches across, in [0, 1]: (left, right).</summary>
-    public Vector2 GetHandsAcross() => new(Reins.LeftAcross, Reins.RightAcross);
-
-    /// <summary>Whether a player is in the picture now.</summary>
-    public bool HasPlayer()
+    /// <summary>How far each hand of the player reaches across, in [0, 1]: (left, right).</summary>
+    public Vector2 GetHandsAcross(int player)
     {
-        var snapshot = Latest;
-        return snapshot?.Player != null && Now - snapshot.Timestamp < 0.5;
+        int i = Index(player);
+        return new(Reins[i].LeftAcross, Reins[i].RightAcross);
     }
 
-    /// <summary>The 17 key points in the mirrored picture, normalized; empty without a player.</summary>
-    public Vector2[] GetKeypoints()
+    private Pose? PoseOf(VisionSnapshot? snapshot, int player)
+    {
+        if (snapshot == null || player < 0 || player >= snapshot.Players.Count)
+        {
+            return null;
+        }
+
+        return snapshot.Players[player];
+    }
+
+    /// <summary>Whether the player is in the picture now.</summary>
+    public bool HasPlayer(int player)
     {
         var snapshot = Latest;
-        if (snapshot?.Player == null)
+        return PoseOf(snapshot, player) != null && Now - snapshot!.Timestamp < 0.5;
+    }
+
+    /// <summary>The player's 17 key points in the mirrored picture, normalized; empty without her.</summary>
+    public Vector2[] GetKeypoints(int player)
+    {
+        var snapshot = Latest;
+        var pose = PoseOf(snapshot, player);
+        if (pose == null)
         {
             return Array.Empty<Vector2>();
         }
@@ -338,8 +430,8 @@ public partial class VisionService : Node
         var points = new Vector2[Pose.KeypointCount];
         for (int i = 0; i < Pose.KeypointCount; i++)
         {
-            var keypoint = snapshot.Player.Keypoints[i];
-            points[i] = new Vector2(1f - keypoint.X / snapshot.Width, keypoint.Y / snapshot.Height);
+            var keypoint = pose.Keypoints[i];
+            points[i] = new Vector2(1f - keypoint.X / snapshot!.Width, keypoint.Y / snapshot.Height);
         }
 
         return points;
@@ -352,8 +444,9 @@ public partial class VisionService : Node
     public void SetWantHands(bool want) => _wantHands = want;
 
     /// <summary>
-    /// The hands which YOLOX found lately, as their centers in the mirrored
-    /// picture, normalized; empty if none were found in the last 0.3 s.
+    /// The hands which YOLOX found lately (of all the players), as their
+    /// centers in the mirrored picture, normalized; empty if none were found in
+    /// the last 0.3 s.
     /// </summary>
     public Vector2[] GetHands()
     {
@@ -374,10 +467,10 @@ public partial class VisionService : Node
     }
 
     /// <summary>The scores of the key points of <see cref="GetKeypoints"/>.</summary>
-    public float[] GetKeypointScores()
+    public float[] GetKeypointScores(int player)
     {
-        var snapshot = Latest;
-        if (snapshot?.Player == null)
+        var pose = PoseOf(Latest, player);
+        if (pose == null)
         {
             return Array.Empty<float>();
         }
@@ -385,46 +478,51 @@ public partial class VisionService : Node
         var scores = new float[Pose.KeypointCount];
         for (int i = 0; i < Pose.KeypointCount; i++)
         {
-            scores[i] = snapshot.Player.Keypoints[i].Score;
+            scores[i] = pose.Keypoints[i].Score;
         }
 
         return scores;
     }
 
     /// <summary>
-    /// The anchor of the looks over the face: "center" (normalized), "eye_distance"
-    /// (normalized to the width), "angle" (radians, clockwise) and "alpha" (0 hides it).
+    /// The anchor of the looks over the player's face: "center" (normalized),
+    /// "eye_distance" (normalized to the width), "angle" (radians, clockwise)
+    /// and "alpha" (0 hides it).
     /// </summary>
-    public Godot.Collections.Dictionary GetFaceAnchor()
+    public Godot.Collections.Dictionary GetFaceAnchor(int player)
     {
         var snapshot = Latest;
         float width = snapshot?.Width ?? 640;
         float height = snapshot?.Height ?? 480;
-        var anchor = Face.Anchor;
+        var face = Faces[Index(player)];
+        var anchor = face.Anchor;
         return new Godot.Collections.Dictionary
         {
             ["center"] = new Vector2(anchor.X / width, anchor.Y / height),
             ["eye_distance"] = anchor.EyeDistance / width,
             ["angle"] = anchor.Angle,
-            ["alpha"] = Face.Alpha,
+            ["alpha"] = player < PlayerCount ? face.Alpha : 0f,
         };
     }
 
     /// <summary>How long the latest pose took, in milliseconds.</summary>
     public double GetInferenceMs() => Latest?.InferenceMs ?? 0.0;
 
-    /// <summary>How long the latest heads and face took, in milliseconds.</summary>
+    /// <summary>How long the latest heads and faces took, in milliseconds.</summary>
     public double GetFaceMs() => LatestFace?.InferenceMs ?? 0.0;
 
-    /// <summary>Count a squat as if Space was pressed, e.g., in the tests.</summary>
-    public void SquatByKeyboard() => Squats.RegisterSquat(Now, _keyboardSquatDepth);
+    /// <summary>Count a squat of the player as if her key was pressed, e.g., in the tests.</summary>
+    public void SquatByKeyboard(int player) => Squats[Index(player)].RegisterSquat(Now, _keyboardSquatDepth);
 
-    /// <summary>Forget the squats and the turns, e.g., at the start of a level.</summary>
+    /// <summary>Forget the squats and the turns of all the players, e.g., at the start of a level.</summary>
     public void ResetRiding()
     {
-        Squats.Reset();
-        Reins.Reset();
-        Brake.Reset();
+        for (int i = 0; i < PlayerSplit.MaxPlayers; i++)
+        {
+            Squats[i].Reset();
+            Reins[i].Reset();
+            Brakes[i].Reset();
+        }
     }
 
     private void SearchCamera(double now)
@@ -599,7 +697,7 @@ public partial class VisionService : Node
                 var frame = NextFrame(_poseSlot);
                 if (frame != null)
                 {
-                    Volatile.Write(ref _latest, vision.Process(frame));
+                    Volatile.Write(ref _latest, vision.Process(frame, PlayerCount));
                 }
             }
         }
@@ -631,10 +729,16 @@ public partial class VisionService : Node
                 }
 
                 // NOTE (mristin):
-                // The pose tells which head is the player's; it may be a few frames
+                // The pose tells which head is whose; it may be a few frames
                 // old, which is close enough to tell the heads apart.
-                var head = Latest?.Player?.Head(0.5f);
-                var found = tracker.Track(frame, head?.X, head?.Y);
+                var latest = Latest;
+                var hints = new (float X, float Y)?[PlayerCount];
+                for (int i = 0; i < hints.Length; i++)
+                {
+                    hints[i] = PoseOf(latest, i)?.Head(0.5f);
+                }
+
+                var found = tracker.TrackAll(frame, hints);
                 Volatile.Write(ref _latestFace, found);
                 if (found.Hands != null)
                 {

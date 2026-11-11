@@ -2,9 +2,11 @@ extends SceneTree
 ## Play the first level with the keyboard: Grandmother sends the rider out with
 ## a clue, a squat rides on, the lamb joins the rider who stays next to it, it
 ## runs into the pen at the gate, and Grandmother thanks the rider with stars.
-## Also check every level as data, and the clues in every language.
+## Also check every level as data, the clues in every language, and two
+## riders together on a split screen.
 
 const _LEVELS_DIR := "res://data/levels"
+const _LEVEL := "res://scenes/level/level.tscn"
 
 var _failures: Array[String] = []
 
@@ -52,10 +54,110 @@ func _check_clue_texts(level: Level) -> void:
     TranslationServer.set_locale(before)
 
 
+## Two riders: each has her own half of the screen, talks to the people on
+## her own, gathers her own followers, and the mission is over when all the
+## animals are home, whoever brought them.
+func _check_two_players() -> void:
+    var service: Node = root.get_node("Vision").service
+    var level: Level = (load(_LEVEL) as PackedScene).instantiate()
+    level.player_count = 2
+    level.map_scene = load(_LEVELS_DIR + "/02_after_the_storm.tscn")
+    Flow.level = ""
+    current_scene.queue_free()
+    root.add_child(level)
+    current_scene = level
+    await process_frame
+    await process_frame
+
+    _check(level.players() == 2, "two riders ride")
+    _check(service.GetPlayerCount() == 2, "the vision splits the picture between them")
+    _check(level.view(0).rect == Rect2(0, 0, 480, 540), "the first rides in the left half")
+    _check(level.view(1).rect == Rect2(480, 0, 480, 540), "the second in the right half")
+    _check(
+        level.view(1).viewport.world_2d == level.view(0).viewport.world_2d,
+        "both halves show the same steppe"
+    )
+    _check(level.rider(0).position.distance_to(level.rider(1).position) > 10.0, "side by side")
+    var grandmother := level.talking_to(0)
+    _check(grandmother != null and level.talking_to(1) == grandmother, "Grandmother sends both out")
+
+    await _wait(Level.TALK_SECONDS + 0.2)
+    service.SquatByKeyboard(1)
+    await _wait(0.3)
+    _check(level.talking_to(1) == null, "the second rider's squat ends her conversation")
+    _check(level.talking_to(0) == grandmother, "but not the first rider's")
+    _check(level.view(0).conversation.visible, "whose conversation still shows")
+    _check(not level.view(1).conversation.visible, "while the second one's is closed")
+
+    var person: Person = null
+    for each in level.map.people():
+        if each != grandmother:
+            person = each
+    var known := level.revealed().size()
+    level.rider(1).position = person.position + Vector2(0, 12)
+    await _wait(0.3)
+    _check(level.talking_to(1) == person, "the second rider talks to a person on her own")
+    _check(level.talking_to(0) == grandmother, "while the first does not hear it")
+    _check(level.revealed().size() > known, "what the person tells goes on the map")
+    _check(
+        level.view(0).map_view.clues.size() == level.revealed().size(),
+        "the map of the first rider shows it, too"
+    )
+    await _wait(Level.TALK_SECONDS)
+    service.SquatByKeyboard(0)
+    service.SquatByKeyboard(1)
+    await _wait(0.3)
+    _check(level.talking_to(0) == null and level.talking_to(1) == null, "both ride on")
+    service.BrakeByKeyboard(0)
+    service.BrakeByKeyboard(1)
+    await _wait(0.3)
+    _check(service.GetSpeed(0) == 0.0 and service.GetSpeed(1) == 0.0, "each brakes her own horse")
+
+    # NOTE (mristin):
+    # The animals join the rider who stays near them: every other one the
+    # first rider, the rest the second.
+    var places: Array[Vector2] = [Vector2(400, 400), level.map.size - Vector2(400, 400)]
+    for i in range(level.animals.size()):
+        var animal: Animal = level.animals[i]
+        var mine := i % 2
+        level.rider(mine).position = level.rider(mine).slide(places[mine])
+        level.rider(1 - mine).position = level.rider(1 - mine).slide(places[1 - mine])
+        animal.position = level.rider(mine).position + Vector2(0, 8)
+        await _wait(Animal.JOIN_SECONDS + 0.3)
+        _check(level.followers(mine).has(animal), "the animal %d follows its rider" % i)
+    var firsts := level.followers(0).size()
+    _check(firsts > 0 and level.followers(1).size() > 0, "each rider has her own followers")
+
+    var gate := level.map.home().gate()
+    level.rider(1).position = gate + Vector2(0, -20)
+    for animal in level.followers(1):
+        animal.position = gate + Vector2(0, -40)
+    await _wait(6.0)
+    _check(level.followers(1).is_empty(), "the second rider brings hers home")
+    _check(not level.finished, "the mission goes on while animals are still out")
+    level.rider(0).position = gate + Vector2(0, -20)
+    for animal in level.followers(0):
+        animal.position = gate + Vector2(0, -40)
+    await _wait(6.0)
+    _check(level.finished, "the mission is over when all the animals are home")
+    for i in range(2):
+        _check(level.talking_to(i) == grandmother, "Grandmother thanks the rider %d" % i)
+        var said := ""
+        for label in level.view(i).conversation.find_children("*", "Label", true, false):
+            said += (label as Label).text + "\n"
+        var rider_name: String = root.get_node("Profile").rider_name(i)
+        _check(rider_name in said, "by her own name: %s" % said)
+    await _wait(Level.THANKS_SECONDS)
+    service.SquatByKeyboard(1)
+    await _wait(1.0)
+    _check(current_scene is Reward, "a squat of either rider goes to the reward")
+    service.SetPlayerCount(1)
+
+
 func _run() -> void:
     _check_levels()
 
-    var level: Level = (load("res://scenes/level/level.tscn") as PackedScene).instantiate()
+    var level: Level = (load(_LEVEL) as PackedScene).instantiate()
     root.add_child(level)
     await process_frame
     await process_frame
@@ -77,7 +179,7 @@ func _run() -> void:
     await _wait(1.5)
     var start := rider.position
     for i in range(6):
-        service.SquatByKeyboard()
+        service.SquatByKeyboard(0)
         await _wait(2.0)
     _check(level.talking_to() == null, "a squat ends the conversation")
     _check(rider.position.y < start.y - 100.0, "the squats ride north, got %s" % rider.position)
@@ -85,21 +187,21 @@ func _run() -> void:
     # NOTE (mristin):
     # Both hands above the head brake: a walking or trotting horse halts, a
     # galloping one rears up and stops at once.
-    service.SquatByKeyboard()
+    service.SquatByKeyboard(0)
     await _wait(0.3)
-    _check(service.GetSpeed() > 0.0, "the horse runs before the brake")
+    _check(service.GetSpeed(0) > 0.0, "the horse runs before the brake")
     _check(rider.gait() < 3, "it does not gallop yet")
-    service.BrakeByKeyboard()
+    service.BrakeByKeyboard(0)
     await _wait(0.3)
-    _check(service.GetSpeed() == 0.0, "the brake stops the horse at once")
+    _check(service.GetSpeed(0) == 0.0, "the brake stops the horse at once")
     _check(rider.rearing() == 0.0, "a horse which does not gallop halts without rearing")
     for i in range(8):
-        service.SquatByKeyboard()
+        service.SquatByKeyboard(0)
         await _wait(1.2)
     _check(rider.gait() == 3, "brisk squats gallop, got the gait %d" % rider.gait())
-    service.BrakeByKeyboard()
+    service.BrakeByKeyboard(0)
     await _wait(0.3)
-    _check(service.GetSpeed() == 0.0, "the brake stops the galloping horse at once")
+    _check(service.GetSpeed(0) == 0.0, "the brake stops the galloping horse at once")
     _check(rider.rearing() > 0.0, "and it rears up")
     var reared_at := rider.position
     await _wait(0.5)
@@ -110,7 +212,7 @@ func _run() -> void:
     # NOTE (mristin):
     # Let the horse stop, then stand next to the lamb.
     await _wait(14.0)
-    _check(service.GetGait() == 0, "the horse stops")
+    _check(service.GetGait(0) == 0, "the horse stops")
     _check(level.coach_mode() == Coach.Mode.SQUAT, "the small figure invites a squat")
     var before := rider.position
     rider.position = Vector2(2.0, rider.position.y)
@@ -150,9 +252,11 @@ func _run() -> void:
     _check(profile.stars.get(level.level_id(), 0) == 3, "the stars are kept")
 
     await _wait(Level.THANKS_SECONDS)
-    service.SquatByKeyboard()
+    service.SquatByKeyboard(0)
     await _wait(1.0)
     _check(current_scene is Reward, "a squat after the thanks goes to the reward")
+
+    await _check_two_players()
 
     if _failures.is_empty():
         print("RESULT: OK")

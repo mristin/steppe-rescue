@@ -3,9 +3,10 @@ extends Control
 
 ## Let the players choose their journey (see section 9 of DESIGN.md), like
 ## the voyages of Bird Dog: Continue the last journey (it shows its name, its
-## rider and her stars), start a New journey (named next, then its rider is
-## created), or go on with one of the other recent journeys. Change rider
-## opens the creator for the rider of the current journey.
+## riders and their stars), start a New journey (named next, then the players
+## choose whether one or two ride, and create their riders), or go on with one
+## of the other recent journeys. Change rider opens the creator for the riders
+## of the current journey.
 ##
 ## It shows on the way from Play once each start, when there is a journey
 ## already, and from the settings.
@@ -54,7 +55,7 @@ func _ready() -> void:
         _continue = _button(_CONTINUE)
         _continue.primary = true
         _continue.font_size = 32
-        _continue.picture = Painting.rider(_sessions[0]["looks"].get("rider", "1"), true)
+        _continue.picture = _picture(_sessions[0])
         _continue.pressed.connect(func() -> void: choose(0))
         _names.append(
             _label(Rect2(_CONTINUE.position.x, _CONTINUE.end.y + 6, _CONTINUE.size.x, 20))
@@ -63,7 +64,7 @@ func _ready() -> void:
     for i in range(1, mini(_sessions.size(), OTHERS + 1)):
         var rect := Rect2(Vector2(_OTHERS_LEFT + (i - 1) * (_OTHER.x + 12.0), _OTHERS_TOP), _OTHER)
         var card := _button(rect)
-        card.picture = Painting.rider(_sessions[i]["looks"].get("rider", "1"), true)
+        card.picture = _picture(_sessions[i])
         card.pressed.connect(func() -> void: choose(i))
         _others.append(card)
         _names.append(_label(Rect2(rect.position.x, rect.end.y + 6, rect.size.x, 20)))
@@ -74,7 +75,7 @@ func _ready() -> void:
     _new.pressed.connect(start_new)
 
     _change = _button(Rect2(_OTHERS_LEFT, 470, 260, 52))
-    _change.visible = profile.has_rider
+    _change.visible = profile.has_riders()
     _change.pressed.connect(
         func() -> void: Flow.open(get_tree(), Flow.RIDER_CREATOR, Flow.SESSIONS)
     )
@@ -129,7 +130,7 @@ func _update_texts() -> void:
     _title.text = tr("Your journeys")
     for i in range(_names.size()):
         var session: Dictionary = _sessions[i]
-        var rider: String = session["rider"] if session["rider"] != "" else tr("Aigerim")
+        var rider := _names_of(session)
         var card: DwellButton = _continue if i == 0 else _others[i - 1]
         if i == 0:
             # TRANSLATORS: The button which goes on with the last journey.
@@ -143,6 +144,54 @@ func _update_texts() -> void:
     # TRANSLATORS: The button which opens the creator for the rider of the current journey.
     _change.text = tr("Change rider")
     _back.text = tr("Back")
+
+
+## The painted riders of the journey on its card: one, or two side by side.
+func _picture(session: Dictionary) -> Texture2D:
+    var riders: Array = session["riders"]
+    if riders.size() < 2:
+        var looks: Dictionary = riders[0]["looks"] if not riders.is_empty() else Looks.DEFAULT
+        return Painting.rider(looks.get("rider", "1"), true)
+    var images: Array[Image] = []
+    var width := 0
+    var height := 0
+    for each in riders:
+        var image := Painting.rider(each["looks"].get("rider", "1"), true).get_image()
+        image.convert(Image.FORMAT_RGBA8)
+        # NOTE (mristin):
+        # Two riders share the card, each at a little less than her size.
+        image.resize(
+            image.get_width() * 3 / 4, image.get_height() * 3 / 4, Image.INTERPOLATE_LANCZOS
+        )
+        images.append(image)
+        width += image.get_width()
+        height = maxi(height, image.get_height())
+    var canvas := Image.create_empty(width, height, false, Image.FORMAT_RGBA8)
+    var x := 0
+    for image in images:
+        canvas.blit_rect(
+            image, Rect2i(Vector2i.ZERO, image.get_size()), Vector2i(x, height - image.get_height())
+        )
+        x += image.get_width()
+    var result := ImageTexture.create_from_image(canvas)
+    result.set_size_override(Vector2i(width / Pixelate.DENSITY, height / Pixelate.DENSITY))
+    return result
+
+
+## The names of the riders of the journey, e.g., "Aigerim and Dana".
+func _names_of(session: Dictionary) -> String:
+    var names: Array[String] = []
+    var riders: Array = session["riders"]
+    for i in range(riders.size()):
+        var written: String = riders[i]["name"]
+        if written == "":
+            written = tr("Aigerim") if i == 0 else tr("Dana")
+        names.append(written)
+    if names.is_empty():
+        return tr("Aigerim")
+    if names.size() == 1:
+        return names[0]
+    return tr("{first} and {second}").format({"first": names[0], "second": names[1]})
 
 
 func _label(rect: Rect2, font_size := 16) -> Label:

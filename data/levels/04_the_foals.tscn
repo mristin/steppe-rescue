@@ -15,6 +15,8 @@
 [ext_resource type="Resource" path="res://data/landmarks/lake.tres" id="13_lake"]
 [ext_resource type="Resource" path="res://data/landmarks/kurgan.tres" id="14_kurgan"]
 [ext_resource type="Resource" path="res://data/animals/horse.tres" id="20_horse"]
+[ext_resource type="Script" path="res://scenes/level_map/creek.gd" id="20_creek"]
+[ext_resource type="Resource" path="res://data/landmarks/creek.tres" id="21_creek"]
 
 [sub_resource type="Resource" id="Clue_Grandmother_0"]
 script = ExtResource("6_clue")
@@ -36,6 +38,12 @@ title = "The foals"
 thanks = "Thank you, {rider}! The foals are home with their mothers."
 size = Vector2(2600, 1800)
 par_seconds = 200.0
+
+[node name="Creek" type="Node2D" parent="."]
+position = Vector2(1300, 660)
+script = ExtResource("20_creek")
+kind = ExtResource("21_creek")
+radius = 10.0
 
 [node name="Pasture" type="Node2D" parent="."]
 position = Vector2(600, 500)
@@ -97,7 +105,7 @@ position = Vector2(1275, 1482)
 script = ExtResource("3_person")
 speaker = "Grandmother"
 portrait = "grandmother"
-greeting = "The foals ran off, {rider}. Ride slowly to them, or they run away!"
+greeting = "The foals ran off over the creek, {rider}. Jump the creek at a gallop, but ride slowly to the foals, or they run away!"
 clues = Array[ExtResource("6_clue")]([SubResource("Clue_Grandmother_0")])
 
 [node name="Beekeeper" type="Node2D" parent="."]

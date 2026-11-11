@@ -101,15 +101,26 @@ func landmark(node_name: String) -> Landmark:
     return get_node_or_null(node_name) as Landmark
 
 
-## The circles which block the horse, each as (x, y, radius).
+## The circles which block the horse, each as (x, y, radius); without the
+## creeks, which it jumps over (see [method jumpable]).
 func solids() -> Array[Vector3]:
     var result: Array[Vector3] = []
     for each in landmarks():
         var radius := each.solid_radius()
         if radius > 0.0:
             result.append(Vector3(each.position.x, each.position.y, radius))
-        if each is River:
+        if each is River and not each is Creek:
             result.append_array((each as River).solids())
+    return result
+
+
+## The circles which block the horse on the ground, but which it jumps over
+## (the creeks), each as (x, y, radius).
+func jumpable() -> Array[Vector3]:
+    var result: Array[Vector3] = []
+    for each in landmarks():
+        if each is Creek:
+            result.append_array((each as Creek).solids())
     return result
 
 

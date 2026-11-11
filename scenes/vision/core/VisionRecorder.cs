@@ -25,7 +25,8 @@ namespace SteppeRescue.Vision
     /// eyes, the head box, whether the head detector found it in this frame,
     /// the head height and the unit of the <see cref="HeadGauge"/>, and the
     /// depth, the count and the speed of the <see cref="SquatMeter"/>) and
-    /// "pose" (the 17 key points of each player, as x, y and score). Each line
+    /// "pose" (the 17 key points of each player, as x, y and score), and "mark"
+    /// (e.g., when the player was asked to jump, with its "name"). Each line
     /// has the time "t" in seconds and the "label" of what the player was asked
     /// to do.
     /// </para>
@@ -89,6 +90,7 @@ namespace SteppeRescue.Vision
                     ["depth"] = squats[i].RawDepth,
                     ["count"] = squats[i].Count,
                     ["speed"] = squats[i].Speed,
+                    ["jumps"] = squats[i].Jumps,
                 });
             }
 
@@ -133,6 +135,12 @@ namespace SteppeRescue.Vision
                 ["ms"] = snapshot.InferenceMs,
                 ["players"] = list,
             });
+        }
+
+        /// <summary>Write a mark at the time <paramref name="t"/>, e.g., when the player was asked to jump.</summary>
+        public void RecordMark(double t, string name)
+        {
+            Write(new Dictionary<string, object?> { ["kind"] = "mark", ["t"] = t, ["label"] = Label, ["name"] = name });
         }
 
         private static float? Number(float value) => float.IsNaN(value) ? null : value;

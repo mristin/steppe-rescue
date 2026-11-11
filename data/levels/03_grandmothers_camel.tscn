@@ -16,6 +16,8 @@
 [ext_resource type="Resource" path="res://data/landmarks/well.tres" id="15_well"]
 [ext_resource type="Resource" path="res://data/animals/sheep.tres" id="18_sheep"]
 [ext_resource type="Resource" path="res://data/animals/camel.tres" id="19_camel"]
+[ext_resource type="Script" path="res://scenes/level_map/creek.gd" id="20_creek"]
+[ext_resource type="Resource" path="res://data/landmarks/creek.tres" id="21_creek"]
 
 [sub_resource type="Resource" id="Clue_Grandmother_0"]
 script = ExtResource("6_clue")
@@ -36,6 +38,12 @@ title = "Grandmother's camel"
 thanks = "Thank you, {rider}! My camel is home, and the sheep too."
 size = Vector2(2400, 1700)
 par_seconds = 170.0
+
+[node name="Creek" type="Node2D" parent="."]
+position = Vector2(1200, 745)
+script = ExtResource("20_creek")
+kind = ExtResource("21_creek")
+radius = 10.0
 
 [node name="Lake" type="Node2D" parent="."]
 position = Vector2(700, 600)
@@ -95,7 +103,7 @@ position = Vector2(1175, 1382)
 script = ExtResource("3_person")
 speaker = "Grandmother"
 portrait = "grandmother"
-greeting = "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
+greeting = "My old camel wandered far away, over the creek, {rider}. The creek has no ford: gallop at it and jump, and your horse will jump over!"
 clues = Array[ExtResource("6_clue")]([SubResource("Clue_Grandmother_0")])
 
 [node name="Shepherd" type="Node2D" parent="."]

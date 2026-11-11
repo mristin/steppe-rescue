@@ -244,6 +244,50 @@ namespace SteppeRescue.Tests
             Assert.InRange(meter.Line, expected - 0.03f * Unit, expected + 0.03f * Unit);
         }
 
+        [Fact]
+        public void A_jump_counts_once_when_the_eyes_rise_above_the_jump_line()
+        {
+            var meter = new SquatMeter();
+            Stand(meter, 0.0, 2.0);
+            Assert.Equal(StandingY - meter.JumpHeight * Unit, meter.JumpLine, 3);
+            for (int jump = 0; jump < 2; jump++)
+            {
+                double start = 2.0 + jump * 2.0;
+                for (double t = start; t < start + 2.0; t += 1.0 / Fps)
+                {
+                    // NOTE (mristin):
+                    // Up 0.9 units and back down within half a second, then stand.
+                    double phase = Math.Clamp((t - start) / 0.5, 0.0, 1.0);
+                    float y = StandingY - 0.9f * Unit * (float)Math.Sin(Math.PI * phase);
+                    meter.Observe(t, y, Unit);
+                    meter.Update(t);
+                }
+            }
+
+            Assert.Equal(2, meter.Jumps);
+            Assert.False(meter.IsJumping);
+        }
+
+        [Fact]
+        public void Bouncing_in_a_gallop_is_no_jump()
+        {
+            // NOTE (mristin):
+            // Galloping, she bounces up to almost half a unit above her stance.
+            var meter = new SquatMeter();
+            Stand(meter, 0.0, 2.0);
+            for (double t = 2.0; t < 14.0; t += 1.0 / Fps)
+            {
+                double phase = ((t - 2.0) % 0.85) / 0.85;
+                float y = StandingY - 0.45f * Unit
+                    + 1.4f * Unit * (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * phase));
+                meter.Observe(t, y, Unit);
+                meter.Update(t);
+            }
+
+            Assert.Equal(0, meter.Jumps);
+            Assert.Equal(Gait.Gallop, meter.Gait);
+        }
+
         [Theory]
         [InlineData(2.0, Gait.Walk)]
         [InlineData(1.0, Gait.Trot)]
@@ -368,6 +412,40 @@ namespace SteppeRescue.Tests
 
             result[label] = (meter.Count - count, gaits, stopped);
             return result;
+        }
+
+        /// <summary>The jumps counted in each step of the recording.</summary>
+        private static Dictionary<string, int> Jumps(string name)
+        {
+            var gauge = new HeadGauge();
+            var meter = new SquatMeter();
+            var result = new Dictionary<string, int>();
+            foreach (var frame in Load(name))
+            {
+                int before = meter.Jumps;
+                if (gauge.Measure(frame.T, frame.Face, frame.Head, frame.Detected))
+                {
+                    meter.Observe(frame.T, gauge.Y, gauge.Unit);
+                }
+
+                meter.Update(frame.T);
+                result[frame.Label] = result.GetValueOrDefault(frame.Label) + meter.Jumps - before;
+            }
+
+            return result;
+        }
+
+        [Fact]
+        public void A_recorded_player_jumps_but_her_gallop_is_no_jump()
+        {
+            // NOTE (mristin):
+            // She was called to jump five times, but jumped about every 2 s,
+            // seven or eight times; her head left the top of the picture in
+            // every jump.
+            var jumps = Jumps("jumps_gallop_against_jump.csv");
+            Assert.Equal(0, jumps["stand 1"]);
+            Assert.Equal(0, jumps["gallop 1"]);
+            Assert.InRange(jumps["jump 1"], 6, 8);
         }
 
         private static double Share(List<Gait> gaits, Func<Gait, bool> which) =>

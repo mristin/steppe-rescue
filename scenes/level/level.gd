@@ -144,13 +144,14 @@ func _ready() -> void:
         if i > 0:
             player.rider.name = "Rider%d" % (i + 1)
             _world.add_child(player.rider)
-        player.rider.set_obstacles(map.solids(), map.size)
+        player.rider.set_obstacles(map.solids(), map.size, map.jumpable())
         var offset := (i - (count - 1) * 0.5) * START_APART
         player.rider.position = player.rider.slide(start.position + side * offset)
         player.rider.heading = start.rotation
         player.rider.looks = profile.rider(i).dressed()
         player.trail.append(player.rider.position)
         player.brakes = _service.GetBrakeCount(i)
+        player.jumps = _service.GetJumpCount(i)
         var bubble := NeedsBubble.new()
         bubble.needs = player.needs
         player.rider.add_child(bubble)
@@ -316,6 +317,13 @@ func _ride(player: LevelPlayer, delta: float) -> void:
         if rider.gait() == 3:
             rider.rear()
     var standing := player.talking != null or finished
+    # NOTE (mristin):
+    # When the player jumps, her horse jumps, too.
+    var jumps: int = _service.GetJumpCount(player.index)
+    if jumps > player.jumps:
+        player.jumps = jumps
+        if not standing:
+            rider.jump()
     var speed: float = 0.0 if standing else player.needs.cap(_service.GetSpeed(player.index))
     rider.ride(delta, speed, 0.0 if standing else _service.GetTurn(player.index))
     player.needs.update(
@@ -662,6 +670,7 @@ func _update_player_hud(player: LevelPlayer) -> void:
 func _update_coach(player: LevelPlayer, delta: float) -> void:
     var coach := player.coach
     coach.following = _service.IsRunning() and _service.HasPlayer(player.index)
+    coach.jumping = _service.IsJumping(player.index)
     coach.live = Vector3(
         _service.GetSquatDepth(player.index),
         -float(_service.GetTurn(player.index)),
@@ -675,6 +684,8 @@ func _update_coach(player: LevelPlayer, delta: float) -> void:
     var waiting := player.talk_time >= (THANKS_SECONDS if finished else TALK_SECONDS)
     if player.talking != null or finished:
         coach.mode = Coach.Mode.SQUAT if waiting else Coach.Mode.STAND
+    elif player.jump_hint_time > 0.0:
+        coach.mode = Coach.Mode.JUMP
     elif player.edge_time > 0.0 or player.turn_hint_time > 0.0:
         coach.mode = Coach.Mode.REACH
     elif player.still_time >= STILL_SECONDS:
@@ -688,7 +699,15 @@ func _update_coach(player: LevelPlayer, delta: float) -> void:
 ## a touch counts once, until she leaves it.
 func note_bumps(delta: float, index := 0) -> void:
     var player := _players[index]
+    # NOTE (mristin):
+    # At a creek, the horse must jump, not turn: the hint to jump shows at
+    # once, and while she stays at it.
+    if player.rider.at_creek():
+        player.jump_hint_time = EDGE_SECONDS
+    player.jump_hint_time = maxf(0.0, player.jump_hint_time - delta)
     var blocked := player.rider.blocked_by if player.rider.speed > 0.0 else -1
+    if player.rider.at_creek():
+        blocked = -1
     if blocked >= 0 and blocked != player.touching:
         player.bumps[blocked] = int(player.bumps.get(blocked, 0)) + 1
         if player.bumps[blocked] >= 2:

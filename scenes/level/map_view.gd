@@ -33,6 +33,7 @@ const _COLORS := {
     "pasture": Palette.EMERALD_LIGHT,
     "salt_lake": Color("#e8efe9"),
     "river": Palette.SKY,
+    "creek": Palette.SKY,
 }
 
 static var _parchment: Texture2D = null

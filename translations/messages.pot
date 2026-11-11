@@ -816,7 +816,9 @@ msgstr ""
 
 #. what a person says to the rider, at most two short sentences; {rider} is her name
 #: data/levels/03_grandmothers_camel.tscn
-msgid "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
+msgid ""
+"My old camel wandered far away, over the creek, {rider}. The creek has no ford: gallop at it and "
+"jump, and your horse will jump over!"
 msgstr ""
 
 #. what a person says to the rider, at most two short sentences; {rider} is her name
@@ -836,7 +838,9 @@ msgstr ""
 
 #. what a person says to the rider, at most two short sentences; {rider} is her name
 #: data/levels/04_the_foals.tscn
-msgid "The foals ran off, {rider}. Ride slowly to them, or they run away!"
+msgid ""
+"The foals ran off over the creek, {rider}. Jump the creek at a gallop, but ride slowly to the "
+"foals, or they run away!"
 msgstr ""
 
 #. the name of a person of the steppe
@@ -1054,6 +1058,34 @@ msgstr ""
 #: data/landmarks/bushes.tres
 msgctxt "between"
 msgid "the bushes"
+msgstr ""
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/creek.tres
+msgctxt "near"
+msgid "the creek"
+msgstr ""
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/creek.tres
+msgctxt "of"
+msgid "the creek"
+msgstr ""
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/creek.tres
+msgctxt "and"
+msgid "the creek"
+msgstr ""
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/creek.tres
+msgctxt "between"
+msgid "the creek"
 msgstr ""
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у

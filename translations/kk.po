@@ -989,8 +989,12 @@ msgstr "Рахмет, {rider}! Түйем де, қойлар да үйде."
 #. what a person says to the rider, at most two short sentences; {rider} is her name
 #: data/levels/03_grandmothers_camel.tscn
 #, fuzzy
-msgid "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
-msgstr "Кәрі түйем алысқа кетіп қалды, {rider}. Тыңда: оны көрмей тұрып естисің!"
+msgid ""
+"My old camel wandered far away, over the creek, {rider}. The creek has no ford: gallop at it and "
+"jump, and your horse will jump over!"
+msgstr ""
+"Кәрі түйем алысқа, жылғаның арғы жағына кетіп қалды, {rider}. Жылғада өткел жоқ: оған қарай шауып "
+"барып секір, сонда атың секіріп өтеді!"
 
 #. what a person says to the rider, at most two short sentences; {rider} is her name
 #: data/levels/03_grandmothers_camel.tscn
@@ -1013,8 +1017,12 @@ msgstr "Рахмет, {rider}! Құлындар енелерімен бірге 
 #. what a person says to the rider, at most two short sentences; {rider} is her name
 #: data/levels/04_the_foals.tscn
 #, fuzzy
-msgid "The foals ran off, {rider}. Ride slowly to them, or they run away!"
-msgstr "Құлындар қашып кетті, {rider}. Оларға ақырын жақында, әйтпесе қашып кетеді!"
+msgid ""
+"The foals ran off over the creek, {rider}. Jump the creek at a gallop, but ride slowly to the "
+"foals, or they run away!"
+msgstr ""
+"Құлындар жылғаның арғы жағына қашып кетті, {rider}. Жылғадан шауып барып секір, ал құлындарға "
+"ақырын жақында, әйтпесе қашып кетеді!"
 
 #. the name of a person of the steppe
 #: data/levels/04_the_foals.tscn data/levels/05_the_birch_groves.tscn
@@ -1273,6 +1281,38 @@ msgstr "қараған бұталары мен"
 msgctxt "between"
 msgid "the bushes"
 msgstr "қараған бұталарының"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "near"
+msgid "the creek"
+msgstr "жылғаның жанында"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "of"
+msgid "the creek"
+msgstr "жылғаның"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "and"
+msgid "the creek"
+msgstr "жылға мен"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "between"
+msgid "the creek"
+msgstr "жылғаның"
 
 #. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
 #. родника', 'бұлақтың жанында'
@@ -1561,6 +1601,14 @@ msgstr "киіз үй мен"
 msgctxt "between"
 msgid "the yurt"
 msgstr "киіз үйдің"
+
+#, fuzzy
+#~ msgid "The foals ran off, {rider}. Ride slowly to them, or they run away!"
+#~ msgstr "Құлындар қашып кетті, {rider}. Оларға ақырын жақында, әйтпесе қашып кетеді!"
+
+#, fuzzy
+#~ msgid "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
+#~ msgstr "Кәрі түйем алысқа кетіп қалды, {rider}. Тыңда: оны көрмей тұрып естисің!"
 
 #, fuzzy
 #~ msgid "I see you! (body {pose} ms, face {face} ms)"

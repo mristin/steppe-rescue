@@ -31,6 +31,9 @@ var trail := PackedVector2Array()
 ## How many times she braked, to see when she brakes again.
 var brakes := 0
 
+## How many times she jumped, to see when she jumps again.
+var jumps := 0
+
 ## How long the warning at the edge of the steppe still shows, in seconds.
 var edge_time := 0.0
 
@@ -41,6 +44,9 @@ var touching := -1
 
 ## How long the hint to turn still shows, in seconds.
 var turn_hint_time := 0.0
+
+## How long the hint to jump (at a creek) still shows, in seconds.
+var jump_hint_time := 0.0
 
 ## How long her horse has stood still, and the squats seen so far, for the
 ## small figure.

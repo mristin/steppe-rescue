@@ -49,6 +49,13 @@ static func hands_up(amount: float, small := false) -> Texture2D:
     return _load("hands_up", frame, small)
 
 
+## The picture of the girl jumping in the frame: the crouch, the take-off, in
+## the air (lifted above the ground at the bottom of the picture) and the
+## landing (assets/pictures/girl/jump_<frame>.png).
+static func jump(frame: int, small := false) -> Texture2D:
+    return _load("jump", clampi(frame, 0, 3), small)
+
+
 ## The picture of the reins in the frame.
 static func reins(frame: int, small := false) -> Texture2D:
     return _load("reins", posmod(frame, FRAMES), small)

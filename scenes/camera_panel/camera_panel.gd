@@ -20,6 +20,10 @@ extends Control
 ## swing below her usual height. It is gold, and green while her eyes are
 ## below it. It moves slowly, so that it does not jump from squat to squat.
 ##
+## Above her head, a light blue dashed line with an arrow up shows how high her
+## eyes must rise for a jump (see [code]SquatMeter.JumpLine[/code]); it turns
+## gold while she jumps.
+##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
 ##
@@ -90,6 +94,9 @@ var _service: Node = null
 ## The line of the squat of each player, as drawn (normalized; NAN: hidden).
 var _target_y: Array[float] = [NAN, NAN]
 
+## The line of the jump of each player, as drawn (normalized; NAN: hidden).
+var _jump_y: Array[float] = [NAN, NAN]
+
 
 func _ready() -> void:
     _service = get_node("/root/Vision").service
@@ -99,16 +106,10 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
     if _service != null:
+        for i in range(_jump_y.size()):
+            _jump_y[i] = _glide(_jump_y[i], _service.GetJumpLine(i), i, delta)
         for i in range(_target_y.size()):
-            var target: Dictionary = _service.GetSquatLine(i)
-            if target.is_empty() or not _service.HasPlayer(i):
-                _target_y[i] = NAN
-            elif is_nan(_target_y[i]):
-                _target_y[i] = target["y"]
-            else:
-                _target_y[i] = lerpf(
-                    _target_y[i], target["y"], 1.0 - exp(-delta / TARGET_GLIDE_SECONDS)
-                )
+            _target_y[i] = _glide(_target_y[i], _service.GetSquatLine(i), i, delta)
     queue_redraw()
 
 
@@ -135,6 +136,7 @@ func _draw() -> void:
         _draw_overlay(i, dressed)
         _draw_fists(i, dressed)
         _draw_target(i, count)
+        _draw_jump(i, count)
         if show_skeleton:
             _draw_hand_marks(i)
 
@@ -146,16 +148,19 @@ func _draw() -> void:
     draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE, false, 2.0)
 
 
-## Draw the line of the squat of the player across her part of the picture.
-func _draw_target(index: int, count: int) -> void:
-    if index >= _target_y.size() or is_nan(_target_y[index]):
-        return
-    var target: Dictionary = _service.GetSquatLine(index)
-    if target.is_empty():
-        return
-    var reached: bool = target["reached"]
-    var color := Palette.EMERALD_LIGHT if reached else Palette.GOLD
-    var y := roundf(_target_y[index] * size.y)
+## The line at [param drawn] glided towards the [param line] of the player (NAN
+## when it is hidden).
+func _glide(drawn: float, line: Dictionary, index: int, delta: float) -> float:
+    if line.is_empty() or not _service.HasPlayer(index):
+        return NAN
+    if is_nan(drawn):
+        return line["y"]
+    return lerpf(drawn, line["y"], 1.0 - exp(-delta / TARGET_GLIDE_SECONDS))
+
+
+## Draw a dashed line across the part of the picture of the player, with an
+## arrow at its end pointing up or down.
+func _draw_dashed(y: float, index: int, count: int, color: Color, up: bool) -> void:
     var left := 0.0 if count < 2 else size.x * 0.5 * index
     var right := size.x if count < 2 else left + size.x * 0.5
     var dash := 8.0
@@ -165,12 +170,33 @@ func _draw_target(index: int, count: int) -> void:
         draw_line(Vector2(x, y), Vector2(end, y), Palette.OUTLINE, 4.0)
         draw_line(Vector2(x, y), Vector2(end, y), color, 2.0)
         x += dash * 1.75
-    # NOTE (mristin):
-    # The arrow at its end points down, the way her eyes must go.
-    var tip := Vector2(right - 9.0, y + 7.0)
+    var tip := Vector2(right - 9.0, y + (-7.0 if up else 7.0))
     var arrow := PackedVector2Array([Vector2(right - 14.0, y), Vector2(right - 4.0, y), tip])
     draw_colored_polygon(arrow, color)
     draw_polyline(arrow + PackedVector2Array([arrow[0]]), Palette.OUTLINE, 1.0)
+
+
+## Draw the line of the jump of the player across her part of the picture.
+func _draw_jump(index: int, count: int) -> void:
+    if index >= _jump_y.size() or is_nan(_jump_y[index]):
+        return
+    var line: Dictionary = _service.GetJumpLine(index)
+    if line.is_empty():
+        return
+    var color := Palette.GOLD if line["jumping"] else Palette.SKY_LIGHT
+    _draw_dashed(roundf(_jump_y[index] * size.y), index, count, color, true)
+
+
+## Draw the line of the squat of the player across her part of the picture.
+func _draw_target(index: int, count: int) -> void:
+    if index >= _target_y.size() or is_nan(_target_y[index]):
+        return
+    var target: Dictionary = _service.GetSquatLine(index)
+    if target.is_empty():
+        return
+    var reached: bool = target["reached"]
+    var color := Palette.EMERALD_LIGHT if reached else Palette.GOLD
+    _draw_dashed(roundf(_target_y[index] * size.y), index, count, color, false)
 
 
 func _draw_skeleton(index: int) -> void:

@@ -381,6 +381,14 @@ public partial class VisionService : Node
         {
             SquatByKeyboard(PlayerCount > 1 ? 1 : 0);
         }
+        else if (key.Keycode == Key.J)
+        {
+            JumpByKeyboard(0);
+        }
+        else if (key.Keycode == Key.Kp0)
+        {
+            JumpByKeyboard(PlayerCount > 1 ? 1 : 0);
+        }
     }
 
     private void Consume(VisionSnapshot snapshot)
@@ -503,6 +511,33 @@ public partial class VisionService : Node
 
         return new Godot.Collections.Dictionary { { "y", meter.Line / height }, { "reached", meter.BelowLine } };
     }
+
+    /// <summary>
+    /// The line which the player's eyes must rise above for a jump (see
+    /// <see cref="SquatMeter.JumpLine"/>): "y", normalized to the height of the
+    /// picture, and "jumping", whether she is in a jump now; an empty
+    /// dictionary before her head was seen.
+    /// </summary>
+    public Godot.Collections.Dictionary GetJumpLine(int player)
+    {
+        var meter = Squats[Index(player)];
+        float height = LatestFace?.Height ?? Latest?.Height ?? 0;
+        if (float.IsNaN(meter.JumpLine) || height <= 0f)
+        {
+            return new Godot.Collections.Dictionary();
+        }
+
+        return new Godot.Collections.Dictionary { { "y", meter.JumpLine / height }, { "jumping", meter.IsJumping } };
+    }
+
+    /// <summary>Count a jump of the player, e.g., in the tests.</summary>
+    public void JumpByKeyboard(int player) => Squats[Index(player)].RegisterJump();
+
+    /// <summary>Whether the player is in a jump now.</summary>
+    public bool IsJumping(int player) => Squats[Index(player)].IsJumping;
+
+    /// <summary>How many times the player jumped.</summary>
+    public int GetJumpCount(int player) => Squats[Index(player)].Jumps;
 
     /// <summary>How deep the player is in the squat now, in [0, 1].</summary>
     public float GetSquatDepth(int player) => Squats[Index(player)].Depth;
@@ -707,6 +742,9 @@ public partial class VisionService : Node
             _recorder.Label = label;
         }
     }
+
+    /// <summary>Mark this moment in the recording, e.g., when the player was asked to jump.</summary>
+    public void MarkRecording(string name) => _recorder?.RecordMark(Now, name);
 
     /// <summary>Stop recording, and return how many lines were recorded.</summary>
     public int StopRecording()

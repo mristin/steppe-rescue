@@ -161,6 +161,37 @@ namespace SteppeRescue.Vision
         /// </summary>
         public double LineFollowTau = 2.0;
 
+        /// <summary>
+        /// The height of the head when the player stands still, in frame pixels;
+        /// NaN before. Unlike the <see cref="UsualTop"/>, the tops of the squats do
+        /// not move it (they bounce higher than she stands), so that the jumps are
+        /// measured from where she stands.
+        /// </summary>
+        public float StandingTop { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// A jump counts when the eyes rise this far (in units) above the
+        /// <see cref="StandingTop"/>: recorded gallops bounced up to about 0.46,
+        /// and jumps rose 0.86 and more (out of the picture).
+        /// </summary>
+        public float JumpHeight = 0.65f;
+
+        /// <summary>The next jump counts once the head came back down to this far (in units) above standing.</summary>
+        public float JumpRearm = 0.3f;
+
+        /// <summary>
+        /// The line which the eyes must rise above for a jump, in frame pixels;
+        /// NaN before the head was seen.
+        /// </summary>
+        public float JumpLine =>
+            float.IsNaN(StandingTop) || float.IsNaN(Unit) ? float.NaN : StandingTop - JumpHeight * Unit;
+
+        /// <summary>Whether the player is in a jump now (her eyes above the <see cref="JumpLine"/>).</summary>
+        public bool IsJumping { get; private set; }
+
+        /// <summary>How many jumps were counted.</summary>
+        public int Jumps { get; private set; }
+
         /// <summary>The horse walks from this speed on.</summary>
         public const float WalkFrom = 0.04f;
 
@@ -218,7 +249,9 @@ namespace SteppeRescue.Vision
                 Top = headY;
                 Bottom = headY;
                 UsualTop = headY;
+                StandingTop = headY;
                 IsDown = false;
+                IsJumping = false;
             }
             else if (IsDown && t - _wentDown > SlowestSquat && t - _lastSwing > SlowestSquat)
             {
@@ -234,7 +267,12 @@ namespace SteppeRescue.Vision
             {
                 // NOTE (mristin):
                 // Standing still, the usual top follows the head slowly.
-                UsualTop += (headY - UsualTop) * (float)(1.0 - Math.Exp(-(t - _lastObserved) / LineFollowTau));
+                float follow = (float)(1.0 - Math.Exp(-(t - _lastObserved) / LineFollowTau));
+                UsualTop += (headY - UsualTop) * follow;
+                if (!IsJumping)
+                {
+                    StandingTop += (headY - StandingTop) * follow;
+                }
             }
 
             _lastObserved = t;
@@ -274,6 +312,19 @@ namespace SteppeRescue.Vision
                 }
             }
 
+            // NOTE (mristin):
+            // A jump counts once the eyes rise above the jump line, and the next
+            // once they came back down.
+            if (!IsJumping && headY <= JumpLine)
+            {
+                IsJumping = true;
+                Jumps++;
+            }
+            else if (IsJumping && headY >= StandingTop - JumpRearm * unit)
+            {
+                IsJumping = false;
+            }
+
             RawDepth = Math.Max(0f, (headY - Top) / unit);
             Depth = Math.Clamp(RawDepth / FullDepth, 0f, 1f);
         }
@@ -284,6 +335,9 @@ namespace SteppeRescue.Vision
             _lastSwing = t;
             _stopAfter = StopAfter;
         }
+
+        /// <summary>Count a jump, e.g., in the tests.</summary>
+        public void RegisterJump() => Jumps++;
 
         /// <summary>Count a squat from the keyboard (or the tests) at the time <paramref name="t"/>.</summary>
         public void RegisterSquat(double t)
@@ -366,6 +420,9 @@ namespace SteppeRescue.Vision
             Unit = float.NaN;
             HeadY = float.NaN;
             UsualTop = float.NaN;
+            StandingTop = float.NaN;
+            IsJumping = false;
+            Jumps = 0;
             _lastSwing = double.NegativeInfinity;
             _stopAfter = double.NaN;
             _lastKey = double.NaN;

@@ -38,11 +38,12 @@ namespace SteppeRescue.Tests
                         Height = 480,
                         Players = new Pose?[] { HandTrackerTests.PoseAt(320f, (390f, 290f), (250f, 290f)) },
                     });
-                    Assert.Equal(3, recorder.Lines);
+                    recorder.RecordMark(1.5, "jump");
+                    Assert.Equal(4, recorder.Lines);
                 }
 
                 var lines = File.ReadAllLines(path);
-                Assert.Equal(3, lines.Length);
+                Assert.Equal(4, lines.Length);
                 using var start = JsonDocument.Parse(lines[0]);
                 Assert.Equal("start", start.RootElement.GetProperty("kind").GetString());
                 Assert.Equal(640, start.RootElement.GetProperty("width").GetInt32());
@@ -56,6 +57,10 @@ namespace SteppeRescue.Tests
 
                 using var pose = JsonDocument.Parse(lines[2]);
                 Assert.Equal(Pose.KeypointCount * 3, pose.RootElement.GetProperty("players")[0].GetArrayLength());
+
+                using var mark = JsonDocument.Parse(lines[3]);
+                Assert.Equal("mark", mark.RootElement.GetProperty("kind").GetString());
+                Assert.Equal("jump", mark.RootElement.GetProperty("name").GetString());
             }
             finally
             {

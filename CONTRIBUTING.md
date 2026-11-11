@@ -37,7 +37,7 @@ They come from old photographs in the public domain: put the photo in `assets/pi
 A source may also outline the person (`figure`) when she is as pale as the paper behind, retouch the photo with a smooth warp (`retouch`, e.g., Grandmother's smile), and lift the shadows (`gamma`); see the docstring of `pixelize.py`.
 
 The tools for the development (like these) live in `dev/`, which Godot ignores, so that they are never released with the game.
-To record how your squats look to the vision (for tuning the squats), run `$GODOT --path . --script dev/squats/record_squats.gd` in front of the camera: it asks you to stand, walk, trot, gallop and stop, three rounds (the second closer to the camera, the third farther), and writes only numbers (never the pictures) into `~/Downloads/squat_recordings/`; `dev/squats/analyze.py <recording>` summarizes it per step (add `--plot out.png` to draw it, `--extract out.csv` for the replay tests).
+To record how your movements look to the vision (for tuning the squats), run `$GODOT --path . --script dev/squats/record_squats.gd` in front of the camera. It walks you through a plan of actions, a CSV in `dev/squats/plans/`: `squats.csv` (the default: stand, walk, trot, gallop and stop, three rounds, the second closer to the camera, the third farther) or `jumps.csv` (pass `-- --plan=res://dev/squats/plans/jumps.csv`: gallop against jumps, with a call to jump that the recording marks). It writes only numbers (never the pictures) into `~/Downloads/squat_recordings/`; `dev/squats/analyze.py <recording>` summarizes it per step (add `--plot out.png` to draw it, `--extract out.csv` for the replay tests).
 Use only pictures in the public domain or under CC0.
 The text is set in GNU Unifont at 16 pixels, imported without anti-aliasing.
 
@@ -101,8 +101,8 @@ Godot scans every directory of the project, and would otherwise try to import th
 
 Open the project in the Godot editor (Import, then select `project.godot`), and press F5.
 The game needs a webcam which supports 640x480.
-Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn, Down brakes.
-With two players, the first rides with W (or Space), A, D and S, and the second with Up, Left, Right and Down.
+Without one, play with the keyboard: Space (or Up) is a squat, Left and Right turn, Down brakes, J jumps.
+With two players, the first rides with W (or Space), A, D and S and jumps with J, and the second with Up, Left, Right and Down and jumps with keypad 0.
 
 Start the game with `-- --no-camera` to switch the camera off, with `-- --lang=ru` (or `kk`, `en`) to choose the language, with `-- --new-rider` to create the rider again, and with `-- --settings=user://other.cfg` to keep the language in another file and the journeys in `user://other_saves/` (the tests do so, to leave yours alone).
 

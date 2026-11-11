@@ -15,6 +15,10 @@ extends RefCounted
 ## The frames of the run of each painted horse from above.
 const HORSE_FRAMES := 13
 
+## The frames of the jump of each painted horse from above: the take-off,
+## rising, the flight, coming down and the landing.
+const JUMP_FRAMES := 5
+
 ## The girl from above is drawn this much smaller than painted: the paintings
 ## make her as wide as the horse, while a girl of ten is about half as wide as
 ## the barrel of a horse (about 0.45 m with her arms, against 0.65 m; a horse
@@ -49,7 +53,9 @@ static func draw_rider(
     center: Vector2,
     heading: float,
     big := false,
-    rear := 0.0
+    rear := 0.0,
+    jump_frame := -1,
+    lift := 0.0
 ) -> void:
     var prefix := "big/" if big else ""
     var steed: String = looks.get("steed", "1")
@@ -58,6 +64,21 @@ static func draw_rider(
     var wide := Vector2(HORSE_WIDTH, 1.0)
     var girl := Vector2.ONE * GIRL_SCALE
     var seat := center
+    var dressed := true
+    if jump_frame >= 0:
+        # NOTE (mristin):
+        # The painted horse jumping, seen from above (assets/pictures/top_down/
+        # horses/<steed>/jump_<frame>.png, painted as wide as it is), and the
+        # horse and the girl bigger the higher they fly, nearer to us. Its
+        # finery is painted for the run, so it is left out for the moment of
+        # the jump.
+        var painted := "horses/%s/jump_%d" % [steed, clampi(jump_frame, 0, JUMP_FRAMES - 1)]
+        if not big and ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
+            horse = _load(painted)
+            wide = Vector2.ONE
+            dressed = false
+        wide *= 1.0 + lift
+        girl *= 1.0 + lift
     if rear > 0.0:
         # NOTE (mristin):
         # A painted horse rearing up, seen from above, if there is one
@@ -75,7 +96,8 @@ static func draw_rider(
         seat = center + back * 0.6
         girl *= 1.0 + 0.12 * rear
     draw(item, horse, center, heading, wide)
-    _dress(item, looks, "horse", horse, center, heading, wide)
+    if dressed:
+        _dress(item, looks, "horse", horse, center, heading, wide)
     draw(item, _load("girls/%s%s" % [prefix, looks.get("rider", "1")]), seat, heading, girl)
     _dress(item, looks, "rider", horse, seat, heading, girl)
 

@@ -15,6 +15,11 @@ extends Control
 ## middle of the picture parts their halves (see section 6 of DESIGN.md, "Two
 ## players").
 ##
+## A dashed line across her part of the picture shows how far her eyes must
+## go for her next swing to count (see [code]SquatMeter.Target[/code]): gold
+## with an arrow down while she goes down, green with an arrow up while she
+## comes back up. It glides, so that it does not jump.
+##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
 ##
@@ -55,7 +60,15 @@ const _RIGHT_WRIST := 10
 ## How opaque the clothes of the body are.
 const BODY_ALPHA := 0.85
 
+## Without the body, the shoulders are this many eye distances wide, to size
+## the fists.
+const FIST_EYES := 4.4
+
 const _KEYPOINT_THRESHOLD := 0.5
+
+## The line of the squat glides to where it should be over about this long, in
+## seconds, so that it does not jump.
+const TARGET_GLIDE_SECONDS := 0.12
 
 ## The color of the marks of each player's hands.
 const _PLAYER_COLORS := [Palette.GOLD, Palette.INDIGO_LIGHT]
@@ -74,6 +87,9 @@ var player := -1
 
 var _service: Node = null
 
+## The line of the squat of each player, as drawn (normalized; NAN: hidden).
+var _target_y: Array[float] = [NAN, NAN]
+
 
 func _ready() -> void:
     _service = get_node("/root/Vision").service
@@ -81,7 +97,18 @@ func _ready() -> void:
     texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+    if _service != null:
+        for i in range(_target_y.size()):
+            var target: Dictionary = _service.GetSquatTarget(i)
+            if target.is_empty() or not _service.HasPlayer(i):
+                _target_y[i] = NAN
+            elif is_nan(_target_y[i]):
+                _target_y[i] = target["y"]
+            else:
+                _target_y[i] = lerpf(
+                    _target_y[i], target["y"], 1.0 - exp(-delta / TARGET_GLIDE_SECONDS)
+                )
     queue_redraw()
 
 
@@ -106,6 +133,8 @@ func _draw() -> void:
         var dressed := _dressed(i)
         _draw_body(i, dressed)
         _draw_overlay(i, dressed)
+        _draw_fists(i, dressed)
+        _draw_target(i, count)
         if show_skeleton:
             _draw_hand_marks(i)
 
@@ -115,6 +144,33 @@ func _draw() -> void:
         draw_rect(Rect2(middle - 1, 0, 2, size.y), Palette.GOLD)
 
     draw_rect(Rect2(Vector2.ZERO, size), Palette.OUTLINE, false, 2.0)
+
+
+## Draw the line of the squat of the player across her part of the picture.
+func _draw_target(index: int, count: int) -> void:
+    if index >= _target_y.size() or is_nan(_target_y[index]):
+        return
+    var target: Dictionary = _service.GetSquatTarget(index)
+    if target.is_empty():
+        return
+    var down: bool = target["down"]
+    var color := Palette.GOLD if down else Palette.EMERALD_LIGHT
+    var y := roundf(_target_y[index] * size.y)
+    var left := 0.0 if count < 2 else size.x * 0.5 * index
+    var right := size.x if count < 2 else left + size.x * 0.5
+    var dash := 8.0
+    var x := left + 4.0
+    while x < right - 16.0:
+        var end := minf(x + dash, right - 16.0)
+        draw_line(Vector2(x, y), Vector2(end, y), Palette.OUTLINE, 4.0)
+        draw_line(Vector2(x, y), Vector2(end, y), color, 2.0)
+        x += dash * 1.75
+    # NOTE (mristin):
+    # The arrow at its end points the way her eyes must go.
+    var tip := Vector2(right - 9.0, y + (7.0 if down else -7.0))
+    var arrow := PackedVector2Array([Vector2(right - 14.0, y), Vector2(right - 4.0, y), tip])
+    draw_colored_polygon(arrow, color)
+    draw_polyline(arrow + PackedVector2Array([arrow[0]]), Palette.OUTLINE, 1.0)
 
 
 func _draw_skeleton(index: int) -> void:
@@ -181,9 +237,9 @@ func _draw_hand_marks(index: int) -> void:
         draw_string(font, at + Vector2(9, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color)
 
 
-## Dress the body of the player as her rider: the boots and the legs, the
-## dress, the coat with its trims and belt, and the sleeves with the cuffs and
-## the hands.
+## Dress the body of the player as her rider: in the painted clothes of her
+## painted rider (see [PaintedBody]), else drawn: the boots and the legs, the
+## dress, the coat with its trims and belt, and the sleeves with the cuffs.
 func _draw_body(index: int, dressed: Dictionary) -> void:
     var body: Dictionary = _service.GetBody(index)
     var alpha: float = body["alpha"]
@@ -200,10 +256,18 @@ func _draw_body(index: int, dressed: Dictionary) -> void:
     if width < 4.0:
         return
 
+    # NOTE (mristin):
+    # The painted riders wear their painted clothes; the others are drawn.
+    if PaintedBody.has(dressed):
+        var placed: Array = []
+        for joint in range(Joint.size()):
+            placed.append(at.call(joint))
+        PaintedBody.draw_body(self, placed, dressed, alpha)
+        return
+
     var completed := Looks.complete(dressed)
     var coat := Looks.shades(completed, "coat")
     var dress := Looks.shades(completed, "dress")
-    var skin := Looks.shades(completed, "skin")
     var trim := coat[0]
     if Finery.step(completed, "coat") >= 1:
         trim = Palette.CRIMSON_DARK if completed["coat"] == "ochre" else Palette.GOLD
@@ -273,7 +337,8 @@ func _draw_body(index: int, dressed: Dictionary) -> void:
     )
 
     # NOTE (mristin):
-    # The sleeves to the cuffs, and the hands.
+    # The sleeves to the cuffs; the fists are drawn over the face (see
+    # [method _draw_fists]), since the raised hands are in front of it.
     for arm in [
         [left_shoulder, Joint.LEFT_ELBOW, Joint.LEFT_HAND],
         [right_shoulder, Joint.RIGHT_ELBOW, Joint.RIGHT_HAND]
@@ -290,7 +355,76 @@ func _draw_body(index: int, dressed: Dictionary) -> void:
         draw_polyline(PackedVector2Array([arm[0], elbow, cuff]), fade.call(coat[1]), width * 0.28)
         draw_circle(elbow, width * 0.14, fade.call(coat[1]))
         draw_line(cuff, (elbow as Vector2).lerp(hand, 0.82), fade.call(trim), width * 0.3)
-        draw_circle(hand, width * 0.13, fade.call(skin[1]))
+
+
+## The width of the player's shoulders in the picture, in pixels: from her
+## body, else from the distance between her eyes, else a guess.
+func _unit(index: int) -> float:
+    var body: Dictionary = _service.GetBody(index)
+    var joints: Array = body["joints"]
+    if (
+        float(body["alpha"]) > 0.0
+        and joints.size() > Joint.RIGHT_SHOULDER
+        and joints[Joint.LEFT_SHOULDER] != null
+        and joints[Joint.RIGHT_SHOULDER] != null
+    ):
+        var shoulders: Vector2 = (
+            ((joints[Joint.RIGHT_SHOULDER] as Vector2) - joints[Joint.LEFT_SHOULDER]) * size
+        )
+        if shoulders.length() > 4.0:
+            return shoulders.length()
+    var anchor: Dictionary = _service.GetFaceAnchor(index)
+    if float(anchor["alpha"]) > 0.0:
+        return float(anchor["eye_distance"]) * size.x * FIST_EYES
+    return size.x * 0.25
+
+
+## Draw a fist on each hand of the player which the detector sees, with the
+## thumb turned inwards, and the reins between her fists: they sag, and are
+## pulled straight when a hand reaches across to turn. The fist and the rein
+## are painted (see [PaintedBody]), else drawn.
+func _draw_fists(index: int, dressed: Dictionary) -> void:
+    var hands: Array = _service.GetPlayerHands(index)
+    if hands.size() < 2 or (hands[0] == null and hands[1] == null):
+        return
+    var unit := _unit(index)
+    var at: Array = []
+    for hand in hands:
+        at.append(null if hand == null else (hand as Vector2) * size)
+    var across: Vector2 = _service.GetHandsAcross(index)
+    var pull := clampf(maxf(across.x, across.y), 0.0, 1.0)
+    if PaintedBody.draw_hands(self, at[0], at[1], unit, pull):
+        return
+
+    var radius := maxf(3.0, unit * 0.11)
+    var skin := Looks.shades(Looks.complete(dressed), "skin")
+    if at[0] != null and at[1] != null:
+        var sag := Vector2(0, unit * 0.3 * (1.0 - pull))
+        var rein := PackedVector2Array([at[0], (at[0] + at[1]) * 0.5 + sag, at[1]])
+        draw_polyline(rein, Palette.OUTLINE, maxf(3.0, radius * 0.6))
+        draw_polyline(rein, Palette.HORSE_BAY_LIGHT, maxf(1.0, radius * 0.3))
+
+    for side in range(2):
+        if at[side] == null:
+            continue
+        var center: Vector2 = at[side]
+        # NOTE (mristin):
+        # In the mirrored picture, her left hand is on the left, with its thumb
+        # turned to the right, towards the other hand.
+        var inward := 1.0 if side == 0 else -1.0
+        var thumb := center + Vector2(inward * radius * 0.8, radius * 0.2)
+        draw_circle(center, radius + 1.5, Palette.OUTLINE)
+        draw_circle(thumb, radius * 0.4 + 1.5, Palette.OUTLINE)
+        draw_circle(center, radius, skin[1])
+        for k in [-1.0, 0.0, 1.0]:
+            draw_circle(center + Vector2(k * radius * 0.55, -radius * 0.45), radius * 0.24, skin[2])
+            draw_line(
+                center + Vector2(k * radius * 0.55 + radius * 0.27, -radius * 0.65),
+                center + Vector2(k * radius * 0.55 + radius * 0.27, -radius * 0.1),
+                skin[0],
+                1.0
+            )
+        draw_circle(thumb, radius * 0.4, skin[0])
 
 
 func _draw_overlay(index: int, dressed: Dictionary) -> void:

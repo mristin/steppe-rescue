@@ -13,9 +13,13 @@ func text(service: Node, timing: bool) -> String:
             return ""
         if not service.HasPlayer(0):
             return tr("Step in front of the camera.")
-        # TRANSLATORS: {pose} and {face} are the milliseconds to find the body and the face.
-        return tr("I see you! (body {pose} ms, face {face} ms)").format(
-            {"pose": int(service.GetInferenceMs()), "face": int(service.GetFaceMs())}
+        # TRANSLATORS: {pose}, {face}: ms for the body, the face; {rate}: bodies a second.
+        return tr("I see you! (body {pose} ms, {rate} times a second; face {face} ms)").format(
+            {
+                "pose": int(service.GetInferenceMs()),
+                "rate": roundi(service.GetPoseRate()),
+                "face": int(service.GetFaceMs())
+            }
         )
 
     var messages := {

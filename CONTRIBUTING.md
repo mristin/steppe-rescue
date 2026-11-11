@@ -37,6 +37,7 @@ They come from old photographs in the public domain: put the photo in `assets/pi
 A source may also outline the person (`figure`) when she is as pale as the paper behind, retouch the photo with a smooth warp (`retouch`, e.g., Grandmother's smile), and lift the shadows (`gamma`); see the docstring of `pixelize.py`.
 
 The tools for the development (like these) live in `dev/`, which Godot ignores, so that they are never released with the game.
+To record how your squats look to the vision (for tuning the squats), run `$GODOT --path . --script dev/squats/record_squats.gd` in front of the camera: it asks you to stand, walk, trot, gallop and stop, three rounds (the second closer to the camera, the third farther), and writes only numbers (never the pictures) into `~/Downloads/squat_recordings/`; `dev/squats/analyze.py <recording>` summarizes it per step (add `--plot out.png` to draw it, `--extract out.csv` for the replay tests).
 Use only pictures in the public domain or under CC0.
 The text is set in GNU Unifont at 16 pixels, imported without anti-aliasing.
 

@@ -55,11 +55,14 @@ static func reins(frame: int, small := false) -> Texture2D:
 
 
 ## Draw the picture on the item with her boots at [param feet], [param scale]
-## times its size (two pixels of the screen per logical pixel at 1).
-static func draw(item: CanvasItem, picture: Texture2D, feet: Vector2, scale := 1.0) -> void:
+## times its size (two pixels of the screen per logical pixel at 1), tinted
+## with [param color] (e.g., half transparent to blend two frames).
+static func draw(
+    item: CanvasItem, picture: Texture2D, feet: Vector2, scale := 1.0, color := Color.WHITE
+) -> void:
     var shown := picture.get_size() * 0.5 * scale
     item.draw_texture_rect(
-        picture, Rect2((feet - Vector2(shown.x * 0.5, shown.y)).round(), shown), false
+        picture, Rect2((feet - Vector2(shown.x * 0.5, shown.y)).round(), shown), false, color
     )
 
 

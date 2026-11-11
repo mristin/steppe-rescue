@@ -654,12 +654,19 @@ func _update_player_hud(player: LevelPlayer) -> void:
     _update_coach(player, get_process_delta_time())
 
 
-## Let the small figure show what the game waits for: a squat when the horse
-## stands still or a conversation waits for one, the reins pulled after the
-## edge of the steppe or the second run into the same obstacle, else the echo
-## of the player's squats.
+## Let the small figure follow the player while the camera sees her, and
+## else show what the game waits for: a squat when the horse stands still or a
+## conversation waits for one, the reins pulled after the edge of the steppe
+## or the second run into the same obstacle, else the echo of the player's
+## squats.
 func _update_coach(player: LevelPlayer, delta: float) -> void:
     var coach := player.coach
+    coach.following = _service.IsRunning() and _service.HasPlayer(player.index)
+    coach.live = Vector3(
+        _service.GetSquatDepth(player.index),
+        -float(_service.GetTurn(player.index)),
+        1.0 if _service.IsBraking(player.index) else 0.0
+    )
     player.still_time = player.still_time + delta if player.rider.speed <= 0.0 else 0.0
     var squats: int = _service.GetSquatCount(player.index)
     if squats > player.squats_seen:

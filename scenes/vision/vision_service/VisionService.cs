@@ -69,8 +69,6 @@ public partial class VisionService : Node
     /// <summary>Wait this long after the first feed shows up, so that the others can follow.</summary>
     private const double _graceAfterFirstFeed = 1.0;
 
-    /// <summary>A key press counts as a squat of this depth, in units.</summary>
-    private const float _keyboardSquatDepth = 1.2f;
 
     [Export]
     public bool UseCamera = true;
@@ -109,11 +107,31 @@ public partial class VisionService : Node
     public readonly BodyFollower[] Bodies = { new(), new() };
 
     /// <summary>
-    /// With the face tracker, the pose runs this often (in seconds): only to tell
-    /// the players' hands apart and to dress their bodies.
+    /// With the face tracker, the pose only tells the players' hands apart and
+    /// dresses their bodies, so it runs as often as the computer manages while
+    /// the faces and the hands keep up (see <see cref="PoseScheduler"/>).
     /// </summary>
-    [Export]
-    public double PoseEvery = 0.25;
+    public readonly PoseScheduler PoseRate = new();
+
+    /// <summary>The hands of each player, [left, right], smoothed for the picture (not for the riding).</summary>
+    private readonly OneEuroFilter[][] _handFilters =
+    {
+        new OneEuroFilter[] { new(), new() },
+        new OneEuroFilter[] { new(), new() },
+    };
+
+    private readonly (float X, float Y)?[][] _smoothedHands =
+    {
+        new (float X, float Y)?[2],
+        new (float X, float Y)?[2],
+    };
+
+    /// <summary>The recording of the vision (see dev/squats/), or null.</summary>
+    private VisionRecorder? _recorder;
+
+    /// <summary>The time between two camera frames, smoothed, in seconds; NaN before two frames.</summary>
+    private double _frameSeconds = double.NaN;
+    private double _lastFrameAt = double.NaN;
 
     /// <summary>
     /// Whether the face tracker follows the heads and the hands; if not (its
@@ -234,6 +252,7 @@ public partial class VisionService : Node
         {
             _consumed = snapshot;
             Consume(snapshot);
+            _recorder?.RecordPose(snapshot);
         }
 
         var face = LatestFace;
@@ -265,6 +284,8 @@ public partial class VisionService : Node
                 Hands.Observe(face.Timestamp, face.Hands);
                 ConsumeHands(face.Timestamp);
             }
+
+            _recorder?.RecordFace(face, Heads, Squats, PlayerCount);
         }
 
         for (int i = 0; i < PlayerSplit.MaxPlayers; i++)
@@ -279,7 +300,28 @@ public partial class VisionService : Node
 
             Reins[i].Update(now);
             Faces[i].Update(now);
+            UpdateBody(i, now);
         }
+    }
+
+    /// <summary>Smooth the hands of the player for the picture, and follow her body with them.</summary>
+    private void UpdateBody(int player, double now)
+    {
+        float unit = Heads[player].Unit;
+        for (int side = 0; side < 2; side++)
+        {
+            var hand = Hands.Hand(player, (HandSide)side, now);
+            if (hand == null)
+            {
+                _handFilters[player][side].Reset();
+                _smoothedHands[player][side] = null;
+                continue;
+            }
+
+            _smoothedHands[player][side] = _handFilters[player][side].Filter(now, hand.Value.X, hand.Value.Y, unit);
+        }
+
+        Bodies[player].Update(now, _smoothedHands[player][0], _smoothedHands[player][1], unit);
     }
 
     /// <summary>Turn and brake the player with the keys held down.</summary>
@@ -444,6 +486,24 @@ public partial class VisionService : Node
     /// <summary>The speeds from which the horse walks, trots and gallops.</summary>
     public Vector3 GetGaitThresholds() => new(SquatMeter.WalkFrom, SquatMeter.TrotFrom, SquatMeter.GallopFrom);
 
+    /// <summary>
+    /// The line which the player's eyes must pass for her next swing to count
+    /// (see <see cref="SquatMeter.Target"/>): "y", normalized to the height of
+    /// the picture, and "down" (true: go below it, false: come back above it);
+    /// an empty dictionary before her head was seen.
+    /// </summary>
+    public Godot.Collections.Dictionary GetSquatTarget(int player)
+    {
+        var meter = Squats[Index(player)];
+        float height = LatestFace?.Height ?? Latest?.Height ?? 0;
+        if (float.IsNaN(meter.Target) || height <= 0f)
+        {
+            return new Godot.Collections.Dictionary();
+        }
+
+        return new Godot.Collections.Dictionary { { "y", meter.Target / height }, { "down", meter.IsDown } };
+    }
+
     /// <summary>How deep the player is in the squat now, in [0, 1].</summary>
     public float GetSquatDepth(int player) => Squats[Index(player)].Depth;
 
@@ -550,11 +610,7 @@ public partial class VisionService : Node
     {
         int i = Index(player);
         double now = Now;
-        return new Godot.Collections.Array
-        {
-            Mirrored(Hands.Hand(i, HandSide.Left, now)),
-            Mirrored(Hands.Hand(i, HandSide.Right, now)),
-        };
+        return new Godot.Collections.Array { Mirrored(_smoothedHands[i][0]), Mirrored(_smoothedHands[i][1]) };
     }
 
     /// <summary>
@@ -566,9 +622,8 @@ public partial class VisionService : Node
     {
         int i = Index(player);
         double now = Now;
-        var joints = Bodies[i].Joints(Hands.Hand(i, HandSide.Left, now), Hands.Hand(i, HandSide.Right, now));
         var result = new Godot.Collections.Array();
-        foreach (var joint in joints)
+        foreach (var joint in Bodies[i].Smoothed)
         {
             result.Add(Mirrored(joint));
         }
@@ -618,11 +673,60 @@ public partial class VisionService : Node
     /// <summary>How long the latest pose took, in milliseconds.</summary>
     public double GetInferenceMs() => Latest?.InferenceMs ?? 0.0;
 
+    /// <summary>How many times a second the body pose runs now (see <see cref="PoseRate"/>).</summary>
+    public double GetPoseRate() => _faceTracking ? 1.0 / PoseRate.Interval : 0.0;
+
+    /// <summary>
+    /// Start recording what the vision measures into the file (as JSON lines,
+    /// see <see cref="VisionRecorder"/>; only numbers, never the pictures).
+    /// Return whether it started.
+    /// </summary>
+    public bool StartRecording(string path)
+    {
+        StopRecording();
+        try
+        {
+            _recorder = new VisionRecorder(ProjectSettings.GlobalizePath(path));
+            var latest = Latest;
+            _recorder.RecordStart(Now, latest?.Width ?? 0, latest?.Height ?? 0, PlayerCount);
+            return true;
+        }
+        catch (Exception exception)
+        {
+            GD.PushError($"Could not record into {path}: {exception.Message}");
+            _recorder = null;
+            return false;
+        }
+    }
+
+    /// <summary>Label what the player is asked to do from now on in the recording.</summary>
+    public void SetRecordingLabel(string label)
+    {
+        if (_recorder != null)
+        {
+            _recorder.Label = label;
+        }
+    }
+
+    /// <summary>Stop recording, and return how many lines were recorded.</summary>
+    public int StopRecording()
+    {
+        if (_recorder == null)
+        {
+            return 0;
+        }
+
+        int lines = _recorder.Lines;
+        _recorder.Dispose();
+        _recorder = null;
+        return lines;
+    }
+
     /// <summary>How long the latest heads and faces took, in milliseconds.</summary>
     public double GetFaceMs() => LatestFace?.InferenceMs ?? 0.0;
 
     /// <summary>Count a squat of the player as if her key was pressed, e.g., in the tests.</summary>
-    public void SquatByKeyboard(int player) => Squats[Index(player)].RegisterSquat(Now, _keyboardSquatDepth);
+    public void SquatByKeyboard(int player) => Squats[Index(player)].RegisterSquat(Now);
 
     /// <summary>Forget the squats and the turns of all the players, e.g., at the start of a level.</summary>
     public void ResetRiding()
@@ -749,6 +853,19 @@ public partial class VisionService : Node
 
     private void OnFrameChanged()
     {
+        // NOTE (mristin):
+        // The time between the frames of the camera, which the faces must keep
+        // up with (see PoseRate).
+        double now = Now;
+        if (!double.IsNaN(_lastFrameAt) && now > _lastFrameAt)
+        {
+            double seconds = Math.Min(0.2, now - _lastFrameAt);
+            double smoothed = double.IsNaN(_frameSeconds) ? seconds : _frameSeconds * 0.9 + seconds * 0.1;
+            Volatile.Write(ref _frameSeconds, smoothed);
+        }
+
+        _lastFrameAt = now;
+
         bool forPose = _poseSlot.Requested;
         bool forFace = _faceSlot.Requested;
         if ((!forPose && !forFace) || CameraTexture == null)
@@ -812,7 +929,7 @@ public partial class VisionService : Node
                 // processor to the faces and the hands.
                 if (_faceTracking)
                 {
-                    int wait = (int)((PoseEvery - started.Elapsed.TotalSeconds) * 1000.0);
+                    int wait = (int)((PoseRate.Interval - started.Elapsed.TotalSeconds) * 1000.0);
                     if (wait > 0)
                     {
                         Thread.Sleep(wait);
@@ -823,7 +940,9 @@ public partial class VisionService : Node
                 var frame = NextFrame(_poseSlot);
                 if (frame != null)
                 {
-                    Volatile.Write(ref _latest, vision.Process(frame, PlayerCount));
+                    var snapshot = vision.Process(frame, PlayerCount);
+                    PoseRate.ObservePose(snapshot.InferenceMs);
+                    Volatile.Write(ref _latest, snapshot);
                 }
             }
         }
@@ -867,6 +986,7 @@ public partial class VisionService : Node
                 }
 
                 var found = tracker.TrackAll(frame, hints);
+                PoseRate.ObserveFace(found.InferenceMs, Volatile.Read(ref _frameSeconds));
                 Volatile.Write(ref _latestFace, found);
                 if (found.Hands != null)
                 {
@@ -896,6 +1016,7 @@ public partial class VisionService : Node
 
     public override void _ExitTree()
     {
+        StopRecording();
         _running = false;
         _poseSlot.Ready.Set();
         _faceSlot.Ready.Set();

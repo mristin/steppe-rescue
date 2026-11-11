@@ -36,8 +36,12 @@ namespace SteppeRescue.Vision
         /// <summary>How much of the difference a calibration takes over, in [0, 1].</summary>
         public float Learning = 0.2f;
 
-        /// <summary>The time constant of smoothing the unit, in seconds.</summary>
-        public double UnitTau = 0.5;
+        /// <summary>
+        /// The time constant of smoothing the unit, in seconds: slow, since the
+        /// distance between the eyes changes as the player tilts her head in a
+        /// squat, but quick enough to follow her when she steps closer or back.
+        /// </summary>
+        public double UnitTau = 3.0;
 
         /// <summary>The eyes below the center of the head box, in its heights.</summary>
         public float EyesBelowCenter { get; private set; } = 0f;

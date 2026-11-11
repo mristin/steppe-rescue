@@ -21,6 +21,7 @@
     <None Include="../../scenes/vision/yunet/model/*.onnx" LinkBase="data" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../scenes/vision/yolox/model/*.onnx" LinkBase="data" CopyToOutputDirectory="PreserveNewest" />
     <None Include="data/**/*.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="data/**/*.csv" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

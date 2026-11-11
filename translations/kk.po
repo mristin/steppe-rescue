@@ -824,11 +824,10 @@ msgctxt "sound"
 msgid "Off"
 msgstr "Өшірулі"
 
-#. {pose} and {face} are the milliseconds to find the body and the face.
+#. {pose}, {face}: ms for the body, the face; {rate}: bodies a second.
 #: scenes/vision/vision_status.gd
-#, fuzzy
-msgid "I see you! (body {pose} ms, face {face} ms)"
-msgstr "Мен сені көріп тұрмын! (дене {pose} мс, бет {face} мс)"
+msgid "I see you! (body {pose} ms, {rate} times a second; face {face} ms)"
+msgstr "Мен сені көріп тұрмын! (дене {pose} мс, секундына {rate} рет; бет {face} мс)"
 
 #: scenes/vision/vision_status.gd
 #, fuzzy
@@ -1562,6 +1561,10 @@ msgstr "киіз үй мен"
 msgctxt "between"
 msgid "the yurt"
 msgstr "киіз үйдің"
+
+#, fuzzy
+#~ msgid "I see you! (body {pose} ms, face {face} ms)"
+#~ msgstr "Мен сені көріп тұрмын! (дене {pose} мс, бет {face} мс)"
 
 #, fuzzy
 #~ msgid "Both hands up above your head: your horse rears up and stops at once!"

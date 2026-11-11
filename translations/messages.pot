@@ -678,9 +678,9 @@ msgctxt "sound"
 msgid "Off"
 msgstr ""
 
-#. {pose} and {face} are the milliseconds to find the body and the face.
+#. {pose}, {face}: ms for the body, the face; {rate}: bodies a second.
 #: scenes/vision/vision_status.gd
-msgid "I see you! (body {pose} ms, face {face} ms)"
+msgid "I see you! (body {pose} ms, {rate} times a second; face {face} ms)"
 msgstr ""
 
 #: scenes/vision/vision_status.gd

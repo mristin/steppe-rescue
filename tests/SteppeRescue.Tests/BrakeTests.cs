@@ -67,17 +67,17 @@ namespace SteppeRescue.Tests
         public void The_brake_stops_a_galloping_horse_at_once()
         {
             var meter = new SquatMeter();
-            for (int i = 0; i < 8; i++)
+            for (int i = 0; i < 12; i++)
             {
-                meter.RegisterSquat(i * 1.4, 1.2f);
-                for (double t = i * 1.4; t < (i + 1) * 1.4; t += 1.0 / 30.0)
+                meter.RegisterSquat(i * 0.5);
+                for (double t = i * 0.5; t < (i + 1) * 0.5; t += 1.0 / 30.0)
                 {
                     meter.Update(t);
                 }
             }
 
             Assert.Equal(Gait.Gallop, meter.Gait);
-            double now = 8 * 1.4;
+            double now = 12 * 0.5;
             for (int i = 0; i < 9; i++)
             {
                 now += 1.0 / 30.0;
@@ -91,7 +91,7 @@ namespace SteppeRescue.Tests
             // The horse stands until the next squat, which starts a walk.
             meter.Update(now + 2.0);
             Assert.Equal(0f, meter.Speed);
-            meter.RegisterSquat(now + 2.0, 1.2f);
+            meter.RegisterSquat(now + 2.0);
             meter.Update(now + 2.5);
             Assert.True(meter.Speed > 0f);
         }

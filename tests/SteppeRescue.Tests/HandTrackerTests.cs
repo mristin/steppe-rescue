@@ -170,22 +170,50 @@ namespace SteppeRescue.Tests
         }
 
         [Fact]
-        public void The_elbow_bends_so_that_the_arm_keeps_its_lengths()
+        public void The_elbow_keeps_its_place_in_the_arm_when_the_hand_moves()
         {
             var body = new BodyFollower();
             body.ObserveHead(0.0, 320f, 97f);
             body.ObservePose(0.0, HandTrackerTests.PoseAt(320f, (390f, 290f), (250f, 290f)));
 
-            var shoulder = (X: 370f, Y: 160f);
-            var posedElbow = (X: (370f + 390f) * 0.5f, Y: (160f + 290f) * 0.5f);
-            float upper = Distance(shoulder, posedElbow);
-
             // NOTE (mristin):
-            // She raises her left hand above her head.
-            var joints = body.Joints((420f, 40f), null);
+            // In the pose, her left elbow lies halfway from the shoulder (370, 160)
+            // to the wrist; she now raises her hand straight up.
+            var joints = body.Joints((370f, -40f), null);
+            var shoulder = Get(joints, Joint.LeftShoulder);
             var elbow = Get(joints, Joint.LeftElbow);
-            Assert.Equal(upper, Distance(shoulder, elbow), 1);
-            Assert.Equal((420f, 40f), Get(joints, Joint.LeftHand));
+            Assert.Equal((370f, -40f), Get(joints, Joint.LeftHand));
+            Assert.InRange(elbow.Y, shoulder.Y - 140f, shoulder.Y - 60f);
+            Assert.InRange(MathF.Abs(elbow.X - shoulder.X), 0f, 20f);
+        }
+
+        [Fact]
+        public void The_elbow_of_a_straight_arm_does_not_flip_when_the_pose_jitters()
+        {
+            var body = new BodyFollower();
+            body.ObserveHead(0.0, 320f, 97f);
+            var random = new Random(3);
+            float lowest = float.PositiveInfinity;
+            float highest = float.NegativeInfinity;
+            for (int i = 0; i < 20; i++)
+            {
+                // NOTE (mristin):
+                // The arm is stretched out to her side; the pose puts the elbow a
+                // few pixels above or below the line, by chance.
+                var pose = HandTrackerTests.PoseAt(320f, (570f, 160f), (250f, 290f));
+                var points = (Keypoint[])pose.Keypoints.Clone();
+                float jitter = (float)(random.NextDouble() - 0.5) * 12f;
+                points[(int)BodyPart.LeftElbow] = new Keypoint(470f, 160f + jitter, 0.9f);
+                body.ObservePose(i * 0.1, new Pose(points, pose.Box, pose.Score));
+                var elbow = Get(body.Joints((620f, 160f), null), Joint.LeftElbow);
+                if (i >= 5)
+                {
+                    lowest = MathF.Min(lowest, elbow.Y);
+                    highest = MathF.Max(highest, elbow.Y);
+                }
+            }
+
+            Assert.True(highest - lowest < 8f, $"the elbow moves by {highest - lowest}");
         }
 
         private static float Distance((float X, float Y) a, (float X, float Y) b)

@@ -16,190 +16,164 @@ namespace SteppeRescue.Vision
     }
 
     /// <summary>
-    /// Count the squats from the height of the head over time, and turn their
-    /// rate and depth into the speed of the horse.
+    /// Turn the up and down of the head into the speed of the horse: the more
+    /// the player squats, deeper and faster, the faster the horse.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// The depth is measured in the unit of the player (see
-    /// <see cref="Pose.Unit"/>), below the standing height of the head. The
-    /// standing height follows the highest head: it jumps up at once, and sinks
-    /// only slowly, so that a slow squat does not drag it down, while a player
-    /// who steps closer to the camera is followed after a few seconds.
+    /// The head goes down and up in swings. A swing counts once the head turned
+    /// back by at least <see cref="SwingDepth"/> (in the unit of the player, see
+    /// <see cref="Pose.Unit"/>, so that it does not matter how far from the
+    /// camera she stands): it went down from its last top, or up from its last
+    /// bottom. There is no standing height to compare with, since players
+    /// bounce up higher than they stand when they squat fast. Each squat (a
+    /// swing down and back up) is counted when the head came back up.
     /// </para>
     /// <para>
-    /// A squat counts when the head went down at least by
-    /// <see cref="CountDepth"/> and came back up within <see cref="ReturnDepth"/>
-    /// of the standing height. The time since the previous squat (the period) sets
-    /// the target speed (see <see cref="SpeedOfPeriod"/>), and a shallow squat
-    /// counts a little less than a deep one. The horse then speeds up and slows
-    /// down gently towards the target.
+    /// Every swing adds its size to the <see cref="Effort"/>, which fades with
+    /// <see cref="EffortTau"/>: so the effort is about how far the head travels
+    /// up and down per second. Deeper squats and faster squats both make it
+    /// bigger. It fades quickly once no swing came for <see cref="StopAfter"/>
+    /// while the head is up, so that the horse stops when the player stands
+    /// still (but not in the middle of a slow squat).
     /// </para>
     /// <para>
-    /// The keyboard (and the tests) can register a squat directly with
-    /// <see cref="RegisterSquat"/>, which goes through the same rules.
+    /// The speed of the horse heads for the effort over <see cref="FullEffort"/>,
+    /// in [0, 1], and the gaits split it (see <see cref="GaitOf"/>). The
+    /// constants come from recordings of players (see dev/squats/): a walk
+    /// moved the head about 0.7 to 1 units a second, a trot 1 to 1.6, and a
+    /// gallop 2.1 to 2.4.
+    /// </para>
+    /// <para>
+    /// The keyboard (and the tests) can register a squat with
+    /// <see cref="RegisterSquat"/>: the effort of the keys goes with how often
+    /// they come (see <see cref="KeyboardEffort"/>).
     /// </para>
     /// </remarks>
     public sealed class SquatMeter
     {
-        /// <summary>The time constant of smoothing the height of the head, in seconds.</summary>
-        public double SmoothingTau = 0.08;
+        /// <summary>The head must turn back this far (in units) for a swing to count.</summary>
+        public float SwingDepth = 0.25f;
 
-        /// <summary>How fast the standing height sinks, in units per second.</summary>
-        public float BaselineSink = 0.1f;
+        /// <summary>The time constant (in seconds) with which the effort fades.</summary>
+        public double EffortTau = 1.5;
 
-        /// <summary>The head must go down at least this much (in units) for a squat to count.</summary>
-        public float CountDepth = 0.5f;
+        /// <summary>Without a swing for this long (in seconds), the effort fades quickly...</summary>
+        public double StopAfter = 1.0;
 
-        /// <summary>A squat this deep (in units) or deeper counts in full.</summary>
-        public float FullDepth = 1.0f;
+        /// <summary>...with this time constant, in seconds.</summary>
+        public double StopTau = 0.2;
 
-        /// <summary>The squat ends when the head comes back within this much (in units).</summary>
-        public float ReturnDepth = 0.2f;
+        /// <summary>The effort (in units per second) at which the horse runs at full speed.</summary>
+        public float FullEffort = 2.5f;
 
-        /// <summary>The period which we assume before the first squat, in seconds.</summary>
-        public double FirstPeriod = 3.5;
+        /// <summary>The time constant (in seconds) with which the speed rises to the effort...</summary>
+        public double SpeedTau = 0.25;
 
-        /// <summary>After this long without a squat (in seconds), the horse stops.</summary>
-        public double MaxPause = 4.5;
-
-        /// <summary>
-        /// A squat may come this late (in seconds) after the rhythm of the player
-        /// expects it; then the horse stops briskly.
-        /// </summary>
-        public double Grace = 0.48;
-
-        /// <summary>
-        /// The horse keeps going this long (in seconds) after a squat, which counts
-        /// once the player stood up again, plus <see cref="CoastShare"/> of the
-        /// rhythm; then it stops, unless the head already goes down into the next
-        /// squat (by <see cref="StartDepth"/>).
-        /// </summary>
-        public double Coast = 0.4;
-
-        public double CoastShare = 0.25;
-
-        /// <summary>The share of the rhythm adds at most this much to the coasting, in seconds.</summary>
-        public double MaxCoastShare = 0.5;
-
-        /// <summary>The head this deep (in units) goes down into the next squat.</summary>
-        public float StartDepth = 0.1f;
-
-        /// <summary>How fast the horse speeds up to a walk, in the full speed per second.</summary>
-        public float Acceleration = 0.48f;
-
-        /// <summary>
-        /// How fast the horse speeds up beyond the walk, in the full speed per second:
-        /// two or three brisk squats gallop, which children manage.
-        /// </summary>
-        public float FastAcceleration = 0.29f;
+        /// <summary>...and falls to it, a little quicker, so that the horse stops promptly.</summary>
+        public double SlowDownTau = 0.15;
 
         /// <summary>How fast the brake stops the horse, in the full speed per second.</summary>
         public float BrakeDeceleration = 5.0f;
 
-        /// <summary>How fast the horse slows down, in the full speed per second.</summary>
-        public float Deceleration = 4.0f;
+        /// <summary>
+        /// The effort of a key pressed every second, in units per second; the
+        /// effort of the keyboard goes with how often the keys come: a key every
+        /// 2 s walks, every second trots, and twice a second gallops.
+        /// </summary>
+        public float KeyboardEffort = 1.4f;
+
+        /// <summary>The first key counts as if the one before came this long before, in seconds.</summary>
+        public double KeyboardFirstPeriod = 2.0;
 
         /// <summary>
-        /// How fast a galloping horse slows down, in the full speed per second: it
-        /// keeps its momentum for a very short moment, and then stops at <see cref="Deceleration"/>.
+        /// After a squat from the keyboard, the horse waits this long (in seconds)
+        /// for the next one before it stops, since a key is a whole squat.
         /// </summary>
-        public float GallopDeceleration = 2.0f;
+        public double KeyboardStopAfter = 2.2;
 
-        /// <summary>A shallow squat (at <see cref="CountDepth"/>) counts this much.</summary>
-        public float ShallowFactor = 0.6f;
+        /// <summary>
+        /// A squat may take this long (in seconds) from one swing to the next
+        /// before the horse stops in its middle, e.g., when the player stays down.
+        /// </summary>
+        public double SlowestSquat = 2.0;
+
+        /// <summary>The depth (in units) shown as the deepest squat (see <see cref="Depth"/>).</summary>
+        public float FullDepth = 0.8f;
 
         /// <summary>The speed of the horse in [0, 1].</summary>
         public float Speed { get; private set; }
 
         /// <summary>The speed which the horse is heading to, in [0, 1].</summary>
-        public float TargetSpeed { get; private set; }
+        public float TargetSpeed => Math.Clamp(Effort / FullEffort, 0f, 1f);
 
-        /// <summary>How deep the head is now, in [0, 1] of <see cref="FullDepth"/>.</summary>
+        /// <summary>How far the head travels up and down, in units per second, fading.</summary>
+        public float Effort { get; private set; }
+
+        /// <summary>How deep the head is below its last top now, in [0, 1] of <see cref="FullDepth"/>.</summary>
         public float Depth { get; private set; }
 
-        /// <summary>How deep the head is now below the standing height, in units.</summary>
+        /// <summary>How deep the head is below its last top now, in units.</summary>
         public float RawDepth { get; private set; }
 
         /// <summary>How many squats were counted.</summary>
         public int Count { get; private set; }
 
-        /// <summary>The time between the last two squats, in seconds.</summary>
-        public double Period { get; private set; } = double.NaN;
-
-        /// <summary>Whether the head went deep enough for the current squat to count.</summary>
+        /// <summary>Whether the head goes down (else up, or still).</summary>
         public bool IsDown { get; private set; }
 
-        private double _smoothedY = double.NaN;
-        private double _baselineY = double.NaN;
-        private double _lastObserved = double.NaN;
-        private double _lastSquat = double.NaN;
-        private double _lastUpdate = double.NaN;
-        private float _deepest;
-        private float _lastFactor = 1f;
+        /// <summary>The highest head since it last went up, in frame pixels (growing down); NaN before.</summary>
+        public float Top { get; private set; } = float.NaN;
+
+        /// <summary>The lowest head since it last went down, in frame pixels; NaN before.</summary>
+        public float Bottom { get; private set; } = float.NaN;
+
+        /// <summary>The unit of the player, as last observed, in frame pixels; NaN before.</summary>
+        public float Unit { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// The height (in frame pixels) which the head must pass for the next
+        /// swing to count: below it while the head goes down, above it while it
+        /// comes up; NaN before the head was seen.
+        /// </summary>
+        public float Target =>
+            float.IsNaN(Unit) ? float.NaN : IsDown ? Bottom - SwingDepth * Unit : Top + SwingDepth * Unit;
 
         /// <summary>The horse walks from this speed on.</summary>
-        public const float WalkFrom = 0.05f;
+        public const float WalkFrom = 0.04f;
 
-        /// <summary>The horse trots from this speed on.</summary>
-        public const float TrotFrom = 0.45f;
+        /// <summary>The horse trots from this speed on (an effort of about 1.15).</summary>
+        public const float TrotFrom = 0.46f;
 
-        /// <summary>The horse gallops from this speed on.</summary>
-        public const float GallopFrom = 0.8f;
+        /// <summary>The horse gallops from this speed on (an effort of about 1.8).</summary>
+        public const float GallopFrom = 0.72f;
+
+        private double _lastSwing = double.NegativeInfinity;
+        private double _stopAfter = double.NaN;
+        private double _lastKey = double.NaN;
+        private double _keyPeriod = double.NaN;
+        private double _lastObserved = double.NaN;
+        private double _lastUpdate = double.NaN;
+        private double _lastSpeedUpdate = double.NaN;
 
         /// <summary>The gait of the horse at the given speed.</summary>
         public static Gait GaitOf(float speed)
         {
-            if (speed < WalkFrom)
+            if (speed >= GallopFrom)
             {
-                return Gait.Stand;
+                return Gait.Gallop;
             }
 
-            if (speed < TrotFrom)
+            if (speed >= TrotFrom)
             {
-                return Gait.Walk;
+                return Gait.Trot;
             }
 
-            return speed < GallopFrom ? Gait.Trot : Gait.Gallop;
+            return speed >= WalkFrom ? Gait.Walk : Gait.Stand;
         }
 
         /// <summary>The gait of the horse now.</summary>
         public Gait Gait => GaitOf(Speed);
-
-        private static readonly (double Period, float Speed)[] _speedTable =
-        {
-            (1.35, 1.0f),
-            (1.7, 0.85f),
-            (2.25, 0.62f),
-            (3.2, 0.35f),
-            (4.25, 0.2f),
-        };
-
-        /// <summary>
-        /// Map the time between two squats (in seconds) to the speed of a full,
-        /// deep squatting: a squat every 3.5 s walks, about every 2.5 s trots,
-        /// and every 1.8 s or faster gallops.
-        /// </summary>
-        public static float SpeedOfPeriod(double period)
-        {
-            if (period <= _speedTable[0].Period)
-            {
-                return _speedTable[0].Speed;
-            }
-
-            for (int i = 1; i < _speedTable.Length; i++)
-            {
-                var (p1, s1) = _speedTable[i];
-                if (period <= p1)
-                {
-                    var (p0, s0) = _speedTable[i - 1];
-                    float t = (float)((period - p0) / (p1 - p0));
-                    return s0 + (s1 - s0) * t;
-                }
-            }
-
-            return _speedTable[^1].Speed;
-        }
 
         /// <summary>
         /// Observe the height of the head (in frame pixels, growing downwards) and
@@ -213,129 +187,147 @@ namespace SteppeRescue.Vision
             }
 
             // NOTE (mristin):
-            // After a long gap (the player left the picture), we start afresh, so
-            // that the standing height is not taken from a different position.
-            if (double.IsNaN(_smoothedY) || t - _lastObserved > 1.0)
+            // After a long gap (the player left the picture), we start afresh.
+            Unit = unit;
+            if (float.IsNaN(Top) || t - _lastObserved > 1.0)
             {
-                _smoothedY = headY;
-                _baselineY = headY;
+                Top = headY;
+                Bottom = headY;
                 IsDown = false;
-                _deepest = 0f;
-            }
-            else
-            {
-                double dt = Math.Max(0.0, t - _lastObserved);
-                double alpha = 1.0 - Math.Exp(-dt / SmoothingTau);
-                _smoothedY += (headY - _smoothedY) * alpha;
-
-                // NOTE (mristin):
-                // The standing height jumps up with the head, but sinks only slowly.
-                _baselineY = Math.Min(_smoothedY, _baselineY + BaselineSink * unit * dt);
             }
 
             _lastObserved = t;
+            Fade(t);
 
-            float depth = (float)((_smoothedY - _baselineY) / unit);
-            RawDepth = depth;
-            Depth = Math.Clamp(depth / FullDepth, 0f, 1f);
-
-            if (depth >= CountDepth)
+            float swing = SwingDepth * unit;
+            if (!IsDown)
             {
-                IsDown = true;
-            }
-
-            if (IsDown)
-            {
-                _deepest = Math.Max(_deepest, depth);
-                if (depth <= ReturnDepth)
+                Top = Math.Min(Top, headY);
+                if (headY - Top >= swing)
                 {
-                    RegisterSquat(t, _deepest);
-                    IsDown = false;
-                    _deepest = 0f;
+                    // NOTE (mristin):
+                    // The head turned down: the swing up to the top is complete.
+                    if (Bottom > Top)
+                    {
+                        AddSwing(t, (Bottom - Top) / unit);
+                    }
+
+                    IsDown = true;
+                    Bottom = headY;
                 }
-            }
-        }
-
-        /// <summary>
-        /// Count a squat of the given depth (in units) at the time
-        /// <paramref name="t"/>, e.g., from the keyboard.
-        /// </summary>
-        public void RegisterSquat(double t, float depth)
-        {
-            Period = double.IsNaN(_lastSquat) ? FirstPeriod : Math.Max(0.05, t - _lastSquat);
-            _lastSquat = t;
-            Count++;
-
-            float over = Math.Clamp((depth - CountDepth) / Math.Max(1e-3f, FullDepth - CountDepth), 0f, 1f);
-            _lastFactor = ShallowFactor + (1f - ShallowFactor) * over;
-        }
-
-        /// <summary>Advance the speed of the horse to the time <paramref name="t"/>.</summary>
-        public void Update(double t)
-        {
-            double dt = double.IsNaN(_lastUpdate) ? 0.0 : Math.Max(0.0, t - _lastUpdate);
-            _lastUpdate = t;
-
-            if (double.IsNaN(_lastSquat))
-            {
-                TargetSpeed = 0f;
             }
             else
             {
-                double since = t - _lastSquat;
-
-                // NOTE (mristin):
-                // The horse keeps the pace of the player's rhythm while she squats.
-                // Once she stands still after a squat, or the next squat is overdue,
-                // she stopped, and so does the horse, at once.
-                // Without the camera (squats from the keyboard), we cannot see her
-                // stand, and wait for the rhythm only.
-                bool seen = !double.IsNaN(_lastObserved) && t - _lastObserved < 0.5;
-                double coast = Coast + Math.Min(CoastShare * Period, MaxCoastShare);
-                bool standing = seen && since > coast && RawDepth < StartDepth;
-                bool overdue = standing || since > Period + Grace || since > MaxPause;
-                TargetSpeed = overdue ? 0f : SpeedOfPeriod(Period) * _lastFactor;
+                Bottom = Math.Max(Bottom, headY);
+                if (Bottom - headY >= swing)
+                {
+                    // NOTE (mristin):
+                    // The head came back up: the swing down is complete, and so
+                    // is the squat.
+                    AddSwing(t, (Bottom - Top) / unit);
+                    Count++;
+                    IsDown = false;
+                    Top = headY;
+                }
             }
 
-            float rate = TargetSpeed > Speed
-                ? Speed < WalkFrom + 0.1f ? Acceleration : FastAcceleration
-                : Speed > GallopFrom ? GallopDeceleration : Deceleration;
-            float step = rate * (float)dt;
-            Speed = TargetSpeed > Speed
-                ? Math.Min(TargetSpeed, Speed + step)
-                : Math.Max(TargetSpeed, Speed - step);
+            RawDepth = Math.Max(0f, (headY - Top) / unit);
+            Depth = Math.Clamp(RawDepth / FullDepth, 0f, 1f);
         }
 
-        /// <summary>
-        /// Brake (see <see cref="Brake"/>) for <paramref name="dt"/> seconds: the
-        /// horse stops at once and forgets the rhythm, so that it stands until the
-        /// next squat; the squats made so far still count.
-        /// </summary>
+        private void AddSwing(double t, float size)
+        {
+            Effort += (float)(size / EffortTau);
+            _lastSwing = t;
+            _stopAfter = StopAfter;
+        }
+
+        /// <summary>Count a squat from the keyboard (or the tests) at the time <paramref name="t"/>.</summary>
+        public void RegisterSquat(double t)
+        {
+            _keyPeriod = double.IsNaN(_lastKey) || t - _lastKey > KeyboardStopAfter
+                ? KeyboardFirstPeriod
+                : Math.Max(0.2, t - _lastKey);
+            _lastKey = t;
+            _lastSwing = t;
+            _stopAfter = KeyboardStopAfter;
+            Fade(t);
+            Count++;
+        }
+
+        /// <summary>Let the effort fade up to the time <paramref name="t"/>.</summary>
+        private void Fade(double t)
+        {
+            if (!double.IsNaN(_lastUpdate) && t > _lastUpdate)
+            {
+                // NOTE (mristin):
+                // In the middle of a slow squat, no swing ends for a while, but
+                // the player is still squatting.
+                double since = t - _lastSwing;
+                double stopAfter = double.IsNaN(_stopAfter) ? StopAfter : _stopAfter;
+                bool stopped = since > (IsDown ? Math.Max(SlowestSquat, stopAfter) : stopAfter);
+                double tau = stopped ? StopTau : EffortTau;
+                Effort *= (float)Math.Exp(-(t - _lastUpdate) / tau);
+            }
+
+            if (double.IsNaN(_lastUpdate) || t > _lastUpdate)
+            {
+                _lastUpdate = t;
+            }
+
+            // NOTE (mristin):
+            // The keys set the effort by how often they come, and it drops as the
+            // next key is late.
+            if (!double.IsNaN(_lastKey) && t - _lastKey <= KeyboardStopAfter)
+            {
+                double period = Math.Max(_keyPeriod, t - _lastKey);
+                Effort = Math.Max(Effort, (float)(KeyboardEffort / period));
+            }
+        }
+
+        /// <summary>Let the speed follow the effort up to the time <paramref name="t"/>.</summary>
+        public void Update(double t)
+        {
+            Fade(t);
+            double dt = double.IsNaN(_lastSpeedUpdate) ? 0.0 : Math.Max(0.0, t - _lastSpeedUpdate);
+            _lastSpeedUpdate = t;
+            double tau = TargetSpeed >= Speed ? SpeedTau : SlowDownTau;
+            Speed += (TargetSpeed - Speed) * (float)(1.0 - Math.Exp(-dt / tau));
+            if (Speed < 0.01f && TargetSpeed < 0.01f)
+            {
+                Speed = 0f;
+            }
+        }
+
+        /// <summary>Brake for <paramref name="dt"/> seconds: the horse stops, and the effort is gone.</summary>
         public void Halt(double dt)
         {
+            // NOTE (mristin):
+            // The horse stands until the next squat, also from the keyboard.
+            Effort = 0f;
+            _lastKey = double.NaN;
             Speed = Math.Max(0f, Speed - BrakeDeceleration * (float)dt);
-            TargetSpeed = 0f;
-            _lastSquat = double.NaN;
-            Period = double.NaN;
         }
 
-        /// <summary>Forget everything, e.g., at the start of a level.</summary>
+        /// <summary>Forget the squats, e.g., at the start of a level.</summary>
         public void Reset()
         {
             Speed = 0f;
-            TargetSpeed = 0f;
+            Effort = 0f;
             Depth = 0f;
             RawDepth = 0f;
             Count = 0;
-            Period = double.NaN;
             IsDown = false;
-            _smoothedY = double.NaN;
-            _baselineY = double.NaN;
+            Top = float.NaN;
+            Bottom = float.NaN;
+            Unit = float.NaN;
+            _lastSwing = double.NegativeInfinity;
+            _stopAfter = double.NaN;
+            _lastKey = double.NaN;
+            _keyPeriod = double.NaN;
             _lastObserved = double.NaN;
-            _lastSquat = double.NaN;
             _lastUpdate = double.NaN;
-            _deepest = 0f;
-            _lastFactor = 1f;
+            _lastSpeedUpdate = double.NaN;
         }
     }
 }  // namespace SteppeRescue.Vision

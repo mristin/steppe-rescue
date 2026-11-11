@@ -33,19 +33,17 @@ func _run() -> void:
     var service: Node = root.get_node("Vision").service
     _check(service.GetGait(0) == 0, "the horse stands at the start")
 
-    await _squat(service, 3.5, 17.5)
+    await _squat(service, 2.0, 10.0)
+    _check(service.GetGait(0) == 1, "a squat every 2 s walks, got the gait %d" % service.GetGait(0))
+
+    await _squat(service, 1.0, 8.0)
     _check(
-        service.GetGait(0) == 1, "a squat every 3.5 s walks, got the gait %d" % service.GetGait(0)
+        service.GetGait(0) == 2, "a squat every second trots, got the gait %d" % service.GetGait(0)
     )
 
-    await _squat(service, 2.5, 12.5)
+    await _squat(service, 0.5, 6.0)
     _check(
-        service.GetGait(0) == 2, "a squat every 2.5 s trots, got the gait %d" % service.GetGait(0)
-    )
-
-    await _squat(service, 1.3, 10.0)
-    _check(
-        service.GetGait(0) == 3, "a squat every 1.3 s gallops, got the gait %d" % service.GetGait(0)
+        service.GetGait(0) == 3, "two squats a second gallop, got the gait %d" % service.GetGait(0)
     )
 
     var speed_bar: SpeedBar = scene.get_node("Right/SpeedBar")

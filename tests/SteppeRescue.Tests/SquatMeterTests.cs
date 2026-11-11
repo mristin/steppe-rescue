@@ -1,4 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 
 using SteppeRescue.Vision;
 using Xunit;
@@ -9,14 +13,21 @@ namespace SteppeRescue.Tests
     {
         private const float Unit = 100f;
         private const float StandingY = 150f;
-        private const double Fps = 30.0;
+        private const double Fps = 18.0;
 
         /// <summary>
         /// Simulate a player who squats with the given period and depth (in units)
-        /// for the given time, sampled at the frame rate of a webcam.
+        /// for the given time, sampled at the frame rate of the face tracker.
         /// </summary>
-        private static SquatMeter Squat(double period, float depth, double duration, double start = 0.0,
-            SquatMeter? meter = null)
+        private static SquatMeter Squat(
+            double period,
+            float depth,
+            double duration,
+            double start = 0.0,
+            SquatMeter? meter = null,
+            float unit = Unit,
+            Action<double, SquatMeter>? each = null
+        )
         {
             meter ??= new SquatMeter();
             for (double t = start; t < start + duration; t += 1.0 / Fps)
@@ -25,195 +36,352 @@ namespace SteppeRescue.Tests
 
                 // NOTE (mristin):
                 // Down and up like a cosine, from standing at the phase 0.
-                float y = StandingY + depth * Unit * (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * phase));
-                meter.Observe(t, y, Unit);
+                float y = StandingY * unit / Unit
+                    + depth * unit * (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * phase));
+                meter.Observe(t, y, unit);
                 meter.Update(t);
+                each?.Invoke(t, meter);
             }
 
             return meter;
         }
 
-        /// <summary>Stand still from <paramref name="start"/> on, and return the time when the horse stopped.</summary>
-        private static double TimeToStop(SquatMeter meter, double start, Action<double>? at = null)
+        /// <summary>Stand still from <paramref name="start"/> for the duration.</summary>
+        private static SquatMeter Stand(SquatMeter meter, double start, double duration, Action<double>? each = null)
         {
-            for (double t = start; t < start + 20.0; t += 1.0 / Fps)
+            for (double t = start; t < start + duration; t += 1.0 / Fps)
             {
                 meter.Observe(t, StandingY, Unit);
                 meter.Update(t);
-                at?.Invoke(t - start);
-                if (meter.Speed == 0f)
-                {
-                    return t - start;
-                }
+                each?.Invoke(t);
             }
 
-            return double.PositiveInfinity;
-        }
-
-        [Fact]
-        public void A_walking_horse_stops_soon_after_the_squats()
-        {
-            var meter = Squat(period: 3.5, depth: 1.2f, duration: 17.5);
-            Assert.Equal(Gait.Walk, meter.Gait);
-
-            // NOTE (mristin):
-            // The last squat ended at the end of the period, so the horse may walk
-            // on until the next squat would be due, but no longer than the pause.
-            Assert.InRange(TimeToStop(meter, 17.5), 0.2, 1.5);
-        }
-
-        [Fact]
-        public void A_galloping_horse_stops_at_once_after_the_squats()
-        {
-            var meter = Squat(period: 1.3, depth: 1.2f, duration: 15.0);
-            Assert.Equal(Gait.Gallop, meter.Gait);
-
-            double stopped = TimeToStop(meter, 15.0);
-            Assert.InRange(stopped, 0.2, 1.5);
-        }
-
-        [Fact]
-        public void A_trotting_horse_stops_soon_after_the_squats()
-        {
-            var meter = Squat(period: 2.5, depth: 1.2f, duration: 15.0);
-            Assert.Equal(Gait.Trot, meter.Gait);
-            Assert.InRange(TimeToStop(meter, 15.0), 0.2, 1.5);
-        }
-
-        [Fact]
-        public void Three_or_four_brisk_squats_gallop()
-        {
-            var meter = new SquatMeter();
-            for (int squats = 1; squats <= 8; squats++)
-            {
-                Squat(period: 1.2, depth: 1.2f, duration: 1.2, start: (squats - 1) * 1.2, meter: meter);
-                if (squats <= 1)
-                {
-                    Assert.NotEqual(Gait.Gallop, meter.Gait);
-                }
-
-                if (squats == 4)
-                {
-                    // NOTE (mristin):
-                    // Children manage three or four brisk squats, not many more.
-                    Assert.Equal(Gait.Gallop, meter.Gait);
-                }
-            }
-
-            Assert.Equal(Gait.Gallop, meter.Gait);
+            return meter;
         }
 
         [Fact]
         public void Standing_still_does_not_move_the_horse()
         {
-            var meter = Squat(period: 2.0, depth: 0f, duration: 10.0);
+            var meter = new SquatMeter();
+            var random = new Random(1);
+            for (double t = 0.0; t < 10.0; t += 1.0 / Fps)
+            {
+                // NOTE (mristin):
+                // The tracker jitters by a few hundredths of the unit.
+                meter.Observe(t, StandingY + (float)(random.NextDouble() - 0.5) * 0.1f * Unit, Unit);
+                meter.Update(t);
+            }
+
             Assert.Equal(0, meter.Count);
             Assert.Equal(0f, meter.Speed);
-            Assert.Equal(Gait.Stand, meter.Gait);
+        }
+
+        [Fact]
+        public void A_squat_counts_when_the_head_comes_back_up()
+        {
+            var meter = Squat(period: 1.4, depth: 0.5f, duration: 0.7);
+            Assert.Equal(0, meter.Count);
+            Squat(period: 1.4, depth: 0.5f, duration: 0.7, start: 0.7, meter: meter);
+            Assert.Equal(1, meter.Count);
+            Assert.Equal(Gait.Walk, meter.Gait);
         }
 
         [Fact]
         public void Nodding_does_not_count()
         {
-            var meter = Squat(period: 1.0, depth: 0.2f, duration: 10.0);
+            var meter = Squat(period: 1.0, depth: 0.15f, duration: 10.0);
             Assert.Equal(0, meter.Count);
             Assert.Equal(0f, meter.Speed);
         }
 
         [Theory]
-        [InlineData(4.0, Gait.Walk)]
-        [InlineData(2.5, Gait.Trot)]
-        [InlineData(1.6, Gait.Gallop)]
-        public void Faster_squats_make_a_faster_gait(double period, Gait expected)
+        [InlineData(1.4, 0.6f, Gait.Walk)]
+        [InlineData(1.1, 0.8f, Gait.Trot)]
+        [InlineData(0.85, 0.95f, Gait.Gallop)]
+        public void Faster_and_deeper_squats_make_a_faster_gait(double period, float depth, Gait expected)
         {
-            var meter = Squat(period, depth: 1.2f, duration: 20.0);
-            Assert.InRange(meter.Count, (int)(20.0 / period) - 2, (int)(20.0 / period) + 1);
+            // NOTE (mristin):
+            // The periods and the depths of a player's walk, trot and gallop, as
+            // recorded (see dev/squats/).
+            var meter = Squat(period, depth, duration: 12.0);
             Assert.Equal(expected, meter.Gait);
         }
 
         [Fact]
-        public void Shallow_squats_count_less_than_deep_ones()
+        public void Deeper_squats_at_the_same_rhythm_are_faster()
         {
-            var shallow = Squat(period: 2.0, depth: 0.7f, duration: 20.0);
-            var deep = Squat(period: 2.0, depth: 1.2f, duration: 20.0);
-            Assert.True(shallow.Count > 0);
-            Assert.True(shallow.Speed < deep.Speed, $"{shallow.Speed} should be < {deep.Speed}");
+            var shallow = Squat(period: 1.2, depth: 0.4f, duration: 10.0);
+            var deep = Squat(period: 1.2, depth: 0.9f, duration: 10.0);
+            Assert.Equal(shallow.Count, deep.Count);
+            Assert.True(deep.Speed > shallow.Speed + 0.1f, $"{deep.Speed} against {shallow.Speed}");
         }
 
         [Fact]
-        public void The_horse_slows_down_and_stops_after_the_squats_stop()
+        public void It_does_not_matter_how_far_from_the_camera_the_player_stands()
         {
-            var meter = Squat(period: 1.5, depth: 1.2f, duration: 15.0);
-            float galloping = meter.Speed;
-            Assert.Equal(Gait.Gallop, meter.Gait);
-
             // NOTE (mristin):
-            // The player stands still.
-            float previous = galloping;
-            for (double t = 15.0; t < 25.0; t += 1.0 / Fps)
+            // Twice as close, the squats are twice as big in pixels, and so is
+            // the unit.
+            var far = Squat(period: 1.1, depth: 0.8f, duration: 10.0, unit: 80f);
+            var close = Squat(period: 1.1, depth: 0.8f, duration: 10.0, unit: 160f);
+            Assert.Equal(far.Count, close.Count);
+            Assert.Equal(far.Speed, close.Speed, 3);
+        }
+
+        [Fact]
+        public void Bouncing_up_higher_than_standing_still_counts()
+        {
+            // NOTE (mristin):
+            // Squatting fast, the player comes up higher than she stood.
+            var meter = new SquatMeter();
+            Stand(meter, 0.0, 1.0);
+            for (double t = 1.0; t < 11.0; t += 1.0 / Fps)
             {
-                meter.Observe(t, StandingY, Unit);
+                double phase = ((t - 1.0) % 0.85) / 0.85;
+                float y = StandingY - 0.3f * Unit
+                    + 0.95f * Unit * (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * phase));
+                meter.Observe(t, y, Unit);
                 meter.Update(t);
-                Assert.True(meter.Speed <= previous + 1e-6f);
-                previous = meter.Speed;
             }
 
-            Assert.Equal(Gait.Stand, meter.Gait);
+            Assert.InRange(meter.Count, 11, 12);
+            Assert.Equal(Gait.Gallop, meter.Gait);
+        }
+
+        [Fact]
+        public void The_horse_stops_soon_after_the_squats_stop()
+        {
+            var meter = Squat(period: 0.85, depth: 0.95f, duration: 8.5);
+            Assert.Equal(Gait.Gallop, meter.Gait);
+            double stopped = double.NaN;
+            Stand(meter, 8.5, 5.0, t =>
+            {
+                if (double.IsNaN(stopped) && meter.Gait == Gait.Stand)
+                {
+                    stopped = t - 8.5;
+                }
+            });
+
+            Assert.InRange(stopped, 0.5, 2.5);
+        }
+
+        [Fact]
+        public void The_horse_does_not_stop_in_the_middle_of_a_slow_squat()
+        {
+            float slowest = float.PositiveInfinity;
+            Squat(period: 3.0, depth: 0.8f, duration: 15.0, each: (t, meter) =>
+            {
+                if (t > 3.0)
+                {
+                    slowest = Math.Min(slowest, meter.Speed);
+                }
+            });
+
+            Assert.True(slowest > 0f, "the horse stopped in the middle of a slow squat");
         }
 
         [Fact]
         public void The_speed_changes_gently()
         {
-            var meter = new SquatMeter();
-            meter.RegisterSquat(0.0, 1.2f);
-            for (double t = 0.0; t < 1.2; t += 1.0 / Fps)
+            float biggest = 0f;
+            float previous = 0f;
+            Squat(period: 0.85, depth: 0.95f, duration: 6.0, each: (_, meter) =>
             {
-                meter.Update(t);
-            }
+                biggest = Math.Max(biggest, meter.Speed - previous);
+                previous = meter.Speed;
+            });
 
-            float walking = meter.Speed;
-            Assert.Equal(Gait.Walk, meter.Gait);
-
-            // NOTE (mristin):
-            // The second squat comes quickly, which asks for a gallop, but the
-            // horse only speeds up gradually.
-            meter.RegisterSquat(1.2, 1.2f);
-            meter.Update(1.2);
-            meter.Update(1.3);
-            Assert.True(meter.TargetSpeed > 0.9f);
-            Assert.True(
-                meter.Speed < walking + 0.1f, $"The horse jumped from {walking} to {meter.Speed}."
-            );
+            Assert.True(biggest < 0.15f, $"The speed jumped by {biggest} in a frame.");
         }
 
         [Fact]
-        public void Stepping_closer_does_not_count_as_squats()
+        public void The_target_lines_follow_the_head()
         {
-            // NOTE (mristin):
-            // The player steps back and forth: the head goes a bit down and up,
-            // but so does the unit, and slowly.
             var meter = new SquatMeter();
-            for (double t = 0.0; t < 20.0; t += 1.0 / Fps)
+            Stand(meter, 0.0, 1.0);
+            Assert.False(meter.IsDown);
+            Assert.Equal(StandingY + meter.SwingDepth * Unit, meter.Target, 3);
+
+            Squat(period: 1.4, depth: 0.6f, duration: 0.7, start: 1.0, meter: meter);
+            Assert.True(meter.IsDown);
+            Assert.Equal(meter.Bottom - meter.SwingDepth * Unit, meter.Target, 3);
+        }
+
+        [Theory]
+        [InlineData(2.0, Gait.Walk)]
+        [InlineData(1.0, Gait.Trot)]
+        [InlineData(0.5, Gait.Gallop)]
+        public void Tapping_faster_on_the_keyboard_is_faster(double every, Gait expected)
+        {
+            var meter = new SquatMeter();
+            int frames = (int)Math.Round(every * 30.0);
+            for (int frame = 0; frame < 300; frame++)
             {
-                float closer = (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * t / 10.0));
-                float unit = Unit * (1f + 0.3f * closer);
-                meter.Observe(t, StandingY + 0.3f * Unit * closer, unit);
+                double t = frame / 30.0;
+                if (frame % frames == 0)
+                {
+                    meter.RegisterSquat(t);
+                }
+
                 meter.Update(t);
             }
 
-            Assert.Equal(0, meter.Count);
-        }
-
-        [Fact]
-        public void Speed_of_period_is_monotonic()
-        {
-            float previous = float.PositiveInfinity;
-            for (double period = 0.5; period < 6.0; period += 0.1)
-            {
-                float speed = SquatMeter.SpeedOfPeriod(period);
-                Assert.True(speed <= previous);
-                previous = speed;
-            }
+            // NOTE (mristin):
+            // Right after a key, so that a slow walk did not fade in between.
+            meter.RegisterSquat(10.0);
+            meter.Update(10.1);
+            Assert.Equal(expected, meter.Gait);
         }
     }
-}
+
+    /// <summary>
+    /// Replay a player's recorded squats (see dev/squats/) through the head gauge
+    /// and the squat meter, as the game does.
+    /// </summary>
+    public class SquatRecordingTests
+    {
+        private sealed record Frame(double T, string Label, FaceLandmarks? Face, BoundingBox? Head, bool Detected);
+
+        private static List<Frame> Load(string name)
+        {
+            var frames = new List<Frame>();
+            var lines = File.ReadAllLines(TestData.Path(name));
+            foreach (var line in lines.Skip(1))
+            {
+                var cells = line.Split(',');
+                float F(int i) => float.Parse(cells[i], CultureInfo.InvariantCulture);
+                FaceLandmarks? face = null;
+                if (cells[2] != "")
+                {
+                    face = new FaceLandmarks
+                    {
+                        LeftEyeX = F(2),
+                        LeftEyeY = F(3),
+                        RightEyeX = F(4),
+                        RightEyeY = F(5),
+                    };
+                }
+
+                BoundingBox? head = cells[6] != "" ? new BoundingBox(F(6), F(7), F(8), F(9)) : null;
+                frames.Add(new Frame(
+                    double.Parse(cells[0], CultureInfo.InvariantCulture), cells[1], face, head, cells[10] == "1"
+                ));
+            }
+
+            return frames;
+        }
+
+        /// <summary>
+        /// For each step: the squats counted, the gait in each frame after its
+        /// first 4 s, and how long after the last squat of the step (or its start)
+        /// the horse stood.
+        /// </summary>
+        private static Dictionary<string, (int Squats, List<Gait> Gaits, double StoppedAfter)> Replay(string name)
+        {
+            var gauge = new HeadGauge();
+            var meter = new SquatMeter();
+            var result = new Dictionary<string, (int Squats, List<Gait> Gaits, double StoppedAfter)>();
+            string label = "";
+            double start = 0.0;
+            int count = 0;
+            var gaits = new List<Gait>();
+            double stopped = double.NaN;
+            double lastSquat = 0.0;
+            foreach (var frame in Load(name))
+            {
+                if (frame.Label != label)
+                {
+                    if (label != "")
+                    {
+                        result[label] = (meter.Count - count, gaits, stopped);
+                    }
+
+                    label = frame.Label;
+                    start = frame.T;
+                    count = meter.Count;
+                    gaits = new List<Gait>();
+                    stopped = double.NaN;
+                    lastSquat = frame.T;
+                }
+
+                int before = meter.Count;
+
+                if (gauge.Measure(frame.T, frame.Face, frame.Head, frame.Detected))
+                {
+                    meter.Observe(frame.T, gauge.Y, gauge.Unit);
+                }
+
+                meter.Update(frame.T);
+                if (meter.Count > before)
+                {
+                    lastSquat = frame.T;
+                    stopped = double.NaN;
+                }
+
+                if (frame.T - start > 4.0)
+                {
+                    gaits.Add(meter.Gait);
+                }
+
+                if (double.IsNaN(stopped) && meter.Gait == Gait.Stand)
+                {
+                    stopped = frame.T - lastSquat;
+                }
+            }
+
+            result[label] = (meter.Count - count, gaits, stopped);
+            return result;
+        }
+
+        private static double Share(List<Gait> gaits, Func<Gait, bool> which) =>
+            gaits.Count == 0 ? 0.0 : gaits.Count(which) / (double)gaits.Count;
+
+        [Fact]
+        public void A_recorded_player_walks_trots_gallops_and_stops()
+        {
+            var steps = Replay("squats_walk_trot_gallop.csv");
+            foreach (var step in new[] { "stand 1", "stand 3" })
+            {
+                Assert.Equal(0, steps[step].Squats);
+                Assert.True(Share(steps[step].Gaits, g => g == Gait.Stand) == 1.0, $"{step} moved the horse");
+            }
+
+            foreach (var round in new[] { 1, 2, 3 })
+            {
+                // NOTE (mristin):
+                // Every squat counts (she squatted about 11 to 15 times in 20 s
+                // at a walk, 15 to 20 at a trot and 17 or 18 in 15 s at a gallop).
+                Assert.InRange(steps[$"walk {round}"].Squats, 10, 16);
+                Assert.InRange(steps[$"trot {round}"].Squats, 14, 21);
+                Assert.InRange(steps[$"gallop {round}"].Squats, 16, 19);
+
+                var walk = steps[$"walk {round}"].Gaits;
+                Assert.True(
+                    Share(walk, g => g == Gait.Walk || g == Gait.Trot) > 0.9, $"walk {round} did not walk"
+                );
+                var gallop = steps[$"gallop {round}"].Gaits;
+                Assert.True(Share(gallop, g => g == Gait.Gallop) > 0.8, $"gallop {round} did not gallop");
+            }
+
+            // NOTE (mristin):
+            // In the first round, she trotted hardly faster than she walked.
+            foreach (var round in new[] { 2, 3 })
+            {
+                var trot = steps[$"trot {round}"].Gaits;
+                Assert.True(Share(trot, g => g == Gait.Trot) > 0.6, $"trot {round} did not trot");
+                Assert.True(
+                    Share(steps[$"walk {round}"].Gaits, g => g == Gait.Walk) > 0.6, $"walk {round} did not walk"
+                );
+            }
+
+            // NOTE (mristin):
+            // She often finished her squat after the call to stop (and went on
+            // squatting through the first stop); the horse stands soon after
+            // her last squat. In the third stop, she sank from bouncing high
+            // into her stance, which looks like the start of a slow squat, so
+            // the horse waits a little longer for her to come up.
+            Assert.InRange(steps["stop 2"].StoppedAfter, 0.0, 2.0);
+            Assert.InRange(steps["stop 3"].StoppedAfter, 0.0, 3.5);
+        }
+    }
+}  // namespace SteppeRescue.Tests

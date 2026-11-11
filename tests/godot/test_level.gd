@@ -202,9 +202,9 @@ func _run() -> void:
     await _wait(0.3)
     _check(service.GetSpeed(0) == 0.0, "the brake stops the horse at once")
     _check(rider.rearing() == 0.0, "a horse which does not gallop halts without rearing")
-    for i in range(8):
+    for i in range(12):
         service.SquatByKeyboard(0)
-        await _wait(1.2)
+        await _wait(0.5)
     _check(rider.gait() == 3, "brisk squats gallop, got the gait %d" % rider.gait())
     service.BrakeByKeyboard(0)
     await _wait(0.3)

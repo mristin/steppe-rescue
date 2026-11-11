@@ -78,6 +78,12 @@ func _check_two_players() -> void:
         "both halves show the same steppe"
     )
     _check(level.rider(0).position.distance_to(level.rider(1).position) > 10.0, "side by side")
+    var profile := root.get_node("Profile")
+    _check(
+        profile.players >= 2 or profile.rider_name(1) == tr("Dana"),
+        "a journey of one lends the second player the default rider, Dana"
+    )
+    _check(level.rider(0).looks != level.rider(1).looks, "the riders do not look the same")
     var grandmother := level.talking_to(0)
     _check(grandmother != null and level.talking_to(1) == grandmother, "Grandmother sends both out")
 
@@ -147,10 +153,11 @@ func _check_two_players() -> void:
             said += (label as Label).text + "\n"
         var rider_name: String = root.get_node("Profile").rider_name(i)
         _check(rider_name in said, "by her own name: %s" % said)
-    await _wait(Level.THANKS_SECONDS)
-    service.SquatByKeyboard(1)
+    await _wait(Level.THANKS_SECONDS + 0.2)
+    _check(level.ok_button() != null and level.ok_button().visible, "then the button OK shows")
+    level.ok_button().press()
     await _wait(1.0)
-    _check(current_scene is Reward, "a squat of either rider goes to the reward")
+    _check(current_scene is Reward, "either rider presses OK to go to the reward")
     service.SetPlayerCount(1)
 
 

@@ -64,7 +64,7 @@ The levels move through the year, which changes the colours and the landmarks a 
 4. **Searching and listening.** Following the clues, the rider rides towards the landmarks. When she comes near an animal, she hears it before she sees it.
 5. **Gathering.** When she comes close enough, the animal joins her and follows.
 6. **Bringing them home.** She can bring the animals home one by one or all at once. Each animal that enters the pen at the aul fills its slot.
-7. **The end.** When all the slots are full, Grandmother thanks her, and the rider chooses her reward (section 8).
+7. **The end.** When all the slots are full, Grandmother thanks her, and the rider chooses her reward (section 8). After the thanks, a squat or the button OK (held with the hand, as in the menus) goes on; with two players, either rider can press it.
 
 ### The map
 
@@ -167,7 +167,7 @@ The player stands facing the camera, about 2 to 3 m away, so that the camera see
 ### The brake: both hands above the head
 
 * **Both hands up above the head** stop the horse at once, and it stands until the next squat, which starts a walk again. A walking or trotting horse simply halts, as a real horse does within a stride or two; only a galloping horse, stopped hard, rears up on its hind legs, its front legs in the air, for about 1.4 s. (A real horse stops from a gallop over a few strides and does not rear to stop; it rears from fear or excitement, which a hard stop at speed can provoke. The rearing is the game's dramatic sign of the hard stop.)
-* Both wrists must be clearly above the head (0.4 of the width of the shoulders above the eyes and ears) for 0.15 s, so that a hand brushing the hair does not brake; one hand up does nothing.
+* Both hands must be clearly above the head (0.4 of the width of the shoulders above the eyes) for 0.15 s, so that a hand brushing the hair does not brake; one hand up does nothing.
 * It is the way to stop quickly, e.g., next to a person or a lost animal; the horse also stops by itself when the player stands still.
 * Down on the keyboard brakes, too.
 * **The pictures:** the painted girl raising both hands above her head (`assets/pictures/girl/hands_up_*.png`), the bay horse rearing up from the side in five frames (`assets/pictures/horse/rear_*.png`), in How to Play, and each of the four horses rearing up seen from above (`assets/pictures/top_down/horses/<preset>/rear.png`), in the level.
@@ -245,7 +245,7 @@ A preview of the rider sitting on her horse in the steppe turns slowly and chang
 
 ### The face overlay
 
-The camera picture in the corner of the screen shows the player, mirrored, **dressed as her rider**: a face landmark detector finds the face, and the game draws the chosen hat, the braids, the earrings and other finery over it, so that they move and turn with the player's head.
+The camera picture in the corner of the screen shows the player, mirrored, **dressed as her rider**: a face landmark detector finds the face, and the game draws the chosen hat, the braids, the earrings and other finery over it, so that they move and turn with the player's head. Her body wears the rider's coat over her dress, with the trims and the belt, the sleeves and the boots, drawn along her shoulders, elbows, hands, hips, knees and ankles; the sleeves reach to her hands, so that every child sees which hands are hers (the movement test also marks each hand with its player and side, e.g., "1L").
 
 * The overlay follows the head's position, size and tilt.
 * The finery won at the end of a level (earrings, a hat with owl feathers, ...) also appears on the overlay.
@@ -370,12 +370,15 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 * **Godot 4.6 (.NET)**, with the Compatibility renderer (OpenGL), which suits the old school laptops. The vision is in C#; the game is in GDScript.
 * **The vision** runs ONNX models on the CPU:
-  * **a body pose model** with the standard 17 key points (the nose, the eyes, the ears, the shoulders, the elbows, the wrists, ...): RTMO-t of MMPose (Apache-2.0). From it we take the head (the mean of the nose, the eyes and the ears), the unit of length (the width of the shoulders) and the wrists. The pose model tells the left wrist from the right one, which the turning needs.
-  * **a head detector** for the overlay: YOLOX-Body-Head-Hand nano (Apache-2.0) at 320x256. The pose model is too slow on a school laptop for the overlay to stick to the face, so the small head detector runs next to it, on every camera frame. The pose tells which of the heads is the player's.
+  * **a head and hand detector**: YOLOX-Body-Head-Hand nano (Apache-2.0) at 320x256, on every camera frame, with the face landmarks (YuNet) in each head. The squats follow the head (the eyes; the head box when the face is lost, e.g., looking down in a deep squat), and the reins and the brake follow the hands, on every frame.
+  * **a body pose model** with the standard 17 key points (the nose, the eyes, the ears, the shoulders, the elbows, the wrists, ...): RTMO-t of MMPose (Apache-2.0). It is too slow on a school laptop to follow the movements, so it runs only four times a second, to tell which head and which hands are whose, and the left hand from the right one (which the turning needs), and to dress the body. Without the face models, it does it all, as often as it can.
   * **a face landmark model** for the overlay: YuNet (MIT), run on a small crop around the head the detector found. It gives the eyes, the nose and the corners of the mouth, from which we compute the position, the size and the tilt of the head.
 * **New in C#, without any Godot dependency, so that it can be unit-tested:**
+  * `HeadGauge`: the height of the head and the unit of length of the player from the face tracker (the eyes and their distance; the head box, calibrated against them, when the face is lost).
+  * `HandTracker`: follows the hands of the detector from frame to frame; whenever a pose comes, it matches its wrists to the hands of the same frame, which tells whose hand each is and which, and follows them again up to now.
+  * `BodyFollower`: the body of the last pose, moved with the head between the poses (the shoulders and the hips fully, the knees halfway, the feet not), with the hands of the `HandTracker` and the elbows bent to keep the lengths of the arms, for dressing the body.
   * `SquatMeter`: from the vertical position of the head over time (smoothed), it finds the squats, their depth and their rate, and gives a speed in [0, 1] and the gait. The keyboard registers its squats through the same rules.
-  * `Reins`: from the head axis and the wrists, it gives the turn in [-1, 1] (negative to the left).
+  * `Reins`: from the head axis and the hands, it gives the turn in [-1, 1] (negative to the left).
   * `FaceTracker`: the head detector and the face landmarks together, on every frame. Once it found the face, it follows it with the face landmarks alone in a crop around where it was (about 3 ms instead of 25 ms), and runs the head detector only when the face is lost and four times a second, to check that it still follows the player's head.
   * `FaceAnchor`: from the face landmarks, the anchor of the overlay (the point between the eyes, the distance between the eyes, and the tilt), smoothed, held briefly and faded out when the face is lost.
   * `VisionService` (the only part which depends on Godot) runs the camera, the pose on one background thread and the face on another, and offers plain getters to GDScript, each for one player (with two players, `PlayerSplit` gives each her half of the picture, and `FaceTracker` follows a face in each half).

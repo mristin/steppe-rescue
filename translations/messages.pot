@@ -80,6 +80,10 @@ msgstr ""
 msgid "Don't ride too far away!"
 msgstr ""
 
+#: scenes/level/level.gd scenes/session_name/session_name.gd
+msgid "OK"
+msgstr ""
+
 #: scenes/level/level.gd
 msgid "R: ride again · Esc: quit"
 msgstr ""
@@ -613,10 +617,6 @@ msgstr ""
 #. The title of the screen where the players name a new journey (a saved game).
 #: scenes/session_name/session_name.gd
 msgid "Name your journey"
-msgstr ""
-
-#: scenes/session_name/session_name.gd
-msgid "OK"
 msgstr ""
 
 #. The title of the screen where the players choose their journey (a saved game).

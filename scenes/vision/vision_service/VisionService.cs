@@ -23,8 +23,10 @@ using SteppeRescue.Vision;
 /// that we never queue frames (and latency) nor copy frames nobody processes;
 /// both threads share the copy. The threads publish immutable snapshots
 /// (<see cref="VisionSnapshot"/> and <see cref="FaceSnapshot"/>), which the
-/// main thread feeds into the <see cref="SquatMeter"/>, the <see cref="Reins"/>
-/// and the <see cref="FaceAnchorFilter"/> in <see cref="_Process"/>.
+/// main thread feeds into the <see cref="SquatMeter"/> (through the
+/// <see cref="HeadGauge"/>, from the faces), the <see cref="Reins"/>, the
+/// <see cref="Brake"/> (from the poses) and the <see cref="FaceAnchorFilter"/>
+/// in <see cref="_Process"/>.
 /// </para>
 /// <para>
 /// One or two players ride together (see <see cref="SetPlayerCount"/>). With
@@ -97,6 +99,29 @@ public partial class VisionService : Node
     public readonly Brake[] Brakes = { new(), new() };
     public readonly FaceAnchorFilter[] Faces = { new(), new() };
 
+    /// <summary>The head of each player from the face tracker, which the squats follow.</summary>
+    public readonly HeadGauge[] Heads = { new(), new() };
+
+    /// <summary>The hands of the players, from the hand detector, told apart by the poses.</summary>
+    public readonly HandTracker Hands = new();
+
+    /// <summary>The body of each player, to dress her as her rider in the camera picture.</summary>
+    public readonly BodyFollower[] Bodies = { new(), new() };
+
+    /// <summary>
+    /// With the face tracker, the pose runs this often (in seconds): only to tell
+    /// the players' hands apart and to dress their bodies.
+    /// </summary>
+    [Export]
+    public double PoseEvery = 0.25;
+
+    /// <summary>
+    /// Whether the face tracker follows the heads and the hands; if not (its
+    /// models are missing, or it failed), the squats, the reins and the brake
+    /// follow the pose, which then runs as often as it can.
+    /// </summary>
+    private volatile bool _faceTracking;
+
     private readonly Stopwatch _clock = Stopwatch.StartNew();
     private double _gameTime;
 
@@ -114,7 +139,6 @@ public partial class VisionService : Node
     /// <summary>The latest face snapshot in which the head detector ran, with its hands.</summary>
     private FaceSnapshot? _latestHands;
 
-    private volatile bool _wantHands;
     private FaceSnapshot? _consumedFace;
 
     /// <summary>The latest pose, or null before the first one.</summary>
@@ -223,6 +247,23 @@ public partial class VisionService : Node
                 {
                     Faces[i].Observe(face.Timestamp, FaceAnchor.FromLandmarks(landmarks, face.Width));
                 }
+
+                // NOTE (mristin):
+                // The squats follow the head on every frame of the face tracker,
+                // which is faster and steadier than the pose.
+                var head = i < face.Heads.Count ? face.Heads[i] : null;
+                if (Heads[i].Measure(face.Timestamp, landmarks, head, face.HeadCount >= 0))
+                {
+                    Squats[i].Observe(face.Timestamp, Heads[i].Y, Heads[i].Unit);
+                    Bodies[i].ObserveHead(face.Timestamp, Heads[i].X, Heads[i].Y);
+                    Hands.SetUnit(i, Heads[i].Unit);
+                }
+            }
+
+            if (face.Hands != null)
+            {
+                Hands.Observe(face.Timestamp, face.Hands);
+                ConsumeHands(face.Timestamp);
             }
         }
 
@@ -305,10 +346,39 @@ public partial class VisionService : Node
         for (int i = 0; i < snapshot.Players.Count && i < PlayerSplit.MaxPlayers; i++)
         {
             var player = snapshot.Players[i];
-            if (player != null)
+            if (player == null)
+            {
+                continue;
+            }
+
+            Bodies[i].ObservePose(snapshot.Timestamp, player);
+            if (!_faceTracking)
             {
                 ConsumePlayer(i, player, snapshot.Timestamp);
             }
+        }
+
+        if (_faceTracking)
+        {
+            Hands.ObservePoses(snapshot.Timestamp, snapshot.Players);
+        }
+    }
+
+    /// <summary>Turn and brake each player with her hands, which the hand tracker follows.</summary>
+    private void ConsumeHands(double t)
+    {
+        for (int i = 0; i < PlayerCount; i++)
+        {
+            var head = Heads[i];
+            if (float.IsNaN(head.Y) || float.IsNaN(head.Unit))
+            {
+                continue;
+            }
+
+            var left = Hands.Hand(i, HandSide.Left, t);
+            var right = Hands.Hand(i, HandSide.Right, t);
+            Reins[i].Observe(t, head.X, head.Unit, left?.X, right?.X);
+            Brakes[i].Observe(t, head.Y, head.Unit, left?.Y, right?.Y);
         }
     }
 
@@ -323,6 +393,7 @@ public partial class VisionService : Node
         }
 
         Squats[index].Observe(t, head.Value.Y, unit.Value);
+        Bodies[index].ObserveHead(t, head.Value.X, head.Value.Y);
 
         float? leftWrist = player.Has(BodyPart.LeftWrist, threshold) ? player[BodyPart.LeftWrist].X : null;
         float? rightWrist = player.Has(BodyPart.RightWrist, threshold) ? player[BodyPart.RightWrist].X : null;
@@ -356,6 +427,7 @@ public partial class VisionService : Node
         }
 
         PlayerCount = clamped;
+        Hands.Reset();
         ResetRiding();
     }
 
@@ -438,12 +510,6 @@ public partial class VisionService : Node
     }
 
     /// <summary>
-    /// Ask the face thread to run the hand detector on every frame (true while a
-    /// menu shows the cursor of the hand), or only now and then.
-    /// </summary>
-    public void SetWantHands(bool want) => _wantHands = want;
-
-    /// <summary>
     /// The hands which YOLOX found lately (of all the players), as their
     /// centers in the mirrored picture, normalized; empty if none were found in
     /// the last 0.3 s.
@@ -464,6 +530,50 @@ public partial class VisionService : Node
         }
 
         return hands;
+    }
+
+    private Variant Mirrored((float X, float Y)? point)
+    {
+        var snapshot = LatestFace;
+        float width = snapshot?.Width ?? Latest?.Width ?? 640;
+        float height = snapshot?.Height ?? Latest?.Height ?? 480;
+        return point == null
+            ? new Variant()
+            : Variant.From(new Vector2(1f - point.Value.X / width, point.Value.Y / height));
+    }
+
+    /// <summary>
+    /// The hands of the player in the mirrored picture, normalized: [left,
+    /// right], each null if not seen (left and right of her body).
+    /// </summary>
+    public Godot.Collections.Array GetPlayerHands(int player)
+    {
+        int i = Index(player);
+        double now = Now;
+        return new Godot.Collections.Array
+        {
+            Mirrored(Hands.Hand(i, HandSide.Left, now)),
+            Mirrored(Hands.Hand(i, HandSide.Right, now)),
+        };
+    }
+
+    /// <summary>
+    /// The body of the player, to dress her: "joints" (the 12 joints of
+    /// <see cref="Joint"/> in the mirrored picture, normalized, each null if
+    /// not seen) and "alpha" (0 hides it).
+    /// </summary>
+    public Godot.Collections.Dictionary GetBody(int player)
+    {
+        int i = Index(player);
+        double now = Now;
+        var joints = Bodies[i].Joints(Hands.Hand(i, HandSide.Left, now), Hands.Hand(i, HandSide.Right, now));
+        var result = new Godot.Collections.Array();
+        foreach (var joint in joints)
+        {
+            result.Add(Mirrored(joint));
+        }
+
+        return new Godot.Collections.Dictionary { { "joints", result }, { "alpha", Bodies[i].Alpha(now) } };
     }
 
     /// <summary>The scores of the key points of <see cref="GetKeypoints"/>.</summary>
@@ -616,6 +726,7 @@ public partial class VisionService : Node
         {
             byte[] headModel = FileAccess.GetFileAsBytes(HeadModelPath);
             byte[] faceModel = FileAccess.GetFileAsBytes(FaceModelPath);
+            _faceTracking = true;
             StartThread("Face", () => FaceLoop(headModel, faceModel));
         }
         else
@@ -692,8 +803,23 @@ public partial class VisionService : Node
             vision = new RiderVision(poseModel, threads);
             Callable.From(() => SetStatus(ServiceStatus.Running, "")).CallDeferred();
 
+            var started = Stopwatch.StartNew();
             while (_running)
             {
+                // NOTE (mristin):
+                // With the face tracker, the pose only tells the hands apart and
+                // dresses the bodies, so it runs only now and then, and leaves the
+                // processor to the faces and the hands.
+                if (_faceTracking)
+                {
+                    int wait = (int)((PoseEvery - started.Elapsed.TotalSeconds) * 1000.0);
+                    if (wait > 0)
+                    {
+                        Thread.Sleep(wait);
+                    }
+                }
+
+                started.Restart();
                 var frame = NextFrame(_poseSlot);
                 if (frame != null)
                 {
@@ -721,7 +847,9 @@ public partial class VisionService : Node
             tracker = new FaceTracker(headModel, faceModel);
             while (_running)
             {
-                tracker.WantHands = _wantHands;
+                // NOTE (mristin):
+                // The reins and the brake follow the hands on every frame.
+                tracker.WantHands = true;
                 var frame = NextFrame(_faceSlot);
                 if (frame == null)
                 {
@@ -751,6 +879,7 @@ public partial class VisionService : Node
             // NOTE (mristin):
             // The faces only dress up the picture, so the riding goes on without them.
             GD.PushWarning($"The face tracking stopped: {exception}");
+            _faceTracking = false;
         }
         finally
         {

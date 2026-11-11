@@ -101,6 +101,10 @@ static var reach := _REACH
 ## -1 for the hands of everybody. Set it before the cursor enters the tree.
 var player := -1
 
+## Whether to show the mirror of the player behind the buttons; off over the
+## steppe (e.g., the button OK at the end of a level), which stays in view.
+var mirror := true
+
 var _service: Node = null
 var _hands: Array[Hand] = []
 var _mirror: Control = null
@@ -122,15 +126,14 @@ func _ready() -> void:
     z_index = 100
     var vision := get_node_or_null("/root/Vision")
     _service = vision.service if vision != null else null
-    if _service != null:
-        _service.SetWantHands(true)
     # NOTE (mristin):
     # The height of the reach follows the shoulders across the screens.
     var base := _base_reach()
     reach = Rect2(base.position.x, reach.position.y, base.size.x, reach.size.y)
     by_hand = false
     at = get_viewport().get_mouse_position()
-    _add_mirror.call_deferred()
+    if mirror:
+        _add_mirror.call_deferred()
 
 
 func _process(delta: float) -> void:
@@ -244,8 +247,6 @@ func _draw_mirror() -> void:
 
 func _exit_tree() -> void:
     birds.clear()
-    if _service != null:
-        _service.SetWantHands(false)
 
 
 func _input(event: InputEvent) -> void:

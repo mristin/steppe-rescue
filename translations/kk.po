@@ -98,6 +98,11 @@ msgstr "Баптаулар"
 msgid "Don't ride too far away!"
 msgstr "Тым алысқа кетпе!"
 
+#: scenes/level/level.gd scenes/session_name/session_name.gd
+#, fuzzy
+msgid "OK"
+msgstr "Жарайды"
+
 #: scenes/level/level.gd
 #, fuzzy
 msgid "R: ride again · Esc: quit"
@@ -747,11 +752,6 @@ msgstr "сұр"
 #, fuzzy
 msgid "Name your journey"
 msgstr "Сапарыңа ат қой"
-
-#: scenes/session_name/session_name.gd
-#, fuzzy
-msgid "OK"
-msgstr "Жарайды"
 
 #. The title of the screen where the players choose their journey (a saved game).
 #: scenes/sessions/sessions.gd

@@ -98,6 +98,11 @@ msgstr "Настройки"
 msgid "Don't ride too far away!"
 msgstr "Не уезжай слишком далеко!"
 
+#: scenes/level/level.gd scenes/session_name/session_name.gd
+#, fuzzy
+msgid "OK"
+msgstr "ОК"
+
 #: scenes/level/level.gd
 #, fuzzy
 msgid "R: ride again · Esc: quit"
@@ -747,11 +752,6 @@ msgstr "серая"
 #, fuzzy
 msgid "Name your journey"
 msgstr "Назови своё путешествие"
-
-#: scenes/session_name/session_name.gd
-#, fuzzy
-msgid "OK"
-msgstr "ОК"
 
 #. The title of the screen where the players choose their journey (a saved game).
 #: scenes/sessions/sessions.gd

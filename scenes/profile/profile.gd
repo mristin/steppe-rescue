@@ -115,9 +115,13 @@ func _tell_vision() -> void:
         vision.service.SetPlayerCount(maxi(1, players))
 
 
-## The rider of the player (0 or 1).
+## The rider of the player (0 or 1); a player whom the journey does not have
+## (e.g., a level of two players in a journey of one) gets the default rider of
+## her place (Dana on Zhuldyz for the second), which is not saved.
 func rider(player := 0) -> RiderProfile:
-    return riders[clampi(player, 0, riders.size() - 1)]
+    if player >= riders.size():
+        return RiderProfile.new(player)
+    return riders[maxi(player, 0)]
 
 
 ## Whether every player created her rider.

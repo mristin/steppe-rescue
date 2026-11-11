@@ -6,6 +6,11 @@ extends Control
 ## [method FrontView.painted_overlay]) are drawn over her head, following the
 ## landmarks of her face.
 ##
+## Her body is dressed, too: the coat of her rider with its sleeves, the
+## dress and the boots, drawn along the joints which the vision follows (see
+## [code]BodyFollower[/code]); the sleeves reach to her hands, so that every
+## child sees which hands are hers.
+##
 ## With two players, each is dressed as her own rider, and a line down the
 ## middle of the picture parts their halves (see section 6 of DESIGN.md, "Two
 ## players").
@@ -15,6 +20,22 @@ extends Control
 ##
 ## The picture is drawn at the resolution of the game, so it becomes pixelated
 ## like everything else.
+
+## The joints of [code]GetBody[/code], in the order of [code]Joint[/code].
+enum Joint {
+    LEFT_SHOULDER,
+    RIGHT_SHOULDER,
+    LEFT_ELBOW,
+    RIGHT_ELBOW,
+    LEFT_HAND,
+    RIGHT_HAND,
+    LEFT_HIP,
+    RIGHT_HIP,
+    LEFT_KNEE,
+    RIGHT_KNEE,
+    LEFT_ANKLE,
+    RIGHT_ANKLE,
+}
 
 ## The bones between the key points (see BodyPart in C#), for the skeleton.
 const _BONES := [
@@ -31,9 +52,16 @@ const _BONES := [
 const _NOSE := 0
 const _LEFT_WRIST := 9
 const _RIGHT_WRIST := 10
+## How opaque the clothes of the body are.
+const BODY_ALPHA := 0.85
+
 const _KEYPOINT_THRESHOLD := 0.5
 
-## Draw the key points, the axis of the head and the reaching hands.
+## The color of the marks of each player's hands.
+const _PLAYER_COLORS := [Palette.GOLD, Palette.INDIGO_LIGHT]
+
+## Draw the key points, the axis of the head and the reaching hands, and
+## mark each hand with its player and its side.
 @export var show_skeleton := false
 
 ## The looks to dress the [member player] in; empty for those of the
@@ -75,7 +103,11 @@ func _draw() -> void:
             continue
         if show_skeleton:
             _draw_skeleton(i)
-        _draw_overlay(i)
+        var dressed := _dressed(i)
+        _draw_body(i, dressed)
+        _draw_overlay(i, dressed)
+        if show_skeleton:
+            _draw_hand_marks(i)
 
     if count > 1:
         var middle := roundf(size.x * 0.5)
@@ -124,7 +156,144 @@ func _draw_skeleton(index: int) -> void:
             draw_rect(Rect2(center.round() - Vector2(1, 1), Vector2(2, 2)), Palette.GOLD)
 
 
-func _draw_overlay(index: int) -> void:
+## The looks of the player, in her finery.
+func _dressed(index: int) -> Dictionary:
+    if not looks.is_empty() and index == maxi(player, 0):
+        return looks
+    return get_node("/root/Profile").rider(index).dressed()
+
+
+## Mark each hand of the player with her color, and "L" or "R" for its side.
+func _draw_hand_marks(index: int) -> void:
+    var hands: Array = _service.GetPlayerHands(index)
+    var color: Color = _PLAYER_COLORS[index % _PLAYER_COLORS.size()]
+    var font := ThemeDB.fallback_font
+    for side in range(2):
+        if hands[side] == null:
+            continue
+        var at: Vector2 = (hands[side] as Vector2) * size
+        draw_arc(at, 7.0, 0.0, TAU, 16, Palette.OUTLINE, 3.0)
+        draw_arc(at, 7.0, 0.0, TAU, 16, color, 1.5)
+        var label := "%d%s" % [index + 1, "L" if side == 0 else "R"]
+        draw_string_outline(
+            font, at + Vector2(9, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, 3, Palette.OUTLINE
+        )
+        draw_string(font, at + Vector2(9, 4), label, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, color)
+
+
+## Dress the body of the player as her rider: the boots and the legs, the
+## dress, the coat with its trims and belt, and the sleeves with the cuffs and
+## the hands.
+func _draw_body(index: int, dressed: Dictionary) -> void:
+    var body: Dictionary = _service.GetBody(index)
+    var alpha: float = body["alpha"]
+    var joints: Array = body["joints"]
+    if alpha <= 0.0 or joints.size() < Joint.size():
+        return
+    var at := func(joint: int) -> Variant:
+        return null if joints[joint] == null else (joints[joint] as Vector2) * size
+    var left_shoulder: Variant = at.call(Joint.LEFT_SHOULDER)
+    var right_shoulder: Variant = at.call(Joint.RIGHT_SHOULDER)
+    if left_shoulder == null or right_shoulder == null:
+        return
+    var width: float = (left_shoulder as Vector2).distance_to(right_shoulder)
+    if width < 4.0:
+        return
+
+    var completed := Looks.complete(dressed)
+    var coat := Looks.shades(completed, "coat")
+    var dress := Looks.shades(completed, "dress")
+    var skin := Looks.shades(completed, "skin")
+    var trim := coat[0]
+    if Finery.step(completed, "coat") >= 1:
+        trim = Palette.CRIMSON_DARK if completed["coat"] == "ochre" else Palette.GOLD
+    var belt := Palette.GOLD if Finery.step(completed, "belt") >= 1 else Palette.HORSE_BAY
+    var fade := func(color: Color) -> Color: return Color(color, color.a * alpha * BODY_ALPHA)
+
+    # NOTE (mristin):
+    # Without the hips (e.g., behind a table), the coat hangs one and a half
+    # shoulder widths below the shoulders.
+    var down := Vector2(0, width * 1.5)
+    var left_hip: Variant = at.call(Joint.LEFT_HIP)
+    var right_hip: Variant = at.call(Joint.RIGHT_HIP)
+    if left_hip == null or right_hip == null:
+        left_hip = left_shoulder + down
+        right_hip = right_shoulder + down
+
+    # NOTE (mristin):
+    # The legs in the dress, and the boots below the knees.
+    for pair in [
+        [left_hip, Joint.LEFT_KNEE, Joint.LEFT_ANKLE],
+        [right_hip, Joint.RIGHT_KNEE, Joint.RIGHT_ANKLE]
+    ]:
+        var knee: Variant = at.call(pair[1])
+        if knee == null:
+            continue
+        draw_line(pair[0], knee, fade.call(dress[0]), width * 0.3)
+        var ankle: Variant = at.call(pair[2])
+        if ankle != null:
+            draw_line(knee, ankle, fade.call(Palette.HOOF), width * 0.26)
+            draw_circle(ankle, width * 0.14, fade.call(Palette.HOOF))
+
+    # NOTE (mristin):
+    # The coat (шапан) from the shoulders to the middle of the thighs, open in
+    # front over the dress, with its trims and the belt.
+    var neck: Vector2 = (left_shoulder + right_shoulder) * 0.5
+    var waist: Vector2 = (left_hip + right_hip) * 0.5
+    var outward: Vector2 = ((right_shoulder as Vector2) - left_shoulder).normalized() * width * 0.12
+    var left_hem: Vector2 = left_hip + (left_hip - left_shoulder) * 0.4 - outward
+    var right_hem: Vector2 = right_hip + (right_hip - right_shoulder) * 0.4 + outward
+    var hem: Vector2 = (left_hem + right_hem) * 0.5
+    draw_colored_polygon(
+        PackedVector2Array([left_shoulder, right_shoulder, right_hem, left_hem]), fade.call(coat[1])
+    )
+    draw_colored_polygon(
+        PackedVector2Array(
+            [left_shoulder, left_shoulder.lerp(neck, 0.35), left_hem.lerp(hem, 0.3), left_hem]
+        ),
+        fade.call(coat[0])
+    )
+    var opening := outward * 0.9
+    draw_colored_polygon(
+        PackedVector2Array(
+            [neck - opening * 0.6, neck + opening * 0.6, hem + opening, hem - opening]
+        ),
+        fade.call(dress[1])
+    )
+    var line := maxf(1.0, width * 0.05)
+    draw_line(neck - opening * 0.6, hem - opening, fade.call(trim), line)
+    draw_line(neck + opening * 0.6, hem + opening, fade.call(trim), line)
+    draw_line(left_hem, right_hem, fade.call(trim), line * 1.4)
+    var belt_y: Vector2 = neck.lerp(waist, 0.8)
+    draw_line(
+        belt_y.lerp(left_shoulder.lerp(left_hip, 0.8), 1.0),
+        belt_y.lerp(right_shoulder.lerp(right_hip, 0.8), 1.0),
+        fade.call(belt),
+        line * 2.0
+    )
+
+    # NOTE (mristin):
+    # The sleeves to the cuffs, and the hands.
+    for arm in [
+        [left_shoulder, Joint.LEFT_ELBOW, Joint.LEFT_HAND],
+        [right_shoulder, Joint.RIGHT_ELBOW, Joint.RIGHT_HAND]
+    ]:
+        var elbow: Variant = at.call(arm[1])
+        if elbow == null:
+            continue
+        var hand: Variant = at.call(arm[2])
+        if hand == null:
+            draw_line(arm[0], elbow, fade.call(coat[1]), width * 0.28)
+            draw_circle(elbow, width * 0.14, fade.call(coat[1]))
+            continue
+        var cuff: Vector2 = (elbow as Vector2).lerp(hand, 0.75)
+        draw_polyline(PackedVector2Array([arm[0], elbow, cuff]), fade.call(coat[1]), width * 0.28)
+        draw_circle(elbow, width * 0.14, fade.call(coat[1]))
+        draw_line(cuff, (elbow as Vector2).lerp(hand, 0.82), fade.call(trim), width * 0.3)
+        draw_circle(hand, width * 0.13, fade.call(skin[1]))
+
+
+func _draw_overlay(index: int, dressed: Dictionary) -> void:
     var anchor: Dictionary = _service.GetFaceAnchor(index)
     var alpha: float = anchor["alpha"]
     if alpha <= 0.0:
@@ -138,11 +307,6 @@ func _draw_overlay(index: int) -> void:
     # The painted hair and hat of the rider, scaled smoothly to the eyes; a
     # rider without a painting is pixelated anew at the distance of the eyes
     # (in whole pixels, so that only a few sizes are cached).
-    var dressed: Dictionary = (
-        looks
-        if not looks.is_empty() and index == maxi(player, 0)
-        else get_node("/root/Profile").rider(index).dressed()
-    )
     var unit := maxf(3.0, roundf(eyes))
     var texture: Texture2D = FrontView.painted_overlay(dressed)
     if texture == null:

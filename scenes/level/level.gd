@@ -84,6 +84,8 @@ var _players: Array[LevelPlayer] = []
 var _wildlife: Wildlife
 var _finish_squats: Array[int] = []
 var _finish_time := 0.0
+var _ok: DwellButton = null
+var _left := false
 
 @onready var _world: Node2D = $World
 @onready var _animals: Node2D = $World/Animals
@@ -164,9 +166,13 @@ func _ready() -> void:
     if count > 1:
         _camera_panel.position = Vector2(368, 364)
         _camera_panel.size = Vector2(224, 168)
-        _status_label.position = Vector2(240, 342)
-        _status_label.size = Vector2(480, 18)
-        _status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+        # NOTE (mristin):
+        # The status goes into the left half, above the water and the food, so
+        # that the line between the halves does not cross it.
+        _status_label.position = Vector2(8, 384)
+        _status_label.size = Vector2(288, 42)
+        _status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+        _status_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
         var divider := ColorRect.new()
         divider.color = Palette.OUTLINE
         divider.position = Vector2(479, 0)
@@ -410,6 +416,8 @@ func _update_thanks(delta: float) -> void:
         player.talk_time = _finish_time
     if _finish_time < THANKS_SECONDS:
         return
+    if _ok == null:
+        _show_ok()
     for player in _players:
         if _service.GetSquatCount(player.index) > _finish_squats[player.index]:
             _leave()
@@ -434,6 +442,8 @@ func _show_conversation(player: LevelPlayer) -> void:
     if player.talking == null:
         return
     var rider_name: String = get_node("/root/Profile").rider_name(player.index)
+    if _ok != null:
+        _ok.text = tr("OK")
     var lines: Array[Dictionary] = []
     if finished:
         lines.append({"text": Grammar.format(tr(map.thanks), {"rider": rider_name})})
@@ -543,8 +553,38 @@ func level_id() -> String:
     return LevelList.id(Flow.level if Flow.level != "" else map_scene.resource_path)
 
 
+## Show the button OK after the thanks, which either rider presses with her
+## hand (or the mouse) to go on, besides the squat.
+func _show_ok() -> void:
+    var layer := CanvasLayer.new()
+    layer.layer = _hud.layer + 1
+    add_child(layer)
+    _ok = DwellButton.new()
+    _ok.text = tr("OK")
+    _ok.font_size = 32
+    _ok.primary = true
+    _ok.size = Vector2(200, 56)
+    # NOTE (mristin):
+    # With two players, the button stands in the middle, where both reach it,
+    # below their conversations and between their riders.
+    _ok.position = Vector2(380, 250) if _players.size() > 1 else Vector2(408, 148)
+    _ok.pressed.connect(_leave)
+    layer.add_child(_ok)
+    var cursor := HandCursor.new()
+    cursor.mirror = false
+    layer.add_child(cursor)
+
+
+## The button OK at the end of the level; null before it shows.
+func ok_button() -> DwellButton:
+    return _ok
+
+
 ## Go on to the reward after the end of the level.
 func _leave() -> void:
+    if _left:
+        return
+    _left = true
     Flow.reward(get_tree(), stars(), level_id())
 
 

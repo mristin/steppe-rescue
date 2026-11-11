@@ -195,16 +195,53 @@ namespace SteppeRescue.Tests
         }
 
         [Fact]
-        public void The_target_lines_follow_the_head()
+        public void The_line_stays_steady_between_squats()
         {
+            // NOTE (mristin):
+            // Her tops vary by a fifth of the unit from squat to squat (she
+            // bounces higher at times); the line moves much less.
             var meter = new SquatMeter();
             Stand(meter, 0.0, 1.0);
-            Assert.False(meter.IsDown);
-            Assert.Equal(StandingY + meter.SwingDepth * Unit, meter.Target, 3);
+            Assert.Equal(StandingY + meter.SwingDepth * Unit, meter.Line, 3);
+            float lowest = float.PositiveInfinity;
+            float highest = float.NegativeInfinity;
+            bool reached = false;
+            for (double t = 1.0; t < 13.0; t += 1.0 / Fps)
+            {
+                int squat = (int)((t - 1.0) / 1.2);
+                double phase = ((t - 1.0) % 1.2) / 1.2;
+                float top = StandingY - (squat % 2 == 0 ? 0f : 0.2f * Unit);
+                float y = top + 0.8f * Unit * (float)(0.5 - 0.5 * Math.Cos(2.0 * Math.PI * phase));
+                meter.Observe(t, y, Unit);
+                meter.Update(t);
+                reached |= meter.BelowLine;
+                if (t > 4.0)
+                {
+                    lowest = Math.Min(lowest, meter.Line);
+                    highest = Math.Max(highest, meter.Line);
+                }
+            }
 
-            Squat(period: 1.4, depth: 0.6f, duration: 0.7, start: 1.0, meter: meter);
-            Assert.True(meter.IsDown);
-            Assert.Equal(meter.Bottom - meter.SwingDepth * Unit, meter.Target, 3);
+            Assert.True(reached, "the eyes never went below the line");
+            Assert.True(highest - lowest < 0.1f * Unit, $"the line moved by {highest - lowest}");
+        }
+
+        [Fact]
+        public void The_line_follows_the_player_who_stepped_closer()
+        {
+            // NOTE (mristin):
+            // Standing still, her head is suddenly a third of a unit lower, e.g.,
+            // after she stepped closer and the camera looks down on her.
+            var meter = new SquatMeter();
+            Stand(meter, 0.0, 2.0);
+            for (double t = 2.0; t < 10.0; t += 1.0 / Fps)
+            {
+                meter.Observe(t, StandingY + 0.3f * Unit, Unit);
+                meter.Update(t);
+            }
+
+            float expected = StandingY + 0.3f * Unit + meter.SwingDepth * Unit;
+            Assert.InRange(meter.Line, expected - 0.03f * Unit, expected + 0.03f * Unit);
         }
 
         [Theory]

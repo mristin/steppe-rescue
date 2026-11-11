@@ -487,21 +487,21 @@ public partial class VisionService : Node
     public Vector3 GetGaitThresholds() => new(SquatMeter.WalkFrom, SquatMeter.TrotFrom, SquatMeter.GallopFrom);
 
     /// <summary>
-    /// The line which the player's eyes must pass for her next swing to count
-    /// (see <see cref="SquatMeter.Target"/>): "y", normalized to the height of
-    /// the picture, and "down" (true: go below it, false: come back above it);
-    /// an empty dictionary before her head was seen.
+    /// The line which shows the player how far down her eyes must go (see
+    /// <see cref="SquatMeter.Line"/>): "y", normalized to the height of the
+    /// picture, and "reached", whether her eyes are below it now; an empty
+    /// dictionary before her head was seen.
     /// </summary>
-    public Godot.Collections.Dictionary GetSquatTarget(int player)
+    public Godot.Collections.Dictionary GetSquatLine(int player)
     {
         var meter = Squats[Index(player)];
         float height = LatestFace?.Height ?? Latest?.Height ?? 0;
-        if (float.IsNaN(meter.Target) || height <= 0f)
+        if (float.IsNaN(meter.Line) || height <= 0f)
         {
             return new Godot.Collections.Dictionary();
         }
 
-        return new Godot.Collections.Dictionary { { "y", meter.Target / height }, { "down", meter.IsDown } };
+        return new Godot.Collections.Dictionary { { "y", meter.Line / height }, { "reached", meter.BelowLine } };
     }
 
     /// <summary>How deep the player is in the squat now, in [0, 1].</summary>

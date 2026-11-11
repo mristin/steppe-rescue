@@ -15,10 +15,10 @@ extends Control
 ## middle of the picture parts their halves (see section 6 of DESIGN.md, "Two
 ## players").
 ##
-## A dashed line across her part of the picture shows how far her eyes must
-## go for her next swing to count (see [code]SquatMeter.Target[/code]): gold
-## with an arrow down while she goes down, green with an arrow up while she
-## comes back up. It glides, so that it does not jump.
+## A dashed line across her part of the picture, with an arrow down, shows how
+## far down her eyes must go in a squat (see [code]SquatMeter.Line[/code]): a
+## swing below her usual height. It is gold, and green while her eyes are
+## below it. It moves slowly, so that it does not jump from squat to squat.
 ##
 ## With [member show_skeleton], also draw the key points of the pose, the axis
 ## of the head and the hands which reach across it (for the movement test).
@@ -67,8 +67,8 @@ const FIST_EYES := 4.4
 const _KEYPOINT_THRESHOLD := 0.5
 
 ## The line of the squat glides to where it should be over about this long, in
-## seconds, so that it does not jump.
-const TARGET_GLIDE_SECONDS := 0.12
+## seconds, so that it does not jump (it moves slowly anyway).
+const TARGET_GLIDE_SECONDS := 0.6
 
 ## The color of the marks of each player's hands.
 const _PLAYER_COLORS := [Palette.GOLD, Palette.INDIGO_LIGHT]
@@ -100,7 +100,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     if _service != null:
         for i in range(_target_y.size()):
-            var target: Dictionary = _service.GetSquatTarget(i)
+            var target: Dictionary = _service.GetSquatLine(i)
             if target.is_empty() or not _service.HasPlayer(i):
                 _target_y[i] = NAN
             elif is_nan(_target_y[i]):
@@ -150,11 +150,11 @@ func _draw() -> void:
 func _draw_target(index: int, count: int) -> void:
     if index >= _target_y.size() or is_nan(_target_y[index]):
         return
-    var target: Dictionary = _service.GetSquatTarget(index)
+    var target: Dictionary = _service.GetSquatLine(index)
     if target.is_empty():
         return
-    var down: bool = target["down"]
-    var color := Palette.GOLD if down else Palette.EMERALD_LIGHT
+    var reached: bool = target["reached"]
+    var color := Palette.EMERALD_LIGHT if reached else Palette.GOLD
     var y := roundf(_target_y[index] * size.y)
     var left := 0.0 if count < 2 else size.x * 0.5 * index
     var right := size.x if count < 2 else left + size.x * 0.5
@@ -166,8 +166,8 @@ func _draw_target(index: int, count: int) -> void:
         draw_line(Vector2(x, y), Vector2(end, y), color, 2.0)
         x += dash * 1.75
     # NOTE (mristin):
-    # The arrow at its end points the way her eyes must go.
-    var tip := Vector2(right - 9.0, y + (7.0 if down else -7.0))
+    # The arrow at its end points down, the way her eyes must go.
+    var tip := Vector2(right - 9.0, y + 7.0)
     var arrow := PackedVector2Array([Vector2(right - 14.0, y), Vector2(right - 4.0, y), tip])
     draw_colored_polygon(arrow, color)
     draw_polyline(arrow + PackedVector2Array([arrow[0]]), Palette.OUTLINE, 1.0)

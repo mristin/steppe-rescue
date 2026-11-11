@@ -131,13 +131,35 @@ namespace SteppeRescue.Vision
         /// <summary>The unit of the player, as last observed, in frame pixels; NaN before.</summary>
         public float Unit { get; private set; } = float.NaN;
 
+        /// <summary>The height of the head as last observed, in frame pixels; NaN before.</summary>
+        public float HeadY { get; private set; } = float.NaN;
+
         /// <summary>
-        /// The height (in frame pixels) which the head must pass for the next
-        /// swing to count: below it while the head goes down, above it while it
-        /// comes up; NaN before the head was seen.
+        /// The usual height of the head when the player is up, in frame pixels;
+        /// NaN before: each top of a squat moves it by <see cref="LineLearning"/>,
+        /// and while she stands still, it follows her head (see
+        /// <see cref="LineFollowTau"/>), e.g., after she stepped closer.
         /// </summary>
-        public float Target =>
-            float.IsNaN(Unit) ? float.NaN : IsDown ? Bottom - SwingDepth * Unit : Top + SwingDepth * Unit;
+        public float UsualTop { get; private set; } = float.NaN;
+
+        /// <summary>
+        /// The line which shows the player how far down her eyes must go: a swing
+        /// below her usual top. It moves slowly, so that it does not jump from
+        /// squat to squat; NaN before the head was seen.
+        /// </summary>
+        public float Line => float.IsNaN(UsualTop) || float.IsNaN(Unit) ? float.NaN : UsualTop + SwingDepth * Unit;
+
+        /// <summary>Whether the head is below the <see cref="Line"/> now.</summary>
+        public bool BelowLine => !float.IsNaN(Line) && HeadY >= Line;
+
+        /// <summary>How much of each new top of a squat the <see cref="UsualTop"/> takes over.</summary>
+        public float LineLearning = 0.3f;
+
+        /// <summary>
+        /// The time constant (in seconds) with which the <see cref="UsualTop"/>
+        /// follows the head while the player stands still.
+        /// </summary>
+        public double LineFollowTau = 2.0;
 
         /// <summary>The horse walks from this speed on.</summary>
         public const float WalkFrom = 0.04f;
@@ -151,6 +173,7 @@ namespace SteppeRescue.Vision
         private double _lastSwing = double.NegativeInfinity;
         private double _stopAfter = double.NaN;
         private double _lastKey = double.NaN;
+        private double _wentDown = double.NaN;
         private double _keyPeriod = double.NaN;
         private double _lastObserved = double.NaN;
         private double _lastUpdate = double.NaN;
@@ -189,11 +212,29 @@ namespace SteppeRescue.Vision
             // NOTE (mristin):
             // After a long gap (the player left the picture), we start afresh.
             Unit = unit;
+            HeadY = headY;
             if (float.IsNaN(Top) || t - _lastObserved > 1.0)
             {
                 Top = headY;
                 Bottom = headY;
+                UsualTop = headY;
                 IsDown = false;
+            }
+            else if (IsDown && t - _wentDown > SlowestSquat && t - _lastSwing > SlowestSquat)
+            {
+                // NOTE (mristin):
+                // The head stayed down longer than the slowest squat: the player
+                // stands at a new height (e.g., she settled into her stance, or
+                // stepped closer), and we start from there.
+                Top = headY;
+                Bottom = headY;
+                IsDown = false;
+            }
+            else if (!IsDown && t - _lastSwing > StopAfter)
+            {
+                // NOTE (mristin):
+                // Standing still, the usual top follows the head slowly.
+                UsualTop += (headY - UsualTop) * (float)(1.0 - Math.Exp(-(t - _lastObserved) / LineFollowTau));
             }
 
             _lastObserved = t;
@@ -212,7 +253,9 @@ namespace SteppeRescue.Vision
                         AddSwing(t, (Bottom - Top) / unit);
                     }
 
+                    UsualTop += (Top - UsualTop) * LineLearning;
                     IsDown = true;
+                    _wentDown = t;
                     Bottom = headY;
                 }
             }
@@ -321,10 +364,13 @@ namespace SteppeRescue.Vision
             Top = float.NaN;
             Bottom = float.NaN;
             Unit = float.NaN;
+            HeadY = float.NaN;
+            UsualTop = float.NaN;
             _lastSwing = double.NegativeInfinity;
             _stopAfter = double.NaN;
             _lastKey = double.NaN;
             _keyPeriod = double.NaN;
+            _wentDown = double.NaN;
             _lastObserved = double.NaN;
             _lastUpdate = double.NaN;
             _lastSpeedUpdate = double.NaN;

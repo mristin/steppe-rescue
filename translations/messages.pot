@@ -47,9 +47,14 @@ msgstr ""
 msgid "Both hands to the right, and your horse turns right."
 msgstr ""
 
-#. In How to Play, before the brake is shown.
+#. In How to Play, before the jump is shown.
 #: scenes/instruction/instruction.gd
 msgid "Squat briskly, and your horse gallops again."
+msgstr ""
+
+#. In How to Play: when the player jumps, her horse jumps over a creek.
+#: scenes/instruction/instruction.gd
+msgid "Jump, and your horse jumps, too: over a creek! From a gallop, it flies far."
 msgstr ""
 
 #. In How to Play: raising both hands above the head is the brake.

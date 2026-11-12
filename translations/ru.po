@@ -58,11 +58,17 @@ msgstr "Тяни поводья: обе руки влево, и конь пов�
 msgid "Both hands to the right, and your horse turns right."
 msgstr "Обе руки вправо, и конь повернёт направо."
 
-#. In How to Play, before the brake is shown.
+#. In How to Play, before the jump is shown.
 #: scenes/instruction/instruction.gd
 #, fuzzy
 msgid "Squat briskly, and your horse gallops again."
 msgstr "Приседай быстро, и твоя лошадь снова поскачет галопом."
+
+#. In How to Play: when the player jumps, her horse jumps over a creek.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Jump, and your horse jumps, too: over a creek! From a gallop, it flies far."
+msgstr "Прыгай, и твой конь тоже прыгнет — через ручей! С галопа он летит далеко."
 
 #. In How to Play: raising both hands above the head is the brake.
 #: scenes/instruction/instruction.gd

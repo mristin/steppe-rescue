@@ -196,10 +196,20 @@ func _run() -> void:
     _check(Instruction.pose(25.0)["reach"] == -1.0, "and to the right")
     _check(instruction.has_method("_draw"), "the instruction draws its animation")
     _check(Instruction.pose(30.0)["speed"] > 0.8, "then she gallops again")
-    _check(Instruction.pose(32.0)["hands_up"] == 1.0, "and raises both hands: the brake")
-    _check(Instruction.pose(31.7)["rear"] > 0.4, "and the horse rears up")
-    _check(Instruction.pose(32.0)["speed"] == 0.0, "and stops")
-    _check(instruction.caption(32.0) != instruction.caption(25.0), "a line tells of the brake")
+    var take_off: float = Instruction.TAKE_OFFS[0]
+    _check(Instruction.pose(take_off - 0.2)["jump"] >= 0, "then she jumps")
+    _check(Instruction.pose(take_off - 0.2)["flight"] < 0.0, "a little before her horse")
+    _check(Instruction.pose(take_off + 0.3)["flight"] > 0.0, "and her horse jumps, too")
+    _check(Instruction.pose(take_off + 0.3)["speed"] > 0.8, "keeping its gallop")
+    _check(instruction.caption(take_off) != instruction.caption(30.0), "a line tells of the jump")
+    var brake := Instruction.BRAKE
+    _check(Instruction.pose(brake + 1.0)["hands_up"] == 1.0, "and raises both hands: the brake")
+    _check(Instruction.pose(brake + 0.7)["rear"] > 0.4, "and the horse rears up")
+    _check(Instruction.pose(brake + 1.0)["speed"] == 0.0, "and stops")
+    _check(
+        instruction.caption(brake + 1.0) != instruction.caption(take_off),
+        "a line tells of the brake"
+    )
     _check(PaintedGirl.reins_frame(1.0) == 2, "she pulls far to the left in the painted frame")
     _check(PaintedGirl.reins_frame(-1.0) == 5, "and far to the right")
     _check(instruction.caption(20.0) != instruction.caption(9.0), "a line says what she does")

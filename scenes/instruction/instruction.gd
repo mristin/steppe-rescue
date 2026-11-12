@@ -7,10 +7,11 @@ extends Control
 ## briskly, and the horse walks, trots and gallops, as the speed bar below it
 ## shows. Then she pulls the reins with both hands to the left, and the
 ## horse, seen from above, turns left; then to the right, and it turns right.
-## Last, she gallops off again and raises both hands above her head: the
-## brake, and the horse rears up and stops at once. A short line at the top
-## says what she does. The animation repeats until
-## the player presses Ready!.
+## Then she gallops off again and jumps, and the horse, seen from above, jumps
+## with her over a creek, twice. Last, she raises both hands above her head:
+## the brake, and the horse rears up and stops at once. A short line at the
+## top says what she does. The animation repeats until the player presses
+## Ready!.
 ##
 ## The squats are good ones: the feet apart, the knees over the toes, the back
 ## straight (see [method FrontView.figure]).
@@ -34,8 +35,12 @@ const STOP := 15.0
 const REACH := 17.0
 const REACH_RIGHT := 22.5
 const GALLOP_AGAIN := 28.0
-const BRAKE := 31.0
-const LOOP := 36.0
+const JUMP := 31.0
+const BRAKE := 36.5
+const LOOP := 41.5
+
+## When the horse takes off over each creek, in seconds of the animation.
+const TAKE_OFFS := [32.3, 34.6]
 
 ## The squats in the slow, steady and brisk part: [start, seconds per squat,
 ## the speed of the horse].
@@ -46,6 +51,24 @@ const _BRISK := [GALLOP_AGAIN, 0.9, 0.95]
 
 ## How long the horse rears, in seconds.
 const _REAR_SECONDS := 1.4
+
+## The jump of the horse from a gallop, as in the level (see
+## [constant Rider.JUMP_SECONDS] and [constant Rider.JUMP_LIFT]): how long it
+## flies, in seconds, and how much bigger (nearer to us) it is at the top.
+const _JUMP_SECONDS := Rider.JUMP_SECONDS + Rider.JUMP_SPEED_SECONDS * 0.95
+const _JUMP_LIFT := Rider.JUMP_LIFT + Rider.JUMP_SPEED_LIFT * 0.95
+
+## The girl in the frame jumps a little before her horse, as the player does
+## (the horse jumps when the game sees her rise): she crouches, takes off,
+## flies and lands, each from this many seconds after the take-off of the
+## horse.
+const _GIRL_JUMP := [-0.35, -0.12, 0.05, 0.7, 0.95]
+
+## How many pixels the steppe moves per second at full speed.
+const _SCROLL := 160.0
+
+## Half the width of the water of the creek from above, in pixels.
+const _CREEK_HALF := 18.0
 
 const _FRAME := Rect2(36, 96, 248, 352)
 const _EYES := 12.0
@@ -73,6 +96,7 @@ var _stride := 0.0
 var _looks: Dictionary = {}
 var _background: Texture2D
 var _rider_on_horse: Texture2D
+var _creek: Texture2D
 
 
 func _ready() -> void:
@@ -81,6 +105,7 @@ func _ready() -> void:
     _background = load(BACKGROUND)
     PaintedTopDown.prepare(self)
     _rider_on_horse = load(RIDER_ON_HORSE)
+    _creek = load(River.PAINTING)
     _caption = Label.new()
     _caption.position = Vector2(56, 22)
     _caption.size = Vector2(848, 52)
@@ -137,10 +162,14 @@ func _process(delta: float) -> void:
         rate = 5.0
     speed = move_toward(speed, target, delta * rate)
     _speed_bar.speed = speed
-    _scroll += speed * delta * 160.0
+    _scroll += speed * delta * _SCROLL
     _stride += delta / _FRAME_SECONDS[_speed_bar.gait()]
     if time >= REACH and time < GALLOP_AGAIN:
         heading -= pose(time)["reach"] * delta * 0.9
+    elif time >= JUMP and time < BRAKE:
+        # NOTE (mristin):
+        # She gallops north, straight at the creeks.
+        heading = 0.0
     var line := caption(time)
     if _caption.text != line:
         _caption.text = line
@@ -157,7 +186,9 @@ func finish() -> void:
 ## [0, 1], how far she pulls the reins, in [-1, 1] (positive to the left),
 ## how far her hands are up above her head (the brake), in [0, 1], how far
 ## the horse is through its rearing, in [0, 1] (0 when it does not rear),
-## whether she sits on the horse, and the speed which the horse goes to.
+## the painted frame of her jump (-1 when she does not jump), how far the
+## horse is through its jump, in [0, 1) (-1 when it does not jump), whether
+## she sits on the horse, and the speed which the horse goes to.
 static func pose(at: float) -> Dictionary:
     var result := {
         "squat": 0.0,
@@ -165,6 +196,8 @@ static func pose(at: float) -> Dictionary:
         "reach": 0.0,
         "hands_up": 0.0,
         "rear": 0.0,
+        "jump": -1,
+        "flight": -1.0,
         "riding": at < DISMOUNT,
         "speed": 0.0,
     }
@@ -193,6 +226,18 @@ static func pose(at: float) -> Dictionary:
         var into := minf(1.0, (at - start) / 0.6)
         var out := clampf((end - 0.8 - at) / 0.6, 0.0, 1.0)
         result["reach"] = minf(into, out) * (1.0 if at < REACH_RIGHT else -1.0)
+    for take_off in TAKE_OFFS:
+        var since: float = at - take_off
+        if since >= 0.0 and since < _JUMP_SECONDS:
+            result["flight"] = since / _JUMP_SECONDS
+        if since >= _GIRL_JUMP[0] and since < _GIRL_JUMP[4]:
+            # NOTE (mristin):
+            # She does not squat while she jumps; the horse keeps its gallop.
+            result["squat"] = 0.0
+            result["phase"] = 0.0
+            for frame in range(4):
+                if since >= _GIRL_JUMP[frame]:
+                    result["jump"] = frame
     return result
 
 
@@ -212,8 +257,10 @@ func caption(at: float) -> String:
         [REACH, tr("Stop squatting, and your horse slows down and stops.")],
         [REACH_RIGHT, tr("Pull the reins: both hands to the left, and your horse turns left.")],
         [GALLOP_AGAIN, tr("Both hands to the right, and your horse turns right.")],
-        # TRANSLATORS: In How to Play, before the brake is shown.
-        [BRAKE, tr("Squat briskly, and your horse gallops again.")],
+        # TRANSLATORS: In How to Play, before the jump is shown.
+        [JUMP, tr("Squat briskly, and your horse gallops again.")],
+        # TRANSLATORS: In How to Play: when the player jumps, her horse jumps over a creek.
+        [BRAKE, tr("Jump, and your horse jumps, too: over a creek! From a gallop, it flies far.")],
     ]
     for line in lines:
         if at < line[0]:
@@ -241,7 +288,7 @@ func _draw() -> void:
     draw_rect(Rect2(inside.position.x, inside.end.y - 40, inside.size.x, 40), Palette.GRASS_LIGHT)
     var feet := Vector2(inside.get_center().x, inside.end.y - 18)
 
-    if time >= REACH and time < GALLOP_AGAIN:
+    if (time >= REACH and time < GALLOP_AGAIN) or (time >= JUMP and time < BRAKE):
         _draw_turning(now)
     else:
         _draw_running(now)
@@ -270,6 +317,17 @@ func _draw() -> void:
             _draw_hands_up(at, hands_up)
     elif reach != 0.0:
         painted = PaintedGirl.reins(PaintedGirl.reins_frame(reach))
+    elif now["jump"] >= 0:
+        painted = PaintedGirl.jump(now["jump"])
+        # NOTE (mristin):
+        # The jump is painted taller than the squat (in the air, she is
+        # lifted above the ground in the picture), higher than the frame; she
+        # steps back a little. Her shadow stays on the ground while she flies.
+        shrink = 0.82
+        if now["jump"] == 2:
+            draw_set_transform(feet, 0.0, Vector2(1.0, 0.3))
+            draw_circle(Vector2.ZERO, 50.0, Color(Palette.OUTLINE, 0.35))
+            draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
     elif now["squat"] > 0.0 or now["phase"] > 0.0:
         painted = PaintedGirl.squat(PaintedGirl.squat_frame(now["phase"]))
     # NOTE (mristin):
@@ -314,7 +372,8 @@ func _now_riding() -> bool:
     return pose(time)["riding"]
 
 
-## The horse from above, which turns to the side the rider pulls the reins.
+## The horse from above, which turns to the side the rider pulls the reins,
+## or gallops north and jumps over the creeks.
 func _draw_turning(now: Dictionary) -> void:
     draw_texture(Ornaments.panel(_FIELD.size), _FIELD.position)
     var field := _FIELD.grow(-12)
@@ -328,10 +387,31 @@ func _draw_turning(now: Dictionary) -> void:
 
     var gait := _speed_bar.gait()
     var center := field.get_center()
+    if time >= JUMP and time < BRAKE:
+        for take_off in TAKE_OFFS:
+            # NOTE (mristin):
+            # The creek comes down the field at the speed of the gallop and is
+            # under the horse in the middle of its jump.
+            var under: float = take_off + _JUMP_SECONDS * 0.5
+            _draw_creek(field, center.y - (under - time) * 0.95 * _SCROLL)
+
+    var flight: float = now["flight"]
+    var jump_frame := -1
+    var lift := 0.0
+    if flight >= 0.0:
+        lift = _JUMP_LIFT * sin(PI * flight)
+        jump_frame = clampi(int(flight * PaintedTopDown.JUMP_FRAMES), 0, 4)
+        # NOTE (mristin):
+        # In the air, the shadow stays on the ground, as in the level.
+        draw_circle(
+            center + Vector2(4, 6) * (1.0 + lift * 6.0), 30.0 * (1.0 - lift), Palette.SHADOW
+        )
     # NOTE (mristin):
     # The instruction always shows the same rider (see section 16 of
     # DESIGN.md), here the first painted girl on the bay horse.
-    PaintedTopDown.draw_rider(self, Looks.DEFAULT, gait, int(_stride * 3.0), center, heading, true)
+    PaintedTopDown.draw_rider(
+        self, Looks.DEFAULT, gait, int(_stride * 3.0), center, heading, true, 0.0, jump_frame, lift
+    )
 
     # NOTE (mristin):
     # The curved arrow ahead of the horse, to the side it turns: drawn for a
@@ -361,3 +441,20 @@ func _draw_turning(now: Dictionary) -> void:
         ),
         Palette.GOLD
     )
+
+
+## Draw the creek across the field from the west to the east, the middle of
+## its water at [param y], cut off at the edges of the field: the painted
+## stretch of the river, as narrow as a creek.
+func _draw_creek(field: Rect2, y: float) -> void:
+    var painted := _creek.get_size()
+    var height := _CREEK_HALF * 2.0 / (River.WATER_BOTTOM - River.WATER_TOP)
+    var scale := height / painted.y
+    var top := y - (River.WATER_TOP + River.WATER_BOTTOM) * 0.5 * height
+    var shown := Rect2(field.position.x, top, painted.x * scale, height)
+    while shown.position.x < field.end.x:
+        var cut := shown.intersection(field)
+        if cut.has_area():
+            var source := Rect2((cut.position - shown.position) / scale, cut.size / scale)
+            draw_texture_rect_region(_creek, cut, source)
+        shown.position.x += shown.size.x - 1.0

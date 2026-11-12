@@ -71,11 +71,13 @@ static func draw_rider(
         # horses/<steed>/jump_<frame>.png, painted as wide as it is), and the
         # horse and the girl bigger the higher they fly, nearer to us. Its
         # finery is painted for the run, so it is left out for the moment of
-        # the jump.
+        # the jump. The jump is painted only small; for the instruction, it
+        # is drawn as big as the big run.
         var painted := "horses/%s/jump_%d" % [steed, clampi(jump_frame, 0, JUMP_FRAMES - 1)]
-        if not big and ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
-            horse = _load(painted)
-            wide = Vector2.ONE
+        if ResourceLoader.exists("res://assets/pictures/top_down/%s.png" % painted):
+            var jumping := _load(painted)
+            wide = Vector2.ONE * horse.get_size().x / jumping.get_size().x
+            horse = jumping
             dressed = false
         wide *= 1.0 + lift
         girl *= 1.0 + lift

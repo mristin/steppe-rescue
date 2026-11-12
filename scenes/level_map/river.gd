@@ -17,8 +17,8 @@ const PAINTING := "res://assets/pictures/landmarks/river.png"
 const FORD_PAINTING := "res://assets/pictures/landmarks/river_ford.png"
 
 ## Where the water runs in the paintings, as fractions of their height.
-const _WATER_TOP := 0.34
-const _WATER_BOTTOM := 0.73
+const WATER_TOP := 0.34
+const WATER_BOTTOM := 0.73
 
 ## The circles which block the horse lie this far apart along the river, as a
 ## share of the half width of the water.
@@ -80,9 +80,9 @@ func _draw() -> void:
         _ford = load(FORD_PAINTING)
     # NOTE (mristin):
     # The painting is scaled so that its water is as wide as the river.
-    var height := size() * 2.0 / (_WATER_BOTTOM - _WATER_TOP)
+    var height := size() * 2.0 / (WATER_BOTTOM - WATER_TOP)
     var width := height * _stretch.get_width() / _stretch.get_height()
-    var top := -(_WATER_TOP + _WATER_BOTTOM) * 0.5 * height
+    var top := -(WATER_TOP + WATER_BOTTOM) * 0.5 * height
     var x := -position.x
     while x < _level_width() - position.x:
         draw_texture_rect(_stretch, Rect2(x, top, width, height), false)

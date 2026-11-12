@@ -161,14 +161,55 @@ func _check_two_players() -> void:
     service.SetPlayerCount(1)
 
 
+## The dust behind the horse: none at a walk, a little at a trot, all of it
+## at a gallop, and none in the air.
+func _check_dust() -> void:
+    var rider := Rider.new()
+    root.add_child(rider)
+    var dust: GallopDust = rider.get_node("Dust")
+    var expected := {0.0: 0, 0.2: 0, 0.6: 1, 1.0: 2}
+    for fraction in expected:
+        rider.speed = Rider.MAX_SPEED * fraction
+        await process_frame
+        await process_frame
+        _check(
+            dust.raising() == expected[fraction],
+            "at %d%% of the speed, the dust is %d" % [int(fraction * 100), expected[fraction]]
+        )
+    rider.queue_free()
+
+
+## With one player, the camera picture glides out of the rider's way at the
+## bottom right of the steppe, and back once she is away.
+func _check_give_way(level: Level) -> void:
+    var rider := level.rider()
+    var start := rider.position
+    rider.position = level.map.size - Vector2(120, 100)
+    await _wait(Level.GIVE_WAY_SECONDS + 0.5)
+    _check(level.panel_away() == 1.0, "the camera picture gives way to the rider")
+    _check(
+        level.view().conversation.position == Level.CONVERSATION_AWAY.position,
+        "and the conversation steps aside"
+    )
+    rider.position = start
+    await _wait(Level.GIVE_WAY_SECONDS + 0.5)
+    _check(level.panel_away() == 0.0, "and comes back once she rode away")
+    _check(
+        level.view().conversation.position == Level.CONVERSATION.position,
+        "and so does the conversation"
+    )
+
+
 func _run() -> void:
     _check_levels()
+    await _check_dust()
 
     var level: Level = (load(_LEVEL) as PackedScene).instantiate()
     root.add_child(level)
     await process_frame
     await process_frame
     _check_clue_texts(level)
+    await _check_give_way(level)
 
     var service: Node = root.get_node("Vision").service
     var rider := level.rider()

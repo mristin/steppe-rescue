@@ -7,9 +7,15 @@ extends RefCounted
 ## whether one or two ride), the creator of the rider and her horse (once for
 ## each player of the journey), the instruction (the first time)
 ## and the request for room around her (once each start, with the camera on)
-## to the next level, and the end of a level to the reward; Levels opens the
-## level select, How to Play the instruction, and Settings the settings, where
-## the language and the journey can be changed.
+## to the next level, and the end of a level to the reward; Levels goes on
+## through the journeys (once each start) and the creator to the level select,
+## so that it shows the progress of the journey they ride in, How to Play opens
+## the instruction, and Settings the settings, where the language and the
+## journey can be changed.
+##
+## A level is played only in a journey where it is open: a level chosen before
+## the journey (e.g., in the level select of another journey) leads to the
+## level select of the chosen journey instead.
 
 const INTRO := "res://scenes/intro/intro.tscn"
 const LANGUAGE_SELECT := "res://scenes/language_select/language_select.tscn"
@@ -34,6 +40,9 @@ static var back := INTRO
 
 ## The path of the level to play (see [LevelList]); empty for the next one.
 static var level := ""
+
+## Whether the player is on her way from Levels to the level select.
+static var choosing := false
 
 ## Whether the players chose their journey since the game started.
 static var session_asked := false
@@ -68,6 +77,7 @@ static func reward(tree: SceneTree, stars: int, level_id := "") -> void:
 ## select when all are.
 static func play(tree: SceneTree, path := "") -> void:
     playing = true
+    choosing = false
     back = INTRO
     level = path
     next(tree)
@@ -91,12 +101,22 @@ static func next(tree: SceneTree) -> void:
         tree.change_scene_to_file.call_deferred(PLAYER_COUNT)
     elif not profile.has_riders():
         tree.change_scene_to_file.call_deferred(RIDER_CREATOR)
+    elif choosing:
+        playing = false
+        choosing = false
+        back = INTRO
+        tree.change_scene_to_file.call_deferred(LEVEL_SELECT)
     elif not profile.has_seen_instruction:
         tree.change_scene_to_file.call_deferred(INSTRUCTION)
     elif not room_asked and tree.root.get_node("Vision").service.GetStatus() != "Disabled":
         tree.change_scene_to_file.call_deferred(FREE_SPACE)
     else:
         playing = false
+        if level != "" and not LevelList.is_open(level, profile):
+            level = ""
+            back = INTRO
+            tree.change_scene_to_file.call_deferred(LEVEL_SELECT)
+            return
         if level == "":
             level = LevelList.next(profile)
         if level == "":
@@ -106,9 +126,20 @@ static func next(tree: SceneTree) -> void:
             tree.change_scene_to_file.call_deferred(LEVEL)
 
 
+## Go on from Levels to the level select of the journey they ride in: first
+## the journeys (once each start) and the creator, if missing.
+static func levels(tree: SceneTree) -> void:
+    playing = true
+    choosing = true
+    back = INTRO
+    level = ""
+    next(tree)
+
+
 ## Open a screen from a menu, which goes back to [param from] when done.
 static func open(tree: SceneTree, path: String, from := INTRO) -> void:
     playing = false
+    choosing = false
     back = from
     tree.change_scene_to_file.call_deferred(path)
 

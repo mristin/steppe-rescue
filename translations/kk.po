@@ -114,6 +114,11 @@ msgstr "Жарайды"
 msgid "R: ride again · Esc: quit"
 msgstr "R: қайта ойнау · Esc: шығу"
 
+#: scenes/level/level.gd
+#, fuzzy
+msgid "Ask the people of the steppe, too:"
+msgstr "Даладағы адамдардан да сұра:"
+
 #. {landmark@near} is a landmark in its form "near", e.g., "у родника".
 #: scenes/level_map/level_map.gd
 #, fuzzy
@@ -149,6 +154,18 @@ msgstr "{landmark@of} шығыс жағында {animals} көрдім."
 #, fuzzy
 msgid "I saw {animals} west of {landmark@of}."
 msgstr "{landmark@of} батыс жағында {animals} көрдім."
+
+#. Grandmother tells whom to ask; {person}: "Shepherd"; {landmark@near}: where.
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "{person} near {landmark@near} saw {animals}."
+msgstr "{landmark@near} {person} {animals} көрді."
+
+#. Grandmother tells whom to ask; {person} is, e.g., "Shepherd".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "{person} saw {animals}."
+msgstr "{person} {animals} көрді."
 
 #. The button which goes back to the previous screen.
 #: scenes/level_select/level_select.gd scenes/session_name/session_name.gd
@@ -765,6 +782,12 @@ msgstr "Сапарыңа ат қой"
 msgid "Your journeys"
 msgstr "Сенің сапарларың"
 
+#. The title of the journeys while the players choose one to delete.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Which journey to delete?"
+msgstr "Қай саяхатты өшіреміз?"
+
 #. The button which goes on with the last journey.
 #: scenes/sessions/sessions.gd
 #, fuzzy
@@ -782,6 +805,24 @@ msgstr "+ Жаңа сапар"
 #, fuzzy
 msgid "Change rider"
 msgstr "Шабандозды өзгерту"
+
+#. The button which deletes a journey (a saved game), after asking.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Delete"
+msgstr "Өшіру"
+
+#. Asked before a journey is deleted; {name} is its name, {riders} its riders.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Delete the journey {name} of {riders} for good?"
+msgstr "{riders} саяхатын ({name}) біржола өшіреміз бе?"
+
+#. The button which keeps a journey instead of deleting it.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Keep"
+msgstr "Қалдыру"
 
 #. The names of the two riders who ride together, e.g., "Aigerim and Dana".
 #: scenes/sessions/sessions.gd scenes/settings/settings.gd

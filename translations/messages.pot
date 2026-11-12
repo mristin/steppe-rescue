@@ -93,6 +93,10 @@ msgstr ""
 msgid "R: ride again · Esc: quit"
 msgstr ""
 
+#: scenes/level/level.gd
+msgid "Ask the people of the steppe, too:"
+msgstr ""
+
 #. {landmark@near} is a landmark in its form "near", e.g., "у родника".
 #: scenes/level_map/level_map.gd
 msgid "I saw {animals} near {landmark@near}."
@@ -121,6 +125,16 @@ msgstr ""
 #. {landmark@of} is a landmark in its form "of", e.g., "родника".
 #: scenes/level_map/level_map.gd
 msgid "I saw {animals} west of {landmark@of}."
+msgstr ""
+
+#. Grandmother tells whom to ask; {person}: "Shepherd"; {landmark@near}: where.
+#: scenes/level_map/level_map.gd
+msgid "{person} near {landmark@near} saw {animals}."
+msgstr ""
+
+#. Grandmother tells whom to ask; {person} is, e.g., "Shepherd".
+#: scenes/level_map/level_map.gd
+msgid "{person} saw {animals}."
 msgstr ""
 
 #. The button which goes back to the previous screen.
@@ -629,6 +643,11 @@ msgstr ""
 msgid "Your journeys"
 msgstr ""
 
+#. The title of the journeys while the players choose one to delete.
+#: scenes/sessions/sessions.gd
+msgid "Which journey to delete?"
+msgstr ""
+
 #. The button which goes on with the last journey.
 #: scenes/sessions/sessions.gd
 msgid "Continue"
@@ -642,6 +661,21 @@ msgstr ""
 #. The button which opens the creator for the rider of the current journey.
 #: scenes/sessions/sessions.gd
 msgid "Change rider"
+msgstr ""
+
+#. The button which deletes a journey (a saved game), after asking.
+#: scenes/sessions/sessions.gd
+msgid "Delete"
+msgstr ""
+
+#. Asked before a journey is deleted; {name} is its name, {riders} its riders.
+#: scenes/sessions/sessions.gd
+msgid "Delete the journey {name} of {riders} for good?"
+msgstr ""
+
+#. The button which keeps a journey instead of deleting it.
+#: scenes/sessions/sessions.gd
+msgid "Keep"
 msgstr ""
 
 #. The names of the two riders who ride together, e.g., "Aigerim and Dana".

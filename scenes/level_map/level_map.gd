@@ -219,6 +219,79 @@ func clue_text(clue: Clue) -> String:
     return text.left(1).to_upper() + text.substr(1)
 
 
+## Where the person sends the rider for the herds which their own clues do
+## not point to (Grandmother, see section 4 of DESIGN.md): for each such herd,
+## the other person who saw it, so that she learns about every herd, at least
+## whom to ask. Each hint is a dictionary with "person" (who saw the herd),
+## "clue" (their clue about it) and "place" (the landmark nearest to them, or
+## null).
+func referrals(person: Person) -> Array[Dictionary]:
+    var known := {}
+    for clue in person.clues:
+        var herd := herd_of(clue)
+        if herd != null:
+            known[herd] = true
+    var result: Array[Dictionary] = []
+    for herd in herds():
+        if known.has(herd):
+            continue
+        for other in people():
+            if other == person:
+                continue
+            var found: Clue = null
+            for clue in other.clues:
+                if herd_of(clue) == herd:
+                    found = clue
+            if found != null:
+                known[herd] = true
+                result.append({"person": other, "clue": found, "place": place_of(other)})
+                break
+    return result
+
+
+## The landmark nearest to the point, by the edge of the landmark, to say
+## where someone stands; null if there is none. The rivers and the creeks are
+## left out: they cross the whole steppe.
+func place_of(who: Node2D) -> Landmark:
+    var nearest: Landmark = null
+    var best := INF
+    for each in landmarks():
+        if each is River or each.kind == null:
+            continue
+        var distance := who.position.distance_to(each.position) - each.size()
+        if distance < best:
+            best = distance
+            nearest = each
+    return nearest
+
+
+## The hint (see [method referrals]) as the person says it, in the language of
+## the game.
+func referral_text(hint: Dictionary) -> String:
+    var clue: Clue = hint["clue"]
+    var place: Landmark = hint["place"]
+    var who: Person = hint["person"]
+    var pattern := ""
+    if place != null:
+        # TRANSLATORS: Grandmother tells whom to ask; {person}: "Shepherd"; {landmark@near}: where.
+        pattern = tr("{person} near {landmark@near} saw {animals}.")
+    else:
+        # TRANSLATORS: Grandmother tells whom to ask; {person} is, e.g., "Shepherd".
+        pattern = tr("{person} saw {animals}.")
+    var text := (
+        Grammar
+        . format(
+            pattern,
+            {
+                "person": who.speaker,
+                "animals": clue.animal.one if clue.count == 1 else clue.animal.many,
+                "landmark": place.kind.name if place != null else "",
+            }
+        )
+    )
+    return text.left(1).to_upper() + text.substr(1)
+
+
 ## The problems of the level, if any: what the tests check for every level.
 func problems() -> PackedStringArray:
     var result := PackedStringArray()
@@ -261,6 +334,20 @@ func problems() -> PackedStringArray:
     for herd in herds():
         if not covered.has(herd) and herd.animal != null:
             result.append("no clue points to the herd %s" % herd.name)
+
+    # NOTE (mristin):
+    # Grandmother tells about every herd: where she saw it, or whom to ask.
+    for person in people():
+        if person.portrait != "grandmother":
+            continue
+        var told := {}
+        for clue in person.clues:
+            told[herd_of(clue)] = true
+        for hint in referrals(person):
+            told[herd_of(hint["clue"])] = true
+        for herd in herds():
+            if not told.has(herd) and herd.animal != null:
+                result.append("Grandmother tells nothing about the herd %s" % herd.name)
     for what in unreachable():
         result.append("the rider cannot reach %s from the start" % what)
     return result

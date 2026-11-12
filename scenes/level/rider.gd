@@ -113,6 +113,11 @@ var _stride := 0.0
 
 func _ready() -> void:
     PaintedTopDown.prepare(self)
+    # NOTE (mristin):
+    # The dust behind the galloping horse.
+    var dust := GallopDust.new()
+    dust.name = "Dust"
+    add_child(dust)
 
 
 ## Set what blocks the horse: the circles (x, y, radius), the edge of the

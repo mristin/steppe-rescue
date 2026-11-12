@@ -55,6 +55,25 @@ const GATE_DISTANCE := 60.0
 ## The riders of two players start this far apart, in pixels.
 const START_APART := 24.0
 
+## With one player, the camera picture and the small figure next to it give
+## way to the rider when she rides under them, at the right edge of the
+## steppe: they glide to the top left corner over about this many seconds...
+const GIVE_WAY_SECONDS := 1.2
+
+## ... once her rider comes this close to them, in pixels...
+const GIVE_WAY_NEAR := 12.0
+
+## ... and glide back once she is this far from their place.
+const GIVE_WAY_CLEAR := 64.0
+
+## Where the camera picture of one player stands when it gives way.
+const AWAY := Vector2(76, 8)
+
+## Where the conversation of one player stands, and where while the camera
+## picture gives way (to its right, before the small map).
+const CONVERSATION := Rect2(8, 40, 600, 100)
+const CONVERSATION_AWAY := Rect2(372, 40, 412, 100)
+
 ## The level to play.
 @export var map_scene: PackedScene
 
@@ -79,6 +98,11 @@ var _service: Node = null
 var _people: Array[Person] = []
 var _grandmother: Person = null
 var _revealed: Array[Clue] = []
+
+## The people whom Grandmother told the riders to ask, and whom they did not
+## talk to yet (marked on the maps).
+var _referred: Array[Person] = []
+var _people_talked := {}
 var _started := false
 var _players: Array[LevelPlayer] = []
 var _wildlife: Wildlife
@@ -86,6 +110,13 @@ var _finish_squats: Array[int] = []
 var _finish_time := 0.0
 var _ok: DwellButton = null
 var _left := false
+
+## Where the camera picture stands at home, and how far it went away from
+## there (see [constant GIVE_WAY_SECONDS]), in [0, 1], and whether it goes
+## away now.
+var _panel_home := Vector2.ZERO
+var _panel_away := 0.0
+var _panel_leaving := false
 
 @onready var _world: Node2D = $World
 @onready var _animals: Node2D = $World/Animals
@@ -181,6 +212,7 @@ func _ready() -> void:
         divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
         _hud.add_child(divider)
         _hud.move_child(divider, 0)
+    _panel_home = _camera_panel.position
     for player in _players:
         _build_coach(player)
         # NOTE (mristin):
@@ -218,10 +250,7 @@ func _build_hud(player: LevelPlayer) -> void:
     _add(player.map_view, player.map_view.small_rect)
 
     player.conversation = Conversation.new()
-    _add(
-        player.conversation,
-        player.place(Rect2(8, 136, 464, 100) if two else Rect2(8, 40, 600, 100))
-    )
+    _add(player.conversation, player.place(Rect2(8, 136, 464, 100) if two else CONVERSATION))
 
     player.edge_label = Label.new()
     player.edge_label.visible = false
@@ -240,6 +269,60 @@ func _build_coach(player: LevelPlayer) -> void:
     player.coach.position = Vector2(x, _camera_panel.position.y)
     player.coach.size = Vector2(width, _camera_panel.size.y)
     _hud.add_child(player.coach)
+
+
+## With one player, let the camera picture and the small figure glide out of
+## the way of the rider to the top left corner while she rides under them,
+## and back once she is clearly away; the conversation moves to the right
+## meanwhile.
+func _give_way(delta: float) -> void:
+    if _players.size() != 1:
+        return
+    var player := _players[0]
+    var on_screen := (
+        player.rider.position
+        - player.center(map.size)
+        + player.rect.size * 0.5
+        + player.rect.position
+    )
+    var coach := player.coach
+    var home := Rect2(
+        Vector2(_panel_home.x - (_camera_panel.position.x - coach.position.x), _panel_home.y),
+        Vector2(
+            _camera_panel.size.x + _camera_panel.position.x - coach.position.x, _camera_panel.size.y
+        )
+    )
+    var away := Rect2(home.position + AWAY - _panel_home, home.size)
+    if not _panel_leaving:
+        _panel_leaving = (
+            home.grow(GIVE_WAY_NEAR).has_point(on_screen)
+            and not away.grow(GIVE_WAY_CLEAR).has_point(on_screen)
+        )
+    elif not home.grow(GIVE_WAY_CLEAR).has_point(on_screen):
+        _panel_leaving = false
+
+    var before := _panel_away
+    _panel_away = move_toward(_panel_away, 1.0 if _panel_leaving else 0.0, delta / GIVE_WAY_SECONDS)
+    if before == _panel_away:
+        return
+    var offset := coach.position - _camera_panel.position
+    _camera_panel.position = _panel_home.lerp(AWAY, smoothstep(0.0, 1.0, _panel_away)).round()
+    coach.position = _camera_panel.position + offset
+
+    # NOTE (mristin):
+    # The conversation steps aside as soon as the picture starts away, and
+    # comes back only once the picture is home again.
+    var aside := _panel_away > 0.0
+    var rect := CONVERSATION_AWAY if aside else CONVERSATION
+    if player.conversation.position != rect.position:
+        player.conversation.position = rect.position
+        player.conversation.size = rect.size
+        _show_conversation(player)
+
+
+## How far the camera picture went out of the rider's way, in [0, 1].
+func panel_away() -> float:
+    return _panel_away
 
 
 ## Put the control of the HUD at the rectangle, over the others (or at the
@@ -293,6 +376,7 @@ func _process(delta: float) -> void:
         others.append([_players[i].rider.position, _players[i].rider.gait()])
     _wildlife.update(delta, _players[0].rider.position, _players[0].rider.gait(), others)
     _update_views()
+    _give_way(delta)
     _update_hud()
 
 
@@ -441,6 +525,13 @@ func _talk(player: LevelPlayer, person: Person) -> void:
     for clue in person.clues:
         if clue not in _revealed:
             _revealed.append(clue)
+    _referred.erase(person)
+    if person == _grandmother:
+        for hint in map.referrals(person):
+            var other: Person = hint["person"]
+            if other not in _referred and not _people_talked.has(other):
+                _referred.append(other)
+    _people_talked[person] = true
     _show_conversation(player)
 
 
@@ -465,6 +556,12 @@ func _show_conversation(player: LevelPlayer) -> void:
         lines.append({"text": Grammar.format(tr(player.talking.greeting), {"rider": rider_name})})
         for clue in player.talking.clues:
             lines.append({"icons": _clue_icons(clue), "text": map.clue_text(clue)})
+        if player.talking == _grandmother:
+            var hints := map.referrals(player.talking)
+            if not hints.is_empty():
+                lines.append({"text": tr("Ask the people of the steppe, too:")})
+            for hint in hints:
+                lines.append({"icons": _referral_icons(hint), "text": map.referral_text(hint)})
     player.conversation.open(
         Icons.portrait(player.talking.portrait), tr(player.talking.speaker), lines
     )
@@ -480,6 +577,27 @@ func _clue_icons(clue: Clue) -> Array:
         if landmark != null:
             icons.append([Icons.landmark(landmark.kind_id(), 2.0), Color.WHITE])
     return icons
+
+
+## The pictures of Grandmother's hint whom to ask: the animals, the person
+## and the landmark where they stand.
+func _referral_icons(hint: Dictionary) -> Array:
+    var clue: Clue = hint["clue"]
+    var icons: Array = []
+    for i in range(clue.count):
+        icons.append([Icons.animal(clue.animal.id, 2.0), Color.WHITE])
+    var who: Person = hint["person"]
+    icons.append([Icons.portrait_icon(who.portrait, 2.0), Color.WHITE])
+    var place: Landmark = hint["place"]
+    if place != null:
+        icons.append([Icons.landmark(place.kind_id(), 2.0), Color.WHITE])
+    return icons
+
+
+## The people whom Grandmother told the riders to ask, and whom they did not
+## talk to yet.
+func referred() -> Array[Person]:
+    return _referred
 
 
 func _update_animals(delta: float) -> void:
@@ -652,6 +770,8 @@ func _update_player_hud(player: LevelPlayer) -> void:
         map_view.partner_at = partner.position
         map_view.partner_heading = partner.heading
     map_view.clues = _revealed
+    map_view.people = _people
+    map_view.referred = _referred
     for clue in _revealed:
         var herd := map.herd_of(clue)
         map_view.found[clue] = (

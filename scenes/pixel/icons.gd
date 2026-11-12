@@ -278,6 +278,13 @@ static func portrait(id: String) -> Texture2D:
     return load("%s/%s_portrait.png" % [_PORTRAITS_DIR, id if id in PORTRAITS else "shepherd"])
 
 
+## The portrait of the person, painted, fitted into the box of the icons at
+## the scale, like the other icons (e.g., in a hint whom to ask).
+static func portrait_icon(id: String, scale := 1.0) -> ImageTexture:
+    var name := id if id in PORTRAITS else "shepherd"
+    return Painting.fitted("%s/%s_portrait.png" % [_PORTRAITS_DIR, name], SIZE * scale)
+
+
 ## The person seen from above, painted, two pixels of the screen per logical
 ## pixel; the middle of the person in the middle of the picture.
 static func person_above(id: String) -> Texture2D:

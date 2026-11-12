@@ -253,11 +253,12 @@ func _run() -> void:
     buttons[1].press()
     await _frames(3)
     _check(current_scene is LevelSelect, "Levels opens the level select")
-    var banners := (current_scene as LevelSelect).banners()
-    _check(banners.size() == LevelList.paths().size(), "every level has its spot")
-    _check(banners[0] != null and banners[0].primary, "the first level is open and next")
-    for i in range(1, banners.size()):
-        _check(banners[i] == null, "the level %d is not open yet" % (i + 1))
+    var rows := (current_scene as LevelSelect).rows()
+    _check(rows.size() == LevelList.paths().size(), "every level is listed")
+    _check(not rows[0].disabled and rows[0].primary, "the first level is open and next")
+    for i in range(1, rows.size()):
+        _check(rows[i].disabled, "the level %d is listed, but not open yet" % (i + 1))
+        _check(rows[i].text != "", "the level %d shows its name" % (i + 1))
     Flow.cancel(self)
     await _frames(3)
     _check(current_scene is Intro, "the level select goes back to the intro")
@@ -318,6 +319,38 @@ func _run() -> void:
     Flow.session_asked = true
 
     # NOTE (mristin):
+    # A level chosen in the level select of one journey is not played in
+    # another journey chosen after it, where it is not open: the level select
+    # of that journey shows instead.
+    profile.choose_session(second)
+    profile.see_instruction()
+    profile.choose_session(first)
+    profile.finish_level(LevelList.id(LevelList.paths()[0]), 2)
+    var second_level := LevelList.paths()[1]
+    _check(
+        LevelList.is_open(second_level, profile), "the second level is open in the first journey"
+    )
+    Flow.session_asked = false
+    Flow.play(self, second_level)
+    await _frames(3)
+    _check(current_scene is Sessions, "a level chosen before the journey asks for the journey")
+    var listed := (current_scene as Sessions).shown()
+    for i in range(listed.size()):
+        if listed[i]["id"] == second:
+            (current_scene as Sessions).choose(i)
+    await _frames(3)
+    _check(profile.session_id == second, "the other journey is chosen")
+    _check(
+        current_scene is LevelSelect, "where the level is not open, the level select shows instead"
+    )
+    Flow.session_asked = false
+    Flow.levels(self)
+    await _frames(3)
+    _check(current_scene is Sessions, "Levels asks for the journey first")
+    profile.choose_session(first)
+    Flow.session_asked = true
+
+    # NOTE (mristin):
     # Finishing every level keeps the stars, opens the next level, and sends
     # Play to the level select.
     var paths := LevelList.paths()
@@ -330,6 +363,28 @@ func _run() -> void:
     Flow.play(self)
     await _frames(3)
     _check(current_scene is LevelSelect, "then Play goes to the level select")
+
+    # NOTE (mristin):
+    # Delete removes a journey only after the question, and Keep keeps it.
+    var count: int = profile.sessions().size()
+    Flow.session_asked = false
+    Flow.play(self)
+    await _frames(3)
+    var journeys_screen := current_scene as Sessions
+    journeys_screen.set_deleting(true)
+    _check(journeys_screen.is_deleting(), "Delete asks which journey to delete")
+    var doomed: String = journeys_screen.shown()[1]["id"]
+    journeys_screen.choose(1)
+    await _frames(2)
+    _check(journeys_screen.question() != null, "choosing a journey asks whether to delete it")
+    _check(profile.sessions().size() == count, "and does not delete it yet")
+    journeys_screen.confirm_button().press()
+    await _frames(3)
+    _check(profile.sessions().size() == count - 1, "Delete in the question deletes it")
+    _check(profile.read(doomed) == null, "for good")
+    _check(current_scene is Sessions, "and the journeys show again")
+    profile.choose_session(first)
+    Flow.session_asked = true
 
     await _check_two_players(profile)
 

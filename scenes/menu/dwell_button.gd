@@ -27,6 +27,13 @@ const _GROW := 2.0
 ## The size of the font of the text.
 @export var font_size := 16
 
+## Where the text starts from the left edge of the button, in pixels; zero
+## centers it (e.g., a row of a list, with marks at its left and right).
+var text_left := 0.0:
+    set(value):
+        text_left = value
+        queue_redraw()
+
 ## The picture on the button, above the text or alone.
 var picture: Texture2D = null:
     set(value):
@@ -152,12 +159,13 @@ func _draw() -> void:
             top += 14.0
 
     if text != "":
-        var width := rect.size.x - 8.0
+        var left := text_left if text_left > 0.0 else 4.0
+        var width := rect.size.x - left - 4.0
         draw_string(
             font,
-            Vector2(rect.position.x + 4.0, top + font.get_ascent(font_size)).round(),
+            Vector2(rect.position.x + left, top + font.get_ascent(font_size)).round(),
             text,
-            HORIZONTAL_ALIGNMENT_CENTER,
+            HORIZONTAL_ALIGNMENT_LEFT if text_left > 0.0 else HORIZONTAL_ALIGNMENT_CENTER,
             width,
             font_size,
             Palette.FELT if primary and not selected else Palette.OUTLINE

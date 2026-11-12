@@ -163,6 +163,27 @@ func choose_session(id: String) -> bool:
     return true
 
 
+## Delete the saved journey of the id for good; return whether it was there.
+## Deleting the current journey leaves none chosen, and the players choose
+## (or start) one before they ride again.
+func delete_session(id: String) -> bool:
+    var path := _session_path(id)
+    if id == "" or not FileAccess.file_exists(path):
+        return false
+    DirAccess.remove_absolute(path)
+    var settings := ConfigFile.new()
+    settings.load(_path())
+    if settings.get_value("general", "last_session", "") == id:
+        settings.set_value("general", "last_session", "")
+        settings.save(_path())
+    if id == session_id:
+        session_id = ""
+        session_name = ""
+        created = ""
+        _from_data({})
+    return true
+
+
 ## The saved journeys, the most recently played first, each with "id",
 ## "name", "updated", "riders" (each a dictionary with "name", as written,
 ## empty for the default, and "looks") and "stars" (in all the levels).

@@ -33,7 +33,7 @@ func _ready() -> void:
     _play.primary = true
     _play.pressed.connect(func() -> void: Flow.play(get_tree()))
     _levels = _button(Rect2(606, 342, 300, 60), 32)
-    _levels.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.LEVEL_SELECT))
+    _levels.pressed.connect(func() -> void: Flow.levels(get_tree()))
     _settings = _button(Rect2(606, 408, 300, 60), 32)
     _settings.pressed.connect(func() -> void: Flow.open(get_tree(), Flow.SETTINGS))
     _how_to_play = _button(Rect2(606, 474, 300, 60), 32)

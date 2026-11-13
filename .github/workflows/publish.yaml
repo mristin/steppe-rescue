@@ -174,11 +174,11 @@ jobs:
           (cd build/windows && zip -q -r "../../dist/steppe-rescue-${PACKAGE_VERSION}-windows-x86_64.zip" .)
 
           # NOTE (mristin):
-          # Godot packs the macOS app as a zip already. Godot builds a universal
-          # app, but ONNX Runtime ships its native library only for Apple Silicon,
-          # so the camera tracking does not work on Intel Macs.
-          cp build/macos/steppe-rescue.zip "dist/steppe-rescue-${PACKAGE_VERSION}-macos-apple-silicon.zip"
-          (cd notices && zip -q -r "../dist/steppe-rescue-${PACKAGE_VERSION}-macos-apple-silicon.zip" .)
+          # Godot packs the macOS app as a zip already. The app is universal and
+          # runs on the Intel and the Apple Silicon Macs (see the note on ONNX
+          # Runtime in SteppeRescue.csproj).
+          cp build/macos/steppe-rescue.zip "dist/steppe-rescue-${PACKAGE_VERSION}-macos.zip"
+          (cd notices && zip -q -r "../dist/steppe-rescue-${PACKAGE_VERSION}-macos.zip" .)
 
           ls -l dist
 

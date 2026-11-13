@@ -192,7 +192,11 @@ $GODOT --headless --path . --export-release "Linux" build/linux/steppe-rescue.x8
 Godot builds the C# part for each platform itself (`dotnet publish`), including the native libraries of ONNX Runtime.
 Mind that Godot exits with zero even if that build fails, and then writes a package without the C# part; check its output for `ERROR`.
 
-The macOS app is universal, but ONNX Runtime provides its native library only for Apple Silicon, so the camera tracking does not work on Intel Macs.
+The macOS app is universal and runs on the Intel and the Apple Silicon Macs.
+We stay with ONNX Runtime 1.19, the last version whose libraries for macOS run on macOS 11 on both (from 1.20 on, they need macOS 13.3, and from 1.24 on, there is none for the Intel Macs); see `SteppeRescue.csproj`.
+On macOS 10.15, which .NET 8 still runs on, the game reports that the camera failed, and the keys still ride.
+ONNX Runtime 1.16 would run there, too, but runs the pose 15-20% slower; our models (opset 11) give the same keypoints on 1.16, 1.19 and 1.24.
+The app is signed ad hoc and not notarized, so the players open it the first time with a right click and Open.
 
 ### The camera on Windows
 

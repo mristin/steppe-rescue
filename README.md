@@ -29,16 +29,24 @@ Unzip the package and start the game.
 
 [releases]: https://github.com/mristin/steppe-rescue/releases
 
-The macOS package runs on Apple Silicon.
-On Intel Macs, the camera tracking does not work, since ONNX Runtime provides no library for them.
+You need a webcam which supports 640x480.
 
-The camera on Windows is experimental: Godot 4.6 has no camera on Windows, so the Windows package brings [CameraServerExtension] along.
+| System | With the webcam | With the keyboard |
+|---|---|---|
+| **Linux** (x86_64) | ✅ | ✅ |
+| **macOS 11 or later** (Apple Silicon and Intel) | ✅ (macOS asks for the permission on the first start) | ✅ |
+| **macOS 10.15** (Intel) | ❌ (the camera tracking needs macOS 11) | ✅ |
+| **Windows** (x86_64) | 🧪 experimental, see below | ✅ |
+
+Godot 4.6 has no camera on Windows, so the Windows package brings [CameraServerExtension] along.
 Virtual cameras (e.g., the one of OBS Studio) do not work there.
 If the camera does not work, ride with the keyboard.
 
 [CameraServerExtension]: https://github.com/j20001970/godot-cameraserver-extension
 
-You need a webcam which supports 640x480.
+The macOS app is not notarized: open it the first time with a right click and Open.
+
+The packages for Windows and macOS are built, but not yet tested on those systems; please report any problems.
 
 ## Acknowledgments
 

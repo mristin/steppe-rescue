@@ -30,7 +30,7 @@ Their notices are in [licenses/godot/COPYRIGHT.txt](licenses/godot/COPYRIGHT.txt
 
 ### ONNX Runtime
 
-* Package: `Microsoft.ML.OnnxRuntime` 1.24.4
+* Package: `Microsoft.ML.OnnxRuntime` 1.19.2
 * License: MIT
 * Copyright (c) Microsoft Corporation
 * Source: https://github.com/microsoft/onnxruntime

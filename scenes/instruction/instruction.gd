@@ -178,7 +178,13 @@ func _process(delta: float) -> void:
 
 ## The player has seen how to ride: go on.
 func finish() -> void:
-    get_node("/root/Profile").see_instruction()
+    # NOTE (mristin):
+    # How to Play opened from the intro before any journey started has no
+    # journey to remember it in; it must not start one, so that the new
+    # player still names her journey after Play.
+    var profile := get_node("/root/Profile")
+    if profile.session_id != "":
+        profile.see_instruction()
     Flow.next(get_tree())
 
 

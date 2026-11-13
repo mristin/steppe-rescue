@@ -129,9 +129,10 @@ func set_obstacles(solids: Array[Vector3], size: Vector2, jumpable: Array[Vector
     _bounds = Rect2(Vector2.ZERO, size).grow(-EDGE)
 
 
-## Rear up on the hind legs: the rider braked.
+## Rear up on the hind legs: the rider braked. A horse in the air flies on
+## and lands first, as a rearing horse does not jump.
 func rear() -> void:
-    if rearing() > 0.0:
+    if rearing() > 0.0 or jump_time >= 0.0:
         return
     rear_time = 0.0
     _sound("stamp", 0.7, 0.0)

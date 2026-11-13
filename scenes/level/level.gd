@@ -177,6 +177,7 @@ func _ready() -> void:
         player.trail.append(player.rider.position)
         player.brakes = _service.GetBrakeCount(i)
         player.jumps = _service.GetJumpCount(i)
+        player.jumps_seen = player.jumps
         var bubble := NeedsBubble.new()
         bubble.needs = player.needs
         player.rider.add_child(bubble)
@@ -214,6 +215,10 @@ func _ready() -> void:
         _hud.move_child(divider, 0)
     for player in _players:
         _build_coach(player)
+    # NOTE (mristin):
+    # The hint to quit draws over the rest of the HUD (e.g., the big map), so
+    # that the second Escape never quits unannounced.
+    _hud.move_child(_quit_hint, -1)
     _arrange()
     for player in _players:
         # NOTE (mristin):
@@ -271,6 +276,9 @@ func _build_coach(player: LevelPlayer) -> void:
     player.coach.position = Vector2(x, _camera_panel.position.y)
     player.coach.size = Vector2(width, _camera_panel.size.y)
     _hud.add_child(player.coach)
+    # NOTE (mristin):
+    # The small figure draws with the camera picture, under the big map.
+    _hud.move_child(player.coach, _camera_panel.get_index() + 1)
 
 
 ## Let the HUD give way to the riders (see [HudLayout]), in the order of
@@ -629,16 +637,18 @@ func _talk(player: LevelPlayer, person: Person) -> void:
 
 
 ## Show (again, e.g., in another language) what the person says now to the
-## player, by her name.
-func _show_conversation(player: LevelPlayer) -> void:
+## player, by her name; shown again, the talk stays on its page.
+func _show_conversation(player: LevelPlayer, again := false) -> void:
     if player.talking == null:
         return
+    var page := player.conversation.page() if again else 0
     var rider_name: String = get_node("/root/Profile").rider_name(player.index)
     if _ok != null:
         _ok.text = tr("OK")
     var lines: Array[Dictionary] = []
     if finished:
-        lines.append({"text": Grammar.format(tr(map.thanks), {"rider": rider_name})})
+        var rider := Grammar.verbatim(rider_name)
+        lines.append({"text": Grammar.format(tr(map.thanks), {"rider": rider})})
         var icons: Array = []
         for i in range(3):
             var color := Color.WHITE if i < stars() else Color(0.2, 0.15, 0.1, 0.5)
@@ -646,7 +656,8 @@ func _show_conversation(player: LevelPlayer) -> void:
         lines.append({"icons": icons})
         lines.append({"text": tr("R: ride again · Esc: quit")})
     else:
-        lines.append({"text": Grammar.format(tr(player.talking.greeting), {"rider": rider_name})})
+        var rider := Grammar.verbatim(rider_name)
+        lines.append({"text": Grammar.format(tr(player.talking.greeting), {"rider": rider})})
         for clue in player.talking.clues:
             lines.append({"icons": _clue_icons(clue), "text": map.clue_text(clue)})
         if player.talking == _grandmother:
@@ -658,6 +669,8 @@ func _show_conversation(player: LevelPlayer) -> void:
     player.conversation.open(
         Icons.portrait(player.talking.portrait), tr(player.talking.speaker), lines
     )
+    if page > 0:
+        player.conversation.turn_to(page)
 
 
 ## The pictures of a clue: the animals, then the landmarks.
@@ -827,26 +840,22 @@ func _update_hud() -> void:
 
 func _update_player_hud(player: LevelPlayer) -> void:
     var at := player.rider.position
+    # NOTE (mristin):
+    # She hears every lost animal near her which she does not see, each with
+    # its own picture at the edge of the screen, in its direction, like a
+    # compass (see section 4 of DESIGN.md).
     var heard: Array[Dictionary] = []
-    for herd in map.herds():
-        var nearest: Animal = null
-        for animal in animals:
-            if animal.herd == herd and animal.is_lost():
-                if (
-                    nearest == null
-                    or animal.position.distance_to(at) < nearest.position.distance_to(at)
-                ):
-                    nearest = animal
-        if nearest == null:
+    for animal in animals:
+        if not animal.is_lost():
             continue
-        var distance := nearest.position.distance_to(at)
-        if distance < Hearing.RADIUS and not player.hearing.on_screen(nearest.position):
+        var distance := animal.position.distance_to(at)
+        if distance < Hearing.RADIUS and not player.hearing.on_screen(animal.position):
             (
                 heard
                 . append(
                     {
-                        "id": nearest.kind.id,
-                        "at": nearest.position,
+                        "id": animal.kind.id,
+                        "at": animal.position,
                         "closeness": 1.0 - distance / Hearing.RADIUS,
                     }
                 )
@@ -875,11 +884,12 @@ func _update_player_hud(player: LevelPlayer) -> void:
     _update_coach(player, get_process_delta_time())
 
 
-## Let the small figure follow the player while the camera sees her, and
-## else show what the game waits for: a squat when the horse stands still or a
-## conversation waits for one, the reins pulled after the edge of the steppe
-## or the second run into the same obstacle, else the echo of the player's
-## squats.
+## Let the small figure do what the game understood of the player (see
+## [Coach]): her squats, her reins, her brake and her jumps, from the camera
+## or the keys; and know what the game waits for, as a hint over her head: a
+## squat when the horse stands still or a conversation waits for one, the
+## reins pulled after the edge of the steppe or the second run into the same
+## obstacle, a jump at a creek.
 func _update_coach(player: LevelPlayer, delta: float) -> void:
     var coach := player.coach
     coach.following = _service.IsRunning() and _service.HasPlayer(player.index)
@@ -894,6 +904,10 @@ func _update_coach(player: LevelPlayer, delta: float) -> void:
     if squats > player.squats_seen:
         coach.echo()
     player.squats_seen = squats
+    var jumps: int = _service.GetJumpCount(player.index)
+    if jumps > player.jumps_seen and not coach.following:
+        coach.echo_jump()
+    player.jumps_seen = jumps
     var waiting := player.talk_time >= (THANKS_SECONDS if finished else TALK_SECONDS)
     if player.talking != null or finished:
         coach.mode = Coach.Mode.SQUAT if waiting else Coach.Mode.STAND
@@ -946,4 +960,4 @@ func _next_language() -> void:
     var index := codes.find(languages.current())
     languages.choose(codes[(index + 1) % codes.size()])
     for player in _players:
-        _show_conversation(player)
+        _show_conversation(player, true)

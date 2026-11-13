@@ -185,9 +185,9 @@ func _choose(
     # NOTE (mristin):
     # First a spot which is in nobody's way; then one which is at least out of
     # the way of the riders and of the pieces placed before; else the one
-    # which covers the riders the least. The home, and then the spot where the
-    # piece stands, are tried before all the others, so that the pieces move
-    # only when they must.
+    # which covers the riders the least, and of those, the pieces placed
+    # before. The home, and then the spot where the piece stands, are tried
+    # before all the others, so that the pieces move only when they must.
     var fits := func(spot: Vector2, strict: bool) -> bool:
         var rect := Rect2(spot, home.size)
         var margin := NEAR if spot == each.target else CLEAR
@@ -208,13 +208,20 @@ func _choose(
         for spot in spots:
             if fits.call(spot, strict):
                 return spot
+    # NOTE (mristin):
+    # Else, the spot which covers the riders the least, and of those, the one
+    # which covers the pieces placed before (e.g., the conversations) the
+    # least.
     var best := each.target
-    var least := INF
+    var least := Vector2(INF, INF)
     for spot in spots:
-        var covered := 0.0
+        var rect := Rect2(spot, home.size)
+        var covered := Vector2.ZERO
         for rider in riders:
-            covered += Rect2(spot, home.size).intersection(rider).get_area()
-        if covered < least:
+            covered.x += rect.intersection(rider).get_area()
+        for other in placed:
+            covered.y += rect.intersection(other).get_area()
+        if covered.x < least.x or (covered.x == least.x and covered.y < least.y):
             least = covered
             best = spot
     return best

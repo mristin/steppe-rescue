@@ -1,22 +1,16 @@
 class_name Coach
 extends Control
 
-## Show, next to the camera picture, a small figure of the rider.
+## Show, next to the camera picture, a small figure of the rider, which does
+## what the game understood of the player, so that she sees at once that her
+## body is understood (see section 5 of DESIGN.md): she goes down as far as
+## the player's head goes down (or, from the keys, squats once with each
+## squat), pulls the reins as the player does, raises her hands when the
+## player brakes, and jumps, lifted off the ground, when the player jumps.
 ##
-## While the camera sees the player ([member following]), the figure does what
-## the game measures of her, frame by frame ([member live]): she goes down as
-## far as the player's head goes down, pulls the reins as the player does, and
-## raises her hands when the player brakes; when the player jumps, she jumps,
-## her hands up, lifted off the ground. So the player sees at once what
-## the game sees; after the edge of the steppe, the curved arrow still shows
-## which way to pull.
-##
-## Without the camera, she does the movement the game is waiting for (see
-## section 5 of DESIGN.md): she squats slowly and invitingly while the horse
-## stands still or a conversation waits for a squat, she pulls the reins with
-## both hands to the left, under a curved arrow, after the rider ran into the
-## edge of the steppe, and else she stands and echoes each squat of the
-## player.
+## What the game waits for shows only as a hint over her head ([member
+## mode]): the curved arrow which way to pull after the edge of the steppe or
+## the second run into the same obstacle, and the arrow up at a creek.
 
 enum Mode { STAND, SQUAT, REACH, JUMP }
 
@@ -35,14 +29,20 @@ const JUMP_SECONDS := 1.2
 ## The figure shows her landing this long after a jump, in seconds.
 const LANDING_SECONDS := 0.35
 
-## What the figure does.
+## A jump from the keys keeps the figure in the air this long, in seconds.
+const JUMP_ECHO_SECONDS := 0.5
+
+## What the game waits for, shown as a hint over her head: the reins pulled
+## (REACH) or a jump (JUMP); STAND and SQUAT show none.
 var mode := Mode.STAND:
     set(value):
         if value != mode:
             _time = 0.0
         mode = value
 
-## Whether the figure follows the player herself (see [member live]).
+## Whether the camera follows the player herself (see [member live]); else,
+## she squats and jumps with the keys (see [method echo] and [method
+## echo_jump]).
 var following := false
 
 ## What the game measures of the player: x how deep her head is in the squat,
@@ -55,6 +55,7 @@ var jumping := false
 
 var _time := 0.0
 var _echo := 0.0
+var _jump_echo := 0.0
 var _was_jumping := false
 var _landing := 0.0
 
@@ -66,93 +67,83 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     _time += delta
     _landing = maxf(0.0, _landing - delta)
-    if _was_jumping and not jumping:
+    _jump_echo = maxf(0.0, _jump_echo - delta)
+    if _was_jumping and not in_air():
         _landing = LANDING_SECONDS
-    _was_jumping = jumping
+    _was_jumping = in_air()
     _echo = maxf(0.0, _echo - delta)
     queue_redraw()
 
 
-## Echo a squat of the player.
+## Echo a squat of the player (from the keys, which tell no depth).
 func echo() -> void:
     _echo = ECHO_SECONDS
 
 
-## How deep the figure squats and how far she pulls the reins to the left now,
-## in [0, 1].
-func pose() -> Vector2:
-    match mode:
-        Mode.SQUAT:
-            return Vector2(0.5 - 0.5 * cos(TAU * _time / SQUAT_SECONDS), 0.0)
-        Mode.REACH:
-            return Vector2(0.0, minf(1.0, _time / 0.5))
+## Echo a jump of the player (from the keys, which tell no height).
+func echo_jump() -> void:
+    _jump_echo = JUMP_ECHO_SECONDS
+
+
+## Whether the figure is in the air now.
+func in_air() -> bool:
+    return jumping or _jump_echo > 0.0
+
+
+## How deep the figure squats now, in [0, 1]: as deep as the player, or in
+## the echo of a squat from the keys.
+func depth() -> float:
+    var echoed := 0.0
     if _echo > 0.0:
-        return Vector2(sin(PI * (1.0 - _echo / ECHO_SECONDS)), 0.0)
-    return Vector2.ZERO
+        echoed = sin(PI * (1.0 - _echo / ECHO_SECONDS))
+    return maxf(clampf(live.x, 0.0, 1.0), echoed)
 
 
 func _draw() -> void:
     draw_texture(Ornaments.panel(size), Vector2.ZERO)
-    var feet := Vector2(size.x * 0.5, size.y - 8.0)
-    if following:
-        _draw_live(feet)
-        if mode == Mode.REACH:
-            _draw_arrow()
-        elif mode == Mode.JUMP:
-            _draw_jump_arrow()
-        return
-    if mode == Mode.JUMP:
-        # NOTE (mristin):
-        # At the creek, she jumps again and again: the crouch, the take-off, in
-        # the air and the landing.
-        var frame := int(fposmod(_time / JUMP_SECONDS, 1.0) * 4.0)
-        PaintedGirl.draw(self, PaintedGirl.jump(frame, true), feet)
-        _draw_jump_arrow()
-        return
-    var picture := PaintedGirl.squat(0, true)
-    match mode:
-        Mode.SQUAT:
-            var phase := fposmod(_time / SQUAT_SECONDS, 1.0)
-            picture = PaintedGirl.squat(PaintedGirl.squat_frame(phase), true)
-        Mode.REACH:
-            picture = PaintedGirl.reins(PaintedGirl.reins_frame(pose().y), true)
-        _:
-            if _echo > 0.0:
-                var phase := 1.0 - _echo / ECHO_SECONDS
-                picture = PaintedGirl.squat(PaintedGirl.squat_frame(phase), true)
-    PaintedGirl.draw(self, picture, feet)
-
+    _draw_live(Vector2(size.x * 0.5, size.y - 8.0))
     if mode == Mode.REACH:
         _draw_arrow()
+    elif mode == Mode.JUMP:
+        _draw_jump_arrow()
 
 
-## Draw the figure as the player is now: braking, pulling the reins, or as
-## deep in the squat as she is, between the frames of the squat.
-func _draw_live(feet: Vector2) -> void:
-    if jumping or _landing > 0.0:
-        # NOTE (mristin):
-        # In the air, she is painted lifted above the ground (her shadow
-        # stays on it), and then she lands.
-        if jumping:
-            draw_set_transform(feet, 0.0, Vector2(1.0, 0.3))
-            draw_circle(Vector2.ZERO, size.x * 0.22, Color(Palette.OUTLINE, 0.35))
-            draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
-        PaintedGirl.draw(self, PaintedGirl.jump(2 if jumping else 3, true), feet)
-        return
+## What the figure shows now: "jump" (in the air or landing), "brake" (her
+## hands up), "reins" (pulling them), "squat" (down in a squat) or "stand".
+func showing() -> String:
+    if in_air() or _landing > 0.0:
+        return "jump"
     if live.z > 0.5:
-        var up := PaintedGirl.hands_up(1.0, true)
-        if up != null:
-            PaintedGirl.draw(self, up, feet)
-            return
+        return "brake"
     if absf(live.y) >= 0.3:
-        PaintedGirl.draw(self, PaintedGirl.reins(PaintedGirl.reins_frame(live.y), true), feet)
-        return
-    # NOTE (mristin):
-    # The frames 0 to 3 go from standing to the deepest squat; she shows the
-    # one nearest to how deep the player is (blending two would show two
-    # heads).
-    var frame := roundi(clampf(live.x, 0.0, 1.0) * float(LIVE_FRAMES - 1))
-    PaintedGirl.draw(self, PaintedGirl.squat(frame, true), feet)
+        return "reins"
+    return "squat" if roundi(depth() * float(LIVE_FRAMES - 1)) > 0 else "stand"
+
+
+## Draw the figure as the player is now: jumping, braking, pulling the reins,
+## or as deep in the squat as she is, between the frames of the squat.
+func _draw_live(feet: Vector2) -> void:
+    match showing():
+        "jump":
+            # NOTE (mristin):
+            # In the air, she is painted lifted above the ground (her shadow
+            # stays on it), and then she lands.
+            if in_air():
+                draw_set_transform(feet, 0.0, Vector2(1.0, 0.3))
+                draw_circle(Vector2.ZERO, size.x * 0.22, Color(Palette.OUTLINE, 0.35))
+                draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+            PaintedGirl.draw(self, PaintedGirl.jump(2 if in_air() else 3, true), feet)
+        "brake":
+            PaintedGirl.draw(self, PaintedGirl.hands_up(1.0, true), feet)
+        "reins":
+            PaintedGirl.draw(self, PaintedGirl.reins(PaintedGirl.reins_frame(live.y), true), feet)
+        _:
+            # NOTE (mristin):
+            # The frames 0 to 3 go from standing to the deepest squat; she
+            # shows the one nearest to how deep the player is (blending two
+            # would show two heads).
+            var frame := roundi(depth() * float(LIVE_FRAMES - 1))
+            PaintedGirl.draw(self, PaintedGirl.squat(frame, true), feet)
 
 
 ## The arrow up over her head: jump!

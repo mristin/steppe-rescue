@@ -52,6 +52,7 @@ var jump_hint_time := 0.0
 ## small figure.
 var still_time := 0.0
 var squats_seen := 0
+var jumps_seen := 0
 
 ## The person she talks to now, the one she talked to last (she talks to
 ## them again only after she rode away), how long the talk lasts, and the

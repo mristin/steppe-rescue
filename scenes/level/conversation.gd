@@ -99,6 +99,12 @@ func next_page() -> bool:
     return true
 
 
+## Show the page (e.g., the same page again in another language), or the
+## last one if the talk has fewer.
+func turn_to(index: int) -> void:
+    _show_page(clampi(index, 0, _pages.size() - 1))
+
+
 func close() -> void:
     visible = false
 

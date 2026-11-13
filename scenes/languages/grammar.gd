@@ -16,9 +16,17 @@ extends RefCounted
 ##   the language (English and Kazakh: one, other; Russian: one, few, many).
 ##
 ## The values of the arguments are English message IDs (translated here, with
-## the asked form) or numbers.
+## the asked form), numbers, or names which stand as they are (see [method
+## verbatim]), e.g., the name the player wrote, which must not be translated
+## even if it is also a message (e.g., "Dana").
 
 static var _placeholder := RegEx.create_from_string("\\{([a-z_]+)(@[a-z_]+|\\|[^{}]*)?\\}")
+
+
+## A value of an argument which stands as it is, untranslated (see [method
+## format]).
+static func verbatim(value: String) -> Dictionary:
+    return {"verbatim": value}
 
 
 static func format(text: String, args: Dictionary) -> String:
@@ -39,6 +47,8 @@ static func _fill(value: Variant, how: String) -> String:
     if how.begins_with("|"):
         var forms := how.substr(1).split("|")
         return forms[mini(plural_index(int(value)), forms.size() - 1)]
+    if value is Dictionary and (value as Dictionary).has("verbatim"):
+        return (value as Dictionary)["verbatim"]
     if not value is String:
         return str(value)
     if how.begins_with("@"):

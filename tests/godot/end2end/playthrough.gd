@@ -111,6 +111,9 @@ var _levels_played := 0
 var _pages_turned := 0
 var _conversations := 0
 
+## Whether the test came to its end (see [method _finalize]).
+var _ended := false
+
 
 func _check(condition: bool, message: String) -> void:
     if not condition:
@@ -120,6 +123,13 @@ func _check(condition: bool, message: String) -> void:
 
 func _initialize() -> void:
     _run.call_deferred()
+
+
+## The game must never quit on its own in the tests (e.g., on Escape twice in
+## a level, see [QuitHint]): the test would end without its result.
+func _finalize() -> void:
+    if not _ended:
+        print("FAIL the game quit before the end of the test, e.g., on Escape twice")
 
 
 func _argument(name: String, default: String) -> String:
@@ -240,6 +250,10 @@ func _run() -> void:
     if DirAccess.dir_exists_absolute(profile.saves_dir()):
         for file in DirAccess.get_files_at(profile.saves_dir()):
             DirAccess.remove_absolute(profile.saves_dir().path_join(file))
+    # NOTE (mristin):
+    # The sounds read the settings before the test deleted them: start with
+    # the sound on, as a new player does.
+    root.get_node("Sounds").enabled = true
     profile.session_id = ""
     profile.players = 0
     profile.stars = {}
@@ -290,6 +304,7 @@ func _run() -> void:
     )
 
     DirAccess.remove_absolute(path)
+    _ended = true
     if _failures.is_empty():
         print("RESULT: OK")
         quit(0)
@@ -526,6 +541,36 @@ func _act_level_select(select: LevelSelect) -> void:
 func _play_level(level: Level) -> void:
     var id := level.level_id()
     var tag := "%s %s (%d players)" % [_phase, id, level.players()]
+    # NOTE (mristin):
+    # Each level starts riding afresh (also after R): no squat, jump or brake
+    # is carried over, the horse stands, and the rider neither brakes nor
+    # turns.
+    var service: Node = root.get_node("Vision").service
+    for i in range(level.players()):
+        _check(
+            (
+                service.GetSquatCount(i) == 0
+                and service.GetJumpCount(i) == 0
+                and service.GetBrakeCount(i) == 0
+                and service.GetSpeed(i) == 0.0
+                and not service.IsBraking(i)
+                and service.GetTurn(i) == 0.0
+            ),
+            (
+                (
+                    "%s: the rider %d starts to ride afresh: %d squats, %d jumps, %d brakes, "
+                    + "the speed %f"
+                )
+                % [
+                    tag,
+                    i + 1,
+                    service.GetSquatCount(i),
+                    service.GetJumpCount(i),
+                    service.GetBrakeCount(i),
+                    service.GetSpeed(i),
+                ]
+            )
+        )
     var people: Array[Person] = []
     for person in level.map.people():
         if person.portrait != "grandmother":

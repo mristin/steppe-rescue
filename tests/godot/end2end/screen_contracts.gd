@@ -14,12 +14,50 @@ extends "res://tests/godot/end2end/contract_book.gd"
 ## Not a test itself (its name does not start with test_), it is preloaded by
 ## the tests.
 
+## Where each piece of the finery shows, as the player sees her rider (see
+## section 8 of DESIGN.md: "dressed that way while riding, in the face
+## overlay, and in the level select"): from above while riding, the tack of
+## the horse, the owl feathers on her hat and the coat over her shoulders (her
+## earrings, bracelets, belt and boots are too small or hidden from above); in
+## the face overlay over the camera picture, what she wears on her head; and
+## standing at home and in the level select, all but her earrings (the
+## painted girls wear their own), the mane only braided with the owl feather
+## (its first steps are close-ups, for the cards).
+const _SHOWN := {
+    "from above while riding":
+    ["saddle", "saddle_cloth", "bridle", "breastplate", "stirrups", "mane", "feathers", "coat"],
+    "in the face overlay": ["feathers", "earrings"],
+    "standing at home and in the level select":
+    [
+        "saddle",
+        "saddle_cloth",
+        "bridle",
+        "breastplate",
+        "stirrups",
+        "mane",
+        "feathers",
+        "belt",
+        "bracelets",
+        "boots",
+        "coat",
+    ],
+}
+
+## The steps of the pieces which show only from the step on, standing.
+const _STANDING_FROM := {"mane": 3}
+
 ## The stars and the rewarded levels seen last, by the id of the journey.
 var _progress := {}
 
 ## The texts of each language: the msgids for the source language, the
 ## msgstrs for the others; built once.
 var _texts := {}
+
+## The looks whose finery was checked, the images of the paintings, and the
+## views of the looks.
+var _finery_checked := {}
+var _images := {}
+var _views := {}
 
 
 ## Check the screen (not a level): its layout.
@@ -72,6 +110,15 @@ func check_screen(screen: Node, tag: String) -> void:
     _check_reward(screen, tag)
     _check_flow(screen, tag)
     _check_language(screen, tag)
+    _check_reward_cards(screen, tag)
+    _check_wardrobe_cards(screen, tag)
+    _check_settings_rows(screen, tag)
+    _check_journey_cards(screen, tag)
+    _check_finery_shows(screen, tag)
+    _check_tree(screen, tag, false)
+    _check_sounds(screen, tag, false)
+    _check_vision(screen, tag, screen.get_node("/root/Profile").players)
+    _check_resting(screen, tag)
 
 
 ## The journey in memory is the journey on the disk, and the settings
@@ -460,3 +507,306 @@ func _check_language(screen: Node, tag: String) -> void:
                         "%s (%s): %s is %s" % [tag, current, JSON.stringify(shown), code]
                     )
                     break
+
+
+## The cards of the reward show the paintings and the names of the pieces
+## offered; once she chose, only the chosen card shows, marked; Go on and
+## Wardrobe show exactly when there is nothing (more) to choose (see section
+## 8 of DESIGN.md).
+func _check_reward_cards(screen: Node, tag: String) -> void:
+    if not (screen is Reward):
+        return
+    var reward := screen as Reward
+    var cards := reward.cards()
+    for i in range(mini(cards.size(), reward.offered.size())):
+        var piece: String = reward.offered[i][0]
+        var at: int = reward.offered[i][1]
+        var card := cards[i]
+        if (
+            card.picture == null
+            or card.picture != Reward.preview(piece, at)
+            or card.text != reward.piece_name(piece, at)
+        ):
+            _report(
+                "%s: a card of the reward shows another piece than it offers" % tag,
+                "%s: %s %d, the card %s" % [tag, piece, at, JSON.stringify(card.text)]
+            )
+        var chosen := reward.chosen == piece
+        if card.visible != (reward.chosen == "" or chosen) or card.selected != chosen:
+            _report(
+                "%s: the reward marks another card than the chosen one" % tag,
+                (
+                    "%s: %s, chosen %s, visible %s, marked %s"
+                    % [tag, piece, JSON.stringify(reward.chosen), card.visible, card.selected]
+                )
+            )
+    var done := reward.chosen != "" or reward.offered.is_empty()
+    if reward._go_on.visible != done or reward._wardrobe.visible != done:
+        _report(
+            "%s: the reward lets her go on before she chose, or not after" % tag,
+            (
+                "%s: chosen %s, %d offered"
+                % [tag, JSON.stringify(reward.chosen), reward.offered.size()]
+            )
+        )
+
+
+## The wardrobe of the rider asked for has a card for each piece she won
+## (with its painting, in the order of the pieces), in the panel of what she
+## wears and marked exactly when she wears it.
+func _check_wardrobe_cards(screen: Node, tag: String) -> void:
+    if not (screen is Wardrobe):
+        return
+    var wardrobe := screen as Wardrobe
+    var profile := screen.get_node("/root/Profile")
+    if wardrobe.player != clampi(Flow.wardrobe_player, 0, profile.riders.size() - 1):
+        _report("%s: the wardrobe of another rider" % tag, "%s: %d" % [tag, wardrobe.player])
+    var rider: RiderProfile = profile.rider(wardrobe.player)
+    var won: Array[String] = []
+    for piece in Finery.PIECES:
+        if rider.finery.has(piece) and Finery.has_picture(piece, int(rider.finery[piece])):
+            won.append(piece)
+    if wardrobe.pieces() != won:
+        _report(
+            "%s: the wardrobe shows other pieces than she won" % tag,
+            "%s: %s, she won %s" % [tag, wardrobe.pieces(), rider.finery]
+        )
+        return
+    for i in range(won.size()):
+        var piece := won[i]
+        var card := wardrobe.cards()[i]
+        var picture := Painting.fitted(
+            Finery.PICTURES % [piece, int(rider.finery[piece])], card.size - Vector2(16, 14)
+        )
+        var worn := rider.wears(piece)
+        if (
+            card.selected != worn
+            or wardrobe.in_worn_panel(piece) != worn
+            or card.picture != picture
+        ):
+            _report(
+                "%s: a card of the wardrobe shows otherwise than she wears it" % tag,
+                (
+                    "%s: %s, worn %s, marked %s, in the panel of the worn %s"
+                    % [tag, piece, worn, card.selected, wardrobe.in_worn_panel(piece)]
+                )
+            )
+    if (wardrobe._empty.text != "") != won.is_empty():
+        _report("%s: the wardrobe says she won nothing, or not" % tag, tag)
+
+
+## The rows of the settings show the language of the game, the journey with
+## its riders, a wardrobe for each rider, and whether the sound is on.
+func _check_settings_rows(screen: Node, tag: String) -> void:
+    if not (screen is Settings):
+        return
+    var settings := screen as Settings
+    var languages := screen.get_node("/root/Languages")
+    var profile := screen.get_node("/root/Profile")
+    var problems: Array[String] = []
+    var language := ""
+    for each in languages.languages:
+        if each["code"] == languages.current():
+            language = each["name"]
+    if settings._language.text != language:
+        problems.append("the language %s, not %s" % [settings._language.text, language])
+    var on: bool = screen.get_node("/root/Sounds").enabled
+    var sound := screen.tr("On", "sound") if on else screen.tr("Off", "sound")
+    if settings._sound.text != sound:
+        problems.append("the sound %s, not %s" % [settings._sound.text, sound])
+    var journey := settings._rider.text
+    if not journey.begins_with(profile.session_name + "\n"):
+        problems.append("the journey %s, not %s" % [JSON.stringify(journey), profile.session_name])
+    for i in range(maxi(1, profile.players)):
+        if profile.rider_name(i) not in journey.get_slice("\n", 1):
+            problems.append("the journey %s without %s" % [journey, profile.rider_name(i)])
+    if settings._second_wardrobe.visible != (profile.players > 1):
+        problems.append("the second wardrobe shows: %s" % settings._second_wardrobe.visible)
+    for problem in problems:
+        _report(
+            "%s: a row of the settings shows another state than the game's" % tag,
+            "%s: %s" % [tag, problem]
+        )
+
+
+## The journeys show a card for each save (at most Sessions.OTHERS + 1), the
+## current one first, each with the stars of its save, its name and riders.
+func _check_journey_cards(screen: Node, tag: String) -> void:
+    if not (screen is Sessions):
+        return
+    var sessions := screen as Sessions
+    var profile := screen.get_node("/root/Profile")
+    var shown := sessions.shown()
+    var saved: Array[Dictionary] = profile.sessions()
+    if shown.size() != mini(saved.size(), Sessions.OTHERS + 1):
+        _report(
+            "%s: the journeys show more or fewer cards than there are saves" % tag,
+            "%s: %d cards, %d saves" % [tag, shown.size(), saved.size()]
+        )
+    var last: String = profile.session_id if profile.session_id != "" else profile.last_id()
+    if last != "" and (shown.is_empty() or shown[0]["id"] != last):
+        _report("%s: the journeys do not show the current one first" % tag, "%s: %s" % [tag, last])
+    for i in range(shown.size()):
+        var card: DwellButton = sessions._continue if i == 0 else sessions._others[i - 1]
+        var data: Variant = profile.read(shown[i]["id"])
+        var stars := 0
+        if data != null:
+            for won in (data as Dictionary).get("progress", {}).get("stars", {}).values():
+                stars += int(won)
+        var label: String = sessions._names[i].text
+        if (
+            not card.text.ends_with("★%d" % stars)
+            or not label.begins_with(str(shown[i]["name"]) + "\n")
+        ):
+            _report(
+                "%s: a card of a journey shows other stars or another name than its save" % tag,
+                (
+                    "%s: %s, %s; saved %s with %d stars"
+                    % [
+                        tag,
+                        JSON.stringify(card.text),
+                        JSON.stringify(label),
+                        shown[i]["name"],
+                        stars
+                    ]
+                )
+            )
+
+
+## The rider is not pixel-identical when she wears her finery: every piece
+## she wears (at its step) changes how she looks in each view where it shows
+## (see [constant _SHOWN]), against the same looks with that piece one step
+## lower (or off). The views are put together as the game paints them (see
+## [PaintedTopDown], [FrontView] and [method Reward.draw_pair]).
+func _check_finery_shows(screen: Node, tag: String) -> void:
+    if not (screen is Reward or screen is Wardrobe or screen is LevelSelect):
+        return
+    var profile := screen.get_node("/root/Profile")
+    for i in range(maxi(1, profile.players)):
+        var looks: Dictionary = profile.rider(i).dressed()
+        var key := JSON.stringify(looks)
+        if _finery_checked.has(key):
+            continue
+        _finery_checked[key] = true
+        for piece in Finery.PIECES:
+            var at := Finery.step(looks, piece)
+            if at < 1 or Finery.PIECES[piece]["for"] == "home":
+                continue
+            var less := looks.duplicate(true)
+            var finery: Dictionary = (less.get("finery", {}) as Dictionary).duplicate()
+            if at == 1:
+                finery.erase(piece)
+            else:
+                finery[piece] = at - 1
+            less["finery"] = finery
+            for view in _SHOWN:
+                if piece not in _SHOWN[view]:
+                    continue
+                if view.begins_with("standing") and at < int(_STANDING_FROM.get(piece, 1)):
+                    continue
+                var dressed := _view(view, looks, piece)
+                var plainer := _view(view, less, piece)
+                if dressed == null or plainer == null:
+                    continue
+                if dressed.get_data() == plainer.get_data():
+                    _report(
+                        "the %s at its step %d does not show %s" % [piece, at, view],
+                        "%s, the rider %d: %s" % [tag, i + 1, looks]
+                    )
+
+
+## The rider (or her horse, for a piece of the horse) as the view shows her;
+## null if the view does not show her in these looks.
+func _view(view: String, looks: Dictionary, piece: String) -> Image:
+    var who: String = Finery.PIECES[piece]["for"]
+    var key := "%s|%s|%s" % [view, who, JSON.stringify(looks)]
+    if not _views.has(key):
+        var image: Image = null
+        if view.begins_with("from above"):
+            image = _from_above(looks)
+        elif view.begins_with("in the face"):
+            var overlay := FrontView.painted_overlay(looks)
+            image = overlay.get_image() if overlay != null else null
+        else:
+            image = _standing(looks, who)
+        _views[key] = image
+    return _views[key]
+
+
+func _image(path: String) -> Image:
+    if not _images.has(path):
+        var image := (load(path) as Texture2D).get_image()
+        image.decompress()
+        image.convert(Image.FORMAT_RGBA8)
+        _images[path] = image
+    return _images[path]
+
+
+## Lay the picture over the middle of the canvas, at the size.
+static func _lay(canvas: Image, picture: Image, size: Vector2) -> void:
+    var shown := Vector2i(maxi(1, roundi(size.x)), maxi(1, roundi(size.y)))
+    var resized := picture.duplicate() as Image
+    resized.resize(shown.x, shown.y, Image.INTERPOLATE_BILINEAR)
+    canvas.blend_rect(resized, Rect2i(Vector2i.ZERO, shown), (canvas.get_size() - shown) / 2)
+
+
+## The rider on her horse from above, standing, as [method
+## PaintedTopDown.draw_rider] paints her, at two pixels per logical pixel: the
+## horse and its finery on the square of the horse, the girl and her finery
+## smaller, over the seat.
+func _from_above(looks: Dictionary) -> Image:
+    var root := "res://assets/pictures/top_down/"
+    var canvas := _image(root + "horses/%s/0.png" % looks.get("steed", "1")).duplicate() as Image
+    var size := Vector2(canvas.get_size())
+    _lay_finery_above(canvas, looks, "horse", size)
+    var girl := _image(root + "girls/%s.png" % looks.get("rider", "1"))
+    _lay(canvas, girl, Vector2(girl.get_size()) * PaintedTopDown.GIRL_SCALE)
+    _lay_finery_above(canvas, looks, "rider", size * PaintedTopDown.GIRL_SCALE)
+    return canvas
+
+
+## Lay the finery of the horse (or the rider) from above, as [method
+## PaintedTopDown._dress] does: a step without its picture shows the one
+## before.
+func _lay_finery_above(canvas: Image, looks: Dictionary, who: String, size: Vector2) -> void:
+    for piece in Finery.PIECES:
+        if Finery.PIECES[piece]["for"] != who:
+            continue
+        for step in range(Finery.step(looks, piece), 0, -1):
+            var path := "res://assets/pictures/top_down/finery/%s_%d.png" % [piece, step]
+            if ResourceLoader.exists(path):
+                _lay(canvas, _image(path), size)
+                break
+
+
+## The painted horse (or rider) standing, in the finery she wears, as [method
+## Reward.dress] lays it at home and in the level select.
+func _standing(looks: Dictionary, who: String) -> Image:
+    var painting := (
+        Painting.horse(looks.get("steed", "1")) if who == "horse" else Painting.dressed_rider(looks)
+    )
+    # NOTE (mristin):
+    # A copy: the painting keeps its image.
+    var canvas := painting.get_image().duplicate() as Image
+    canvas.convert(Image.FORMAT_RGBA8)
+    var size := Vector2(canvas.get_size())
+    for place in Reward._ON_HORSE if who == "horse" else Reward._ON_RIDER:
+        var piece: String = place[0]
+        var at := Finery.step(looks, piece)
+        if at < 1 or (place.size() > 4 and at != place[4]):
+            continue
+        var path := Finery.PICTURES % [piece, at]
+        if not ResourceLoader.exists(path):
+            continue
+        var picture := _image(path)
+        var width: float = place[3] * size.x
+        var shown := Vector2(width, width * picture.get_height() / picture.get_width())
+        var resized := picture.duplicate() as Image
+        resized.resize(maxi(1, roundi(shown.x)), maxi(1, roundi(shown.y)))
+        var center := Vector2(place[1], place[2]) * size
+        canvas.blend_rect(
+            resized,
+            Rect2i(Vector2i.ZERO, resized.get_size()),
+            Vector2i((center - shown * 0.5).round())
+        )
+    return canvas

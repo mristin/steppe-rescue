@@ -105,6 +105,11 @@ var _map_open := 0.0
 var _since_escape := 99.0
 var _clock := 0.0
 
+## Whether the rider still rides into the edge of the steppe, and twice into
+## the same obstacle, on purpose in this level, to see the hints.
+var _edge_left := false
+var _bump_left := false
+
 
 func _init(
     a_level: Level,
@@ -134,6 +139,8 @@ func _init(
     _thirst = _rng.randf_range(0.1, 0.5)
     _hunger = _rng.randf_range(0.1, 0.5)
     tricky = index == 0
+    _edge_left = _rng.randf() < 0.7
+    _bump_left = _rng.randf() < 0.7
 
 
 func _fail(message: String) -> void:
@@ -254,18 +261,23 @@ func _check_expected() -> void:
 
 func _done(task: Dictionary) -> bool:
     var needs := level.view(index).needs
+    var done := true
     match task["kind"]:
         "person":
-            return talked.has((task["person"] as Person).name)
+            done = talked.has((task["person"] as Person).name)
         "animal":
-            return (task["animal"] as Animal).state != Animal.State.LOST
+            done = (task["animal"] as Animal).state != Animal.State.LOST
         "home":
-            return level.followers(index).is_empty()
+            done = level.followers(index).is_empty()
         "drink":
-            return needs.water >= 0.95
+            done = needs.water >= 0.95
         "graze":
-            return needs.food >= 0.95
-    return true
+            done = needs.food >= 0.95
+        "edge":
+            done = level.view(index).edge_time > 0.0
+        "bump":
+            done = level.turn_hint(index)
+    return done
 
 
 func _next_task() -> void:
@@ -282,6 +294,18 @@ func _next_task() -> void:
         _task = {"kind": "drink", "at": _nearest(_nav.water, rider.position)}
         _thirst = _rng.randf_range(0.1, 0.5)
         return
+    # NOTE (mristin):
+    # Now and then, she rides into the edge of the steppe, or twice into the
+    # same obstacle, as a child does, to see the hints.
+    if _edge_left and _rng.randf() < 0.3:
+        _edge_left = false
+        _task = _edge_task()
+        return
+    if _bump_left and _rng.randf() < 0.3:
+        _bump_left = false
+        _task = _bump_task()
+        if not _task.is_empty():
+            return
     if needs.food < _hunger and not _nav.pasture.is_empty():
         _task = {"kind": "graze", "at": _nearest(_nav.pasture, rider.position)}
         _hunger = _rng.randf_range(0.1, 0.5)
@@ -331,6 +355,75 @@ func _next_task() -> void:
         _task = choices[_rng.randi_range(0, choices.size() - 1)]
 
 
+## Ride into the nearest edge of the steppe.
+func _edge_task() -> Dictionary:
+    var at := _rider().position
+    var inner := Rect2(Vector2.ZERO, level.map.size).grow(-Rider.EDGE)
+    var sides := [
+        [at.x - inner.position.x, Vector2(inner.position.x, at.y), Vector2.LEFT],
+        [inner.end.x - at.x, Vector2(inner.end.x, at.y), Vector2.RIGHT],
+        [at.y - inner.position.y, Vector2(at.x, inner.position.y), Vector2.UP],
+        [inner.end.y - at.y, Vector2(at.x, inner.end.y), Vector2.DOWN],
+    ]
+    sides.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+    var edge: Vector2 = sides[0][1]
+    var out: Vector2 = sides[0][2]
+    return {"kind": "edge", "at": edge - out * 40.0, "out": edge + out * 40.0}
+
+
+## Ride twice into the nearest obstacle with room before it; empty if none is
+## near.
+func _bump_task() -> Dictionary:
+    var at := _rider().position
+    var best := {}
+    var nearest := 700.0
+    for solid in level.map.solids():
+        var center := Vector2(solid.x, solid.y)
+        var away := (at - center).normalized()
+        if away == Vector2.ZERO:
+            continue
+        var before := center + away * (solid.z + Rider.RADIUS + 40.0)
+        var distance := at.distance_to(center) - solid.z
+        if distance < nearest and _nav.is_free(before):
+            nearest = distance
+            best = {
+                "kind": "bump",
+                "center": center,
+                "reach": solid.z + Rider.RADIUS,
+                "at": before,
+                "phase": "approach"
+            }
+    return best
+
+
+## Ride into the edge, or twice into the obstacle, until the hint shows.
+func _ride_trick(delta: float) -> void:
+    var rider := _rider()
+    if _task_time > 60.0:
+        _fail("riding into %s did not show its hint" % _describe())
+        _task = {}
+        return
+    if _task["kind"] == "edge":
+        var at: Vector2 = _task["at"]
+        if rider.position.distance_to(at) > 30.0 and not _task.has("near"):
+            _drive(at, TROT, delta)
+        else:
+            _task["near"] = true
+            _drive(_task["out"], WALK, delta, true)
+        return
+    var center: Vector2 = _task["center"]
+    var before: Vector2 = _task["at"]
+    match _task["phase"]:
+        "approach", "back":
+            _drive(before, TROT if _task["phase"] == "approach" else WALK, delta)
+            if rider.position.distance_to(before) < 16.0:
+                _task["phase"] = "hit"
+        "hit":
+            _drive(center, WALK, delta, true)
+            if rider.position.distance_to(center) <= float(_task["reach"]) + 1.5:
+                _task["phase"] = "back"
+
+
 ## The spot of the few nearest which is the shortest ride away (e.g., not
 ## across the river).
 func _nearest(spots: Array[Vector2], at: Vector2) -> Vector2:
@@ -371,6 +464,9 @@ func _ride_task(delta: float) -> void:
     var target := _target()
     var distance := rider.position.distance_to(target)
     var kind: String = _task["kind"]
+    if kind in ["edge", "bump"]:
+        _ride_trick(delta)
+        return
     var stop_at := 6.0
     var slow_at := 90.0
     var fast := GALLOP
@@ -448,21 +544,24 @@ func _ride_task(delta: float) -> void:
 
 
 func _describe() -> String:
+    var described := "nothing"
     match _task.get("kind", ""):
         "person":
-            return "the person %s" % (_task["person"] as Person).name
+            described = "the person %s" % (_task["person"] as Person).name
         "animal":
-            return (
-                "the %s of %s"
-                % [(_task["animal"] as Animal).kind.id, (_task["animal"] as Animal).herd.name]
-            )
+            var animal: Animal = _task["animal"]
+            described = "the %s of %s" % [animal.kind.id, animal.herd.name]
         "home":
-            return "the gate of the pen"
+            described = "the gate of the pen"
         "drink":
-            return "the water"
+            described = "the water"
         "graze":
-            return "the pasture"
-    return "nothing"
+            described = "the pasture"
+        "edge":
+            described = "the edge of the steppe"
+        "bump":
+            described = "the obstacle at %s twice" % (_task["center"] as Vector2).round()
+    return described
 
 
 ## Put the rider at the point, since she could not get there herself.
@@ -475,8 +574,10 @@ func _put(target: Vector2) -> void:
     _task_time = 0.0
 
 
-## Ride towards the target at the speed in [0, 1]; stop at zero.
-func _drive(target: Vector2, want: float, delta: float) -> void:
+## Ride towards the target at the speed in [0, 1] (straight at it if
+## [param direct], else along the way around what blocks the horse); stop at
+## zero.
+func _drive(target: Vector2, want: float, delta: float, direct := false) -> void:
     var rider := _rider()
     var speed: float = _service.GetSpeed(index)
     if want <= 0.0:
@@ -493,7 +594,7 @@ func _drive(target: Vector2, want: float, delta: float) -> void:
         return
 
     var aim := target
-    if rider.position.distance_to(target) > 48.0:
+    if not direct and rider.position.distance_to(target) > 48.0:
         _way_age += delta
         if _way.is_empty() or _way_age > 3.0:
             _way = _nav.way(rider.position, target)

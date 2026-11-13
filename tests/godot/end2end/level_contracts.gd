@@ -1,4 +1,4 @@
-extends "res://tests/godot/end2end/contract_book.gd"
+extends "res://tests/godot/end2end/level_view_contracts.gd"
 ## Check the contracts of the game while the tests play it (design by
 ## contract, in the tests only, so that the game never pays for them): what
 ## must hold on every screen and on every frame of a level, whatever the
@@ -30,14 +30,15 @@ extends "res://tests/godot/end2end/contract_book.gd"
 ## * the animals go only forward: lost, following, into the pen, home; they
 ##   join a rider near them, and run into the pen only with a rider at the
 ##   gate; the time of the ride never runs backwards, and stops at the end;
-## * every rider hears every lost animal which is off her screen and within
-##   hearing, and only those; the maps show exactly the clues told and whom
+## * every rider hears every lost animal (and every follower which fell far
+##   behind and calls out) which is off her screen and within hearing, and
+##   only those; the maps show exactly the clues told and whom
 ##   to ask, so that every herd is marked; and the small figure does what the
 ##   player does, so that she sees that her body is understood;
 ## * a conversation is titled by its speaker and calls the rider by her
 ##   name (as she wrote it, never translated), and switching the language
-##   keeps its page; the HUD of a rider stays in her half, on whole pixels, and under
-##   the big map (but the conversations, the warnings, the hint to quit and
+##   keeps its page; the HUD of a rider stays in her half, on whole pixels,
+##   and under the big map (but the conversations, the warnings, the hint to quit and
 ##   the button OK); the wild creatures stay in the steppe and out of the
 ##   lakes.
 ##
@@ -48,9 +49,6 @@ extends "res://tests/godot/end2end/contract_book.gd"
 ##
 ## Not a test itself (its name does not start with test_), it is preloaded by
 ## the tests.
-
-## How far a rider or an animal may stand in what blocks the horse, in pixels.
-const _SLACK := 0.5
 
 ## What the last check of each level saw, by the id of the level's instance.
 var _last := {}
@@ -447,8 +445,9 @@ func check_level(level: Level, now: float, tag: String, full := true) -> void:
             last.erase(rearing_key)
 
     # NOTE (mristin):
-    # Each rider hears every lost animal within the radius which is not on her
-    # screen, each with its own picture at the edge, and nothing else (the
+    # Each rider hears every lost animal (and every follower which lags far
+    # behind, calling) within the radius which is not on her screen, each with
+    # its own picture at the edge, and nothing else (the
     # screen is where her view looks, give or take the 4 px inset of [method
     # Hearing.on_screen] and the rounding of the view).
     for i in range(level.players()):
@@ -473,25 +472,31 @@ func check_level(level: Level, now: float, tag: String, full := true) -> void:
                 "%s: the %s of %s at %s" % [who, animal.kind.id, animal.herd.name, animal.position]
             )
             var distance := animal.position.distance_to(at)
+            var audible := (
+                animal.is_lost() or (animal.state == Animal.State.FOLLOWING and animal.lagging)
+            )
             if (
                 heard
                 and (
-                    not animal.is_lost()
+                    not audible
                     or distance >= Hearing.RADIUS
                     or seen.grow(-5.0).has_point(animal.position)
                 )
             ):
                 _report(
-                    "%s: a rider hears an animal which is not lost, on her screen or too far" % tag,
+                    (
+                        "%s: a rider hears an animal which does not call, on her screen or too far"
+                        % tag
+                    ),
                     what
                 )
             if (
                 not heard
-                and animal.is_lost()
+                and audible
                 and distance < Hearing.RADIUS - 0.5
                 and not seen.grow(-3.0).has_point(animal.position)
             ):
-                _report("%s: a rider does not hear a lost animal off her screen" % tag, what)
+                _report("%s: a rider does not hear a calling animal off her screen" % tag, what)
         for sound in sounds:
             _report(
                 "%s: a rider hears an animal which is not there" % tag,
@@ -622,10 +627,6 @@ func check_level(level: Level, now: float, tag: String, full := true) -> void:
             _report("%s: a horse drinks away from fresh water (e.g., at the salt lake)" % tag, who)
         if (needs.grazing or food_rose) and not pasture:
             _report("%s: a horse grazes away from a pasture" % tag, who)
-        if (needs.drinking or needs.grazing) and view.speed_bar.speed >= HorseNeeds.STANDING_SPEED:
-            _report(
-                "%s: a running horse drinks or grazes" % tag, "%s: %f" % [who, view.speed_bar.speed]
-            )
 
     # NOTE (mristin):
     # The small figure does what the game understood of the player, so that
@@ -711,6 +712,35 @@ func check_level(level: Level, now: float, tag: String, full := true) -> void:
 
     if level.elapsed < float(last.get("elapsed", 0.0)):
         _report("%s: the time of the ride runs backwards" % tag, where)
+    # NOTE (mristin):
+    # The motion and the world over time, between this check and the last
+    # (dt seconds of the game: the checks skip frames), see
+    # level_motion_contracts.gd; what the level shows, see
+    # level_view_contracts.gd; and what outlives it, see contract_book.gd.
+    var frame := Engine.get_process_frames()
+    var dt := level.get_process_delta_time() * (frame - int(last.get("frame", frame)))
+    last["frame"] = frame
+    _check_followers(level, tag, where, last, dt)
+    _check_calls(level, tag, where, last, dt)
+    _check_jumps(level, tag, where, last, dt)
+    _check_motion(level, tag, where, last, dt)
+    _check_crossings(level, tag, where, last)
+    _check_lost(level, tag, where, last, dt)
+    _check_edge(level, tag, where, last, dt)
+    _check_views(level, tag, where)
+    _check_clock(level, tag, where, last, dt)
+    _check_standing_needs(level, tag, where)
+    _check_gaits(level, tag, where)
+    _check_maps_follow(level, tag, where)
+    _check_own_hud(level, tag, where)
+    _check_hints(level, tag, where, last)
+    if full:
+        _check_clue_areas(level, tag, where)
+        _check_heard_in_view(level, tag, where)
+        _check_tree(level, tag, true)
+    _check_sounds(level, tag, true)
+    _check_vision(level, tag, level.players())
+    _check_level_life(level, tag)
     last["elapsed"] = level.elapsed
     last["locale"] = TranslationServer.get_locale()
     last["finished"] = level.finished

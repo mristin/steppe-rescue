@@ -31,10 +31,6 @@ var _failures: Array[String] = []
 var _found := {}
 var _rng := RandomNumberGenerator.new()
 
-## The opaque part of each painted horse from above, in logical pixels around
-## the seat of the saddle, facing north.
-var _horse_extents := {}
-
 
 func _check(condition: bool, message: String) -> void:
     if not condition:
@@ -56,48 +52,6 @@ func _argument(name: String, default: int) -> int:
         if arg.begins_with("--%s=" % name):
             return int(arg.get_slice("=", 1))
     return default
-
-
-## The opaque part of the painted horse, as drawn (see
-## [method PaintedTopDown.draw_rider]): the frames of its run at half their
-## size, a bit wider, around the seat.
-func _horse_extent(steed: String) -> Rect2:
-    if _horse_extents.has(steed):
-        return _horse_extents[steed]
-    var result := Rect2()
-    for frame in range(PaintedTopDown.HORSE_FRAMES):
-        var path := "res://assets/pictures/top_down/horses/%s/%d.png" % [steed, frame]
-        var image := Image.load_from_file(ProjectSettings.globalize_path(path))
-        if image == null:
-            continue
-        var used := Rect2(image.get_used_rect())
-        used.position -= Vector2(image.get_size()) * 0.5
-        var scale := Vector2(0.5 * PaintedTopDown.HORSE_WIDTH, 0.5)
-        var drawn := Rect2(used.position * scale, used.size * scale)
-        result = drawn if not result.has_area() else result.merge(drawn)
-    _horse_extents[steed] = result
-    return result
-
-
-## Where the rider of the player shows on the screen: the rectangle around
-## her horse, turned to her heading.
-func _rider_on_screen(level: Level, player: int) -> Rect2:
-    var view := level.view(player)
-    var rider := view.rider
-    var at := (
-        rider.position - view.center(level.map.size) + view.rect.size * 0.5 + view.rect.position
-    )
-    var extent := _horse_extent(rider.looks.get("steed", "1"))
-    var corners := [
-        extent.position,
-        Vector2(extent.end.x, extent.position.y),
-        extent.end,
-        Vector2(extent.position.x, extent.end.y),
-    ]
-    var result := Rect2(at + (corners[0] as Vector2).rotated(rider.heading), Vector2.ZERO)
-    for corner in corners:
-        result = result.expand(at + (corner as Vector2).rotated(rider.heading))
-    return result
 
 
 ## A random place in the steppe of the level: anywhere, or at its edges and
@@ -138,7 +92,7 @@ func _put(level: Level, player: int, at: Vector2) -> void:
 func _check_riders(level: Level, name: String, why: String) -> void:
     var items := Layout.elements(level, Layout.hud_extra(level), Layout.hud_skip(level))
     for i in range(level.players()):
-        var rider := _rider_on_screen(level, i)
+        var rider := Layout.rider_on_screen(level, i)
         for item in items:
             var node: Node = item["node"]
             var rect: Rect2 = item["rect"]

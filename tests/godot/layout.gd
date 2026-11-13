@@ -22,6 +22,11 @@ const TOLERANCE := 1.0
 ## A button writes its text this far from its sides (see [DwellButton]).
 const _BUTTON_PADDING := 4.0
 
+## The opaque part of each painted horse from above, by its steed, in logical
+## pixels around the seat of the saddle, facing north (see [method
+## horse_extent]).
+static var _horse_extents := {}
+
 
 ## The rectangle on the screen which the letters of the label cover; an empty
 ## rectangle if the label shows no text.
@@ -264,3 +269,45 @@ static func hud_skip(level: Level) -> Array:
     for i in range(level.players()):
         skip.append(level.view(i).hearing)
     return skip
+
+
+## The opaque part of the painted horse, as drawn (see
+## [method PaintedTopDown.draw_rider]): the frames of its run at half their
+## size, a bit wider, around the seat.
+static func horse_extent(steed: String) -> Rect2:
+    if _horse_extents.has(steed):
+        return _horse_extents[steed]
+    var result := Rect2()
+    for frame in range(PaintedTopDown.HORSE_FRAMES):
+        var path := "res://assets/pictures/top_down/horses/%s/%d.png" % [steed, frame]
+        var image := Image.load_from_file(ProjectSettings.globalize_path(path))
+        if image == null:
+            continue
+        var used := Rect2(image.get_used_rect())
+        used.position -= Vector2(image.get_size()) * 0.5
+        var scale := Vector2(0.5 * PaintedTopDown.HORSE_WIDTH, 0.5)
+        var drawn := Rect2(used.position * scale, used.size * scale)
+        result = drawn if not result.has_area() else result.merge(drawn)
+    _horse_extents[steed] = result
+    return result
+
+
+## Where the rider of the player shows on the screen: the rectangle around
+## her horse, turned to her heading.
+static func rider_on_screen(level: Level, player: int) -> Rect2:
+    var view := level.view(player)
+    var rider := view.rider
+    var at := (
+        rider.position - view.center(level.map.size) + view.rect.size * 0.5 + view.rect.position
+    )
+    var extent := horse_extent(rider.looks.get("steed", "1"))
+    var corners := [
+        extent.position,
+        Vector2(extent.end.x, extent.position.y),
+        extent.end,
+        Vector2(extent.position.x, extent.end.y),
+    ]
+    var result := Rect2(at + (corners[0] as Vector2).rotated(rider.heading), Vector2.ZERO)
+    for corner in corners:
+        result = result.expand(at + (corner as Vector2).rotated(rider.heading))
+    return result

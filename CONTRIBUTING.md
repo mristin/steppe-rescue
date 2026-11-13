@@ -153,7 +153,7 @@ Select or skip steps with `--select` and `--skip`, and run only some Godot tests
 
 ### The Godot tests
 
-Each Godot test in `tests/godot/test_*.gd` is a script extending `SceneTree`, which runs the game headless without the camera, checks the behavior, prints `RESULT: OK` and quits with zero on success.
+Each Godot test in `tests/godot/` (and its subdirectories), named `test_*.gd`, is a script extending `SceneTree`, which runs the game headless without the camera, checks the behavior, prints `RESULT: OK` and quits with zero on success.
 We run them with `--fixed-fps 60`, so a minute of play takes only a second or two.
 Without the camera, the vision measures the squats in game time, so the tests can squat with the keyboard (`SquatByKeyboard`).
 
@@ -161,6 +161,16 @@ To run a single test directly:
 
 ```
 $GODOT --headless --fixed-fps 60 --path . --script tests/godot/test_movement_test.gd -- --no-camera
+```
+
+The end-to-end tests in `tests/godot/end2end/` play the whole game, from a new player at the intro through every level to the end, and once more after a restart, as players do: `test_one_player.gd` alone, and `test_two_players.gd` on the split screen.
+They click the buttons with the mouse (or hold the hand still over them) and ride only with the keys (`rider_bot.gd`, finding the way with `navigator.gd`): they talk to every person, turn every page of every conversation, bring every animal home, let the horse drink and graze, choose the gifts, and take random detours (How to Play, the settings, the wardrobe, other looks and names, the language, the big map, riding a level again).
+All the way, they check the contracts of the game, which run only in the tests: those of the menus, the flow and the saving in `screen_contracts.gd` (e.g., the journey in memory is the one on the disk, each level gives one gift to each rider, every text is in the language of the game), and those of the levels in `level_contracts.gd` (e.g., nothing of the HUD covers a rider, the riders and the lost animals stay out of the lakes, every animal is lost, follows one rider or is home, a horse in the air keeps its speed, a rider hears every lost animal near her and off her screen, the small figure does what the player does).
+The random choices come from a seed, so that a failure repeats; try others with `-- --seed=<n>`.
+The game runs three times faster than the fixed frame rate gives (`-- --time-scale=<x>`), so each test plays about 25 minutes of the game in a minute and a half.
+
+```
+$GODOT --headless --fixed-fps 60 --path . --script tests/godot/end2end/test_one_player.gd -- --no-camera --settings=user://tests/one_player.cfg --seed=7
 ```
 
 ## Continuous integration

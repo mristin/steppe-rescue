@@ -182,8 +182,8 @@ def check_scripts(godot: str, jobs: int) -> int:
 
 
 def run_godot_tests(godot: str, jobs: int, only: Optional[Sequence[str]], verbose: bool) -> int:
-    """Run the Godot test scripts of tests/godot/ in parallel."""
-    tests = sorted((REPO_ROOT / "tests" / "godot").glob("test_*.gd"))
+    """Run the Godot test scripts of tests/godot/ (and its subdirectories) in parallel."""
+    tests = sorted((REPO_ROOT / "tests" / "godot").rglob("test_*.gd"))
     if only:
         tests = [test for test in tests if any(name in test.name for name in only)]
 
@@ -214,7 +214,7 @@ def run_godot_tests(godot: str, jobs: int, only: Optional[Sequence[str]], verbos
                 "--no-camera",
                 f"--settings=user://tests/{test.stem}.cfg",
             ],
-            timeout=300.0,
+            timeout=600.0,
         )
         return test, code, output, duration
 

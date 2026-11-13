@@ -12,6 +12,10 @@ extends RefCounted
 
 static var _cache: Dictionary = {}
 
+## The painted riders standing in the boots of the finery, by the painting
+## of the rider and the boots.
+static var _dressed: Dictionary = {}
+
 
 ## The painting at the path, of half its size in pixels.
 static func texture(path: String) -> ImageTexture:
@@ -58,18 +62,43 @@ static func horse(preset: String, card := false) -> ImageTexture:
     return texture("res://assets/pictures/horses/%s%s.png" % ["card/" if card else "", id])
 
 
-## The painted rider of the looks standing, in the coat of the finery she
-## wears, at its step (assets/pictures/riders/coat_<step>/, see
-## dev/pictures/cut_standing_coat.py); in her own coat without it.
+## The painted rider of the looks standing, in the finery which is painted on
+## her: the coat at its step (assets/pictures/riders/coat_<step>/, see
+## dev/pictures/cut_standing_coat.py; her own coat without it), and the boots
+## (assets/pictures/riders/boots/, see dev/pictures/cut_boots.py), whose
+## strip of her lower legs takes the place of hers.
 static func dressed_rider(looks: Dictionary) -> ImageTexture:
     var id: String = looks.get("rider", "")
     if id not in Looks.PRESETS:
         id = Looks.DEFAULT["rider"]
+    var path := "res://assets/pictures/riders/%s.png" % id
     for step in range(Finery.step(looks, "coat"), 0, -1):
-        var path := "res://assets/pictures/riders/coat_%d/%s.png" % [step, id]
-        if ResourceLoader.exists(path):
-            return texture(path)
-    return rider(id)
+        var coat := "res://assets/pictures/riders/coat_%d/%s.png" % [step, id]
+        if ResourceLoader.exists(coat):
+            path = coat
+            break
+    var boots := "res://assets/pictures/riders/boots/%s.png" % id
+    if Finery.step(looks, "boots") < 1 or not ResourceLoader.exists(boots):
+        return texture(path)
+    var key := path + "|" + boots
+    if not _dressed.has(key):
+        var image := (load(path) as Texture2D).get_image().duplicate() as Image
+        image.decompress()
+        image.convert(Image.FORMAT_RGBA8)
+        var legs := (load(boots) as Texture2D).get_image().duplicate() as Image
+        legs.decompress()
+        legs.convert(Image.FORMAT_RGBA8)
+        # NOTE (mristin):
+        # Her own lower legs give way to those in the boots.
+        var top := legs.get_used_rect().position.y
+        image.fill_rect(
+            Rect2i(0, top, image.get_width(), image.get_height() - top), Color(0, 0, 0, 0)
+        )
+        image.blend_rect(legs, Rect2i(Vector2i.ZERO, legs.get_size()), Vector2i.ZERO)
+        var result := ImageTexture.create_from_image(image)
+        result.set_size_override(Vector2i(image.get_size() * 0.5))
+        _dressed[key] = result
+    return _dressed[key]
 
 
 ## The painted rider of the preset (see [constant Looks.PRESETS]), standing,

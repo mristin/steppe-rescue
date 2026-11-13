@@ -145,7 +145,11 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
     )
     var color := Color(1, 1, 1, alpha)
 
+    # NOTE (mristin):
+    # The boots of the finery, once she won them, else her own.
     var boot := texture("boot_" + preset)
+    if Finery.step(looks, "boots") >= 1 and texture("boot_finery") != null:
+        boot = texture("boot_finery")
     for leg in [
         [CameraPanel.Joint.LEFT_KNEE, CameraPanel.Joint.LEFT_ANKLE, -1.0],
         [CameraPanel.Joint.RIGHT_KNEE, CameraPanel.Joint.RIGHT_ANKLE, 1.0]

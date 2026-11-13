@@ -34,11 +34,10 @@ const _ON_HORSE := [
 ]
 
 ## Where the pieces go on the painted riders, who all stand alike, facing the
-## viewer. The coat is painted on the rider herself (see [method
-## Painting.dressed_rider]); the earrings show only in the camera picture,
-## since the painted girls wear their own.
+## viewer. The coat and the boots are painted on the rider herself (see
+## [method Painting.dressed_rider]); the earrings show only in the camera
+## picture, since the painted girls wear their own.
 const _ON_RIDER := [
-    ["boots", 0.5, 0.925, 0.58],
     ["belt", 0.5, 0.45, 0.46],
     ["bracelets", 0.2, 0.62, 0.11],
     ["bracelets", 0.8, 0.62, 0.11],

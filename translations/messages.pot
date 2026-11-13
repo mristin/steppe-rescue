@@ -735,19 +735,23 @@ msgid "Loading..."
 msgstr ""
 
 #: scenes/vision/vision_status.gd
-msgid "The camera does not work on Windows yet. Use the keyboard."
-msgstr ""
-
-#: scenes/vision/vision_status.gd
-msgid "No camera found. Use the keyboard."
-msgstr ""
-
-#: scenes/vision/vision_status.gd
 msgid "The models are missing. Use the keyboard."
 msgstr ""
 
 #: scenes/vision/vision_status.gd
 msgid "The camera failed. Use the keyboard."
+msgstr ""
+
+#: scenes/vision/vision_status.gd
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr ""
+
+#: scenes/vision/vision_status.gd
+msgid "Windows does not allow the camera. Use the keyboard."
+msgstr ""
+
+#: scenes/vision/vision_status.gd
+msgid "No camera found. Use the keyboard."
 msgstr ""
 
 #. The wardrobe: the title of the panel of the finery which she wears.

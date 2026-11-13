@@ -32,6 +32,12 @@ Unzip the package and start the game.
 The macOS package runs on Apple Silicon.
 On Intel Macs, the camera tracking does not work, since ONNX Runtime provides no library for them.
 
+The camera on Windows is experimental: Godot 4.6 has no camera on Windows, so the Windows package brings [CameraServerExtension] along.
+Virtual cameras (e.g., the one of OBS Studio) do not work there.
+If the camera does not work, ride with the keyboard.
+
+[CameraServerExtension]: https://github.com/j20001970/godot-cameraserver-extension
+
 You need a webcam which supports 640x480.
 
 ## Acknowledgments

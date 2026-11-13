@@ -26,16 +26,21 @@ func text(service: Node, timing: bool) -> String:
         "Disabled": tr("The camera is off. Use the keyboard."),
         "SearchingCamera": tr("Looking for a camera..."),
         "LoadingModels": tr("Loading..."),
-        # NOTE (mristin):
-        # Godot 4.6 implements no camera on Windows, so the camera server there
-        # never finds one, whatever is plugged in.
-        "NoCamera":
-        (
-            tr("The camera does not work on Windows yet. Use the keyboard.")
-            if OS.get_name() == "Windows"
-            else tr("No camera found. Use the keyboard.")
-        ),
+        "NoCamera": _no_camera(service),
         "ModelsMissing": tr("The models are missing. Use the keyboard."),
         "Failed": tr("The camera failed. Use the keyboard."),
     }
     return messages.get(status, "")
+
+
+## Why there is no camera: on Windows, Godot 4.6 has no camera of its own,
+## and the vision service needs its camera extension, which Windows must allow.
+func _no_camera(service: Node) -> String:
+    var reason: String = (
+        service.GetNoCameraReason() if service.has_method("GetNoCameraReason") else ""
+    )
+    if reason == "unsupported":
+        return tr("The camera does not work on Windows yet. Use the keyboard.")
+    if reason == "denied":
+        return tr("Windows does not allow the camera. Use the keyboard.")
+    return tr("No camera found. Use the keyboard.")

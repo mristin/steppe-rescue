@@ -893,16 +893,6 @@ msgstr "Жүктелуде..."
 
 #: scenes/vision/vision_status.gd
 #, fuzzy
-msgid "The camera does not work on Windows yet. Use the keyboard."
-msgstr "Камера Windows-та әзірге жұмыс істемейді. Пернетақтаны қолдан."
-
-#: scenes/vision/vision_status.gd
-#, fuzzy
-msgid "No camera found. Use the keyboard."
-msgstr "Камера табылмады. Пернетақтаны қолдан."
-
-#: scenes/vision/vision_status.gd
-#, fuzzy
 msgid "The models are missing. Use the keyboard."
 msgstr "Модельдер жоқ. Пернетақтаны қолдан."
 
@@ -910,6 +900,21 @@ msgstr "Модельдер жоқ. Пернетақтаны қолдан."
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Камера істен шықты. Пернетақтаны қолдан."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr "Камера Windows-та әзірге жұмыс істемейді. Пернетақтаны қолдан."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Windows does not allow the camera. Use the keyboard."
+msgstr "Windows камераға рұқсат бермейді. Пернетақтаны қолдан."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "No camera found. Use the keyboard."
+msgstr "Камера табылмады. Пернетақтаны қолдан."
 
 #. The wardrobe: the title of the panel of the finery which she wears.
 #: scenes/wardrobe/wardrobe.gd

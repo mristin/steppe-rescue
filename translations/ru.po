@@ -893,16 +893,6 @@ msgstr "Загрузка..."
 
 #: scenes/vision/vision_status.gd
 #, fuzzy
-msgid "The camera does not work on Windows yet. Use the keyboard."
-msgstr "Камера пока не работает на Windows. Играй с клавиатуры."
-
-#: scenes/vision/vision_status.gd
-#, fuzzy
-msgid "No camera found. Use the keyboard."
-msgstr "Камера не найдена. Играй с клавиатуры."
-
-#: scenes/vision/vision_status.gd
-#, fuzzy
 msgid "The models are missing. Use the keyboard."
 msgstr "Не хватает моделей. Играй с клавиатуры."
 
@@ -910,6 +900,21 @@ msgstr "Не хватает моделей. Играй с клавиатуры."
 #, fuzzy
 msgid "The camera failed. Use the keyboard."
 msgstr "Ошибка камеры. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr "Камера пока не работает на Windows. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Windows does not allow the camera. Use the keyboard."
+msgstr "Windows не разрешает камеру. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "No camera found. Use the keyboard."
+msgstr "Камера не найдена. Играй с клавиатуры."
 
 #. The wardrobe: the title of the panel of the finery which she wears.
 #: scenes/wardrobe/wardrobe.gd

@@ -194,6 +194,18 @@ Mind that Godot exits with zero even if that build fails, and then writes a pack
 
 The macOS app is universal, but ONNX Runtime provides its native library only for Apple Silicon, so the camera tracking does not work on Intel Macs.
 
+### The camera on Windows
+
+Godot 4.6 implements no camera on Windows, so we use [CameraServerExtension] there, and only there, from `addons/CameraServerExtension/` (the prebuilt Windows x86_64 library of its release 2026.03.27).
+Godot reports an error on every platform which an extension lists no library for, so the directory is hidden from Godot (`.gdignore`); the vision service loads the extension itself on Windows (`StartCameraExtension` in `scenes/vision/vision_service/VisionService.cs`), from the directory of the executable, or from the project in the editor.
+Hence, when you export for Windows by hand, copy `CameraServerExtension.gdextension` and `libcameraserver-extension.windows.dll` next to the executable, as `.github/workflows/publish.yaml` does.
+If the package lies in the project (e.g., in `build/`), put a `.gdignore` there first (`touch build/.gdignore`), or Godot tries to load the extension, and fails, on the other platforms.
+
+Drop the extension once Godot supports the camera on Windows itself ([godotengine/godot#108538]).
+
+[CameraServerExtension]: https://github.com/j20001970/godot-cameraserver-extension
+[godotengine/godot#108538]: https://github.com/godotengine/godot/pull/108538
+
 ### Releases
 
 When you publish a release on GitHub, the workflow `.github/workflows/publish.yaml` exports the game for Linux, Windows and macOS, adds our license, [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the license texts of the distributed components, and attaches the packages to the release.

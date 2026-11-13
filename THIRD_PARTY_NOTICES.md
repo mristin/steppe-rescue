@@ -6,7 +6,7 @@ This covers the code, the scenes and everything the game draws in code.
 The game includes, or is built with, the following third-party components.
 Each keeps its own license.
 
-Every release package carries our [LICENSE](LICENSE), this file and, in the directory `licenses/`, the license texts of Godot Engine, ONNX Runtime (from its NuGet package), the three models and the font; see `.github/workflows/publish.yaml`.
+Every release package carries our [LICENSE](LICENSE), this file and, in the directory `licenses/`, the license texts of Godot Engine, ONNX Runtime (from its NuGet package), the three models and the font, and the Windows package also the license text of CameraServerExtension; see `.github/workflows/publish.yaml`.
 
 ## Distributed with the game
 
@@ -34,6 +34,16 @@ Their notices are in [licenses/godot/COPYRIGHT.txt](licenses/godot/COPYRIGHT.txt
 * License: MIT
 * Copyright (c) Microsoft Corporation
 * Source: https://github.com/microsoft/onnxruntime
+
+### CameraServerExtension (only in the Windows package)
+
+* Version: 2026.03.27 (the prebuilt Windows x86_64 library of the release)
+* License: MIT
+* Copyright (c) 2024-present Jason Kuo
+* Source: https://github.com/j20001970/godot-cameraserver-extension
+* License text: [addons/CameraServerExtension/LICENSE](addons/CameraServerExtension/LICENSE)
+
+Godot 4.6 implements no camera on Windows; the extension provides it there, with Media Foundation.
 
 ### RTMO (pose)
 

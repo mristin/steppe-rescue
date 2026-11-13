@@ -735,6 +735,10 @@ msgid "Loading..."
 msgstr ""
 
 #: scenes/vision/vision_status.gd
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr ""
+
+#: scenes/vision/vision_status.gd
 msgid "No camera found. Use the keyboard."
 msgstr ""
 

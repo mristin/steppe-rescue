@@ -26,7 +26,15 @@ func text(service: Node, timing: bool) -> String:
         "Disabled": tr("The camera is off. Use the keyboard."),
         "SearchingCamera": tr("Looking for a camera..."),
         "LoadingModels": tr("Loading..."),
-        "NoCamera": tr("No camera found. Use the keyboard."),
+        # NOTE (mristin):
+        # Godot 4.6 implements no camera on Windows, so the camera server there
+        # never finds one, whatever is plugged in.
+        "NoCamera":
+        (
+            tr("The camera does not work on Windows yet. Use the keyboard.")
+            if OS.get_name() == "Windows"
+            else tr("No camera found. Use the keyboard.")
+        ),
         "ModelsMissing": tr("The models are missing. Use the keyboard."),
         "Failed": tr("The camera failed. Use the keyboard."),
     }

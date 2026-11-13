@@ -893,6 +893,11 @@ msgstr "Жүктелуде..."
 
 #: scenes/vision/vision_status.gd
 #, fuzzy
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr "Камера Windows-та әзірге жұмыс істемейді. Пернетақтаны қолдан."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
 msgid "No camera found. Use the keyboard."
 msgstr "Камера табылмады. Пернетақтаны қолдан."
 

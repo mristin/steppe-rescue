@@ -893,6 +893,11 @@ msgstr "Загрузка..."
 
 #: scenes/vision/vision_status.gd
 #, fuzzy
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr "Камера пока не работает на Windows. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
 msgid "No camera found. Use the keyboard."
 msgstr "Камера не найдена. Играй с клавиатуры."
 

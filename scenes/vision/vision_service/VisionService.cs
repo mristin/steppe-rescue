@@ -166,6 +166,25 @@ public partial class VisionService : Node
     public FaceSnapshot? LatestFace => Volatile.Read(ref _latestFace);
 
     private CameraFeed? _feed;
+
+    /// <summary>
+    /// The chroma plane of a feed which delivers its frames as two planes (Y and
+    /// CbCr, e.g., on macOS); <see cref="CameraTexture"/> then holds the Y plane.
+    /// </summary>
+    private CameraTexture? _cbcrTexture;
+
+    /// <summary>The frames of a two-plane feed converted to RGB, for the preview.</summary>
+    private ImageTexture? _ycbcrPreview;
+
+    /// <summary>Try to activate the feed again at this time, see <see cref="RetryActivation"/>.</summary>
+    private double _nextActivationAttempt = double.NaN;
+
+    /// <summary>Try to activate an inactive feed again every this many seconds.</summary>
+    private const double _activationRetryPeriod = 3.0;
+
+    /// <summary>Convert the two-plane frames down to at most this width.</summary>
+    private const int _maxYcbcrWidth = 640;
+
     private double _searchStarted = double.NaN;
     private double _firstFeedAt = double.NaN;
 
@@ -246,6 +265,8 @@ public partial class VisionService : Node
         {
             SearchCamera(now);
         }
+
+        RetryActivation(now);
 
         var snapshot = Latest;
         if (snapshot != null && !ReferenceEquals(snapshot, _consumed))
@@ -465,7 +486,7 @@ public partial class VisionService : Node
 
     public bool IsRunning() => Status == ServiceStatus.Running;
 
-    public Texture2D? GetCameraTexture() => CameraTexture;
+    public Texture2D? GetCameraTexture() => _ycbcrPreview ?? (Texture2D?)CameraTexture;
 
     /// <summary>Set how many players ride together (1 or 2), and forget their riding.</summary>
     public void SetPlayerCount(int count)
@@ -807,10 +828,16 @@ public partial class VisionService : Node
 
         if (candidates.Count == 0)
         {
+            // NOTE (mristin):
+            // Godot 4.6 implements no camera on Windows: the camera server there
+            // never reports a feed, whatever is plugged in. The players see the
+            // message of vision_status.gd, which says so, too.
             SetStatus(
                 ServiceStatus.NoCamera,
                 count == 0
-                    ? "No camera found."
+                    ? OS.GetName() == "Windows"
+                        ? "The camera does not work on Windows yet (Godot 4.6 does not support it)."
+                        : "No camera found."
                     : "No camera supports 640x480, which the vision needs."
             );
             return;
@@ -820,10 +847,22 @@ public partial class VisionService : Node
         StartCamera(chosen, formatIndex);
     }
 
-    /// <summary>Find the 640x480 format, preferring YUYV; return -1 if there is none.</summary>
+    /// <summary>
+    /// Find the 640x480 format, preferring YUYV; return -1 if there is none, and
+    /// <see cref="_anyFormat"/> if the feed lists no formats at all.
+    /// </summary>
+    /// <remarks>
+    /// Godot lists the formats only on Linux; elsewhere (e.g., on macOS) the feed
+    /// runs at the resolution of the system, which the pipeline letterboxes anyhow.
+    /// </remarks>
     private static int FindFormat(CameraFeed feed)
     {
         var formats = feed.GetFormats();
+        if (formats.Count == 0)
+        {
+            return _anyFormat;
+        }
+
         int fallback = -1;
         for (int i = 0; i < formats.Count; i++)
         {
@@ -847,14 +886,31 @@ public partial class VisionService : Node
         return fallback;
     }
 
+    /// <summary>The format index of a feed which lists no formats (see <see cref="FindFormat"/>).</summary>
+    private const int _anyFormat = int.MaxValue;
+
     private void StartCamera(CameraFeed feed, int formatIndex)
     {
-        GD.Print($"Starting the camera {feed.GetName()}, format #{formatIndex}: {feed.GetFormats()[formatIndex]}");
+        string description = formatIndex == _anyFormat
+            ? $"{feed.GetName()}, the default format"
+            : $"{feed.GetName()}, format #{formatIndex}: {feed.GetFormats()[formatIndex]}";
+        GD.Print($"Starting the camera {description}");
         _feed = feed;
-        _feed.SetFormat(formatIndex, new Godot.Collections.Dictionary());
+        if (formatIndex != _anyFormat)
+        {
+            _feed.SetFormat(formatIndex, new Godot.Collections.Dictionary());
+        }
+
         _feed.FeedIsActive = true;
+        _nextActivationAttempt = Now + _activationRetryPeriod;
 
         CameraTexture = new CameraTexture { CameraFeedId = _feed.GetId(), CameraIsActive = true };
+        _cbcrTexture = new CameraTexture
+        {
+            CameraFeedId = _feed.GetId(),
+            WhichFeed = CameraServer.FeedImage.CbcrImage,
+            CameraIsActive = true,
+        };
         _feed.FrameChanged += OnFrameChanged;
 
         SetStatus(ServiceStatus.LoadingModels, "Loading the models...");
@@ -904,29 +960,73 @@ public partial class VisionService : Node
 
         _lastFrameAt = now;
 
+        if (CameraTexture == null || _feed == null)
+        {
+            return;
+        }
+
         bool forPose = _poseSlot.Requested;
         bool forFace = _faceSlot.Requested;
-        if ((!forPose && !forFace) || CameraTexture == null)
+        bool twoPlanes = _feed.GetDatatype() == CameraFeed.FeedDataType.YcbcrSep;
+        if (!forPose && !forFace && !twoPlanes)
         {
             return;
         }
 
-        Image? image = CameraTexture.GetImage();
-        if (image == null || image.IsEmpty())
+        byte[] rgb;
+        int width;
+        int height;
+        if (twoPlanes)
         {
-            return;
-        }
+            // NOTE (mristin):
+            // A two-plane feed has no RGB texture, so we convert it ourselves, on
+            // every frame, as the preview needs it, too.
+            Image? luma = CameraTexture.GetImage();
+            Image? chroma = _cbcrTexture?.GetImage();
+            if (luma == null || luma.IsEmpty() || chroma == null || chroma.IsEmpty())
+            {
+                return;
+            }
 
-        if (image.GetFormat() != Image.Format.Rgb8)
+            (rgb, width, height) = YcbcrToRgb(luma, chroma, _maxYcbcrWidth);
+            var preview = Image.CreateFromData(width, height, false, Image.Format.Rgb8, rgb);
+            if (_ycbcrPreview == null || _ycbcrPreview.GetSize() != preview.GetSize())
+            {
+                _ycbcrPreview = ImageTexture.CreateFromImage(preview);
+            }
+            else
+            {
+                _ycbcrPreview.Update(preview);
+            }
+
+            if (!forPose && !forFace)
+            {
+                return;
+            }
+        }
+        else
         {
-            image.Convert(Image.Format.Rgb8);
+            Image? image = CameraTexture.GetImage();
+            if (image == null || image.IsEmpty())
+            {
+                return;
+            }
+
+            if (image.GetFormat() != Image.Format.Rgb8)
+            {
+                image.Convert(Image.Format.Rgb8);
+            }
+
+            rgb = image.GetData();
+            width = image.GetWidth();
+            height = image.GetHeight();
         }
 
         // NOTE (mristin):
         // We copy the raw bytes on the main thread so that the inference threads
         // never touch any engine objects. The threads only read the frame, so
         // they can share it.
-        var frame = new Frame(image.GetData(), image.GetWidth(), image.GetHeight(), Now);
+        var frame = new Frame(rgb, width, height, Now);
         if (forPose)
         {
             _poseSlot.Put(frame);
@@ -935,6 +1035,56 @@ public partial class VisionService : Node
         if (forFace)
         {
             _faceSlot.Put(frame);
+        }
+    }
+
+    /// <summary>Convert a Y plane and a CbCr plane of the camera to RGB8.</summary>
+    private static (byte[] Rgb, int Width, int Height) YcbcrToRgb(Image luma, Image chroma, int maxWidth)
+    {
+        if (luma.GetFormat() != Image.Format.R8)
+        {
+            luma.Convert(Image.Format.R8);
+        }
+
+        if (chroma.GetFormat() != Image.Format.Rg8)
+        {
+            chroma.Convert(Image.Format.Rg8);
+        }
+
+        return YcbcrConverter.ToRgb(
+            luma.GetData(), luma.GetWidth(), luma.GetHeight(),
+            chroma.GetData(), chroma.GetWidth(), chroma.GetHeight(),
+            maxWidth);
+    }
+
+    /// <summary>
+    /// Activate the feed again if it did not start, which happens on macOS on the
+    /// first start: the feed asks for the permission and stays off even when the
+    /// players grant it.
+    /// </summary>
+    /// <remarks>
+    /// While the system still asks, every attempt asks again, so we try only every
+    /// few seconds; Godot keeps the capture session once there is one.
+    /// </remarks>
+    private void RetryActivation(double now)
+    {
+        if (_feed == null || _feed.FeedIsActive || double.IsNaN(_nextActivationAttempt)
+            || now < _nextActivationAttempt)
+        {
+            return;
+        }
+
+        _nextActivationAttempt = now + _activationRetryPeriod;
+        GD.Print("The camera did not start; trying again (maybe the camera permission was just granted).");
+        _feed.FeedIsActive = true;
+        if (CameraTexture != null)
+        {
+            CameraTexture.CameraIsActive = true;
+        }
+
+        if (_cbcrTexture != null)
+        {
+            _cbcrTexture.CameraIsActive = true;
         }
     }
 
@@ -1075,6 +1225,11 @@ public partial class VisionService : Node
         if (CameraTexture != null)
         {
             CameraTexture.CameraIsActive = false;
+        }
+
+        if (_cbcrTexture != null)
+        {
+            _cbcrTexture.CameraIsActive = false;
         }
     }
 }

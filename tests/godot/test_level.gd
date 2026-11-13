@@ -25,6 +25,16 @@ func _wait(seconds: float) -> void:
     await create_timer(seconds).timeout
 
 
+## Wait until the condition holds, but at most [param timeout] seconds.
+## Return whether it holds.
+func _wait_until(condition: Callable, timeout: float) -> bool:
+    var waited := 0.0
+    while not condition.call() and waited < timeout:
+        await _wait(0.1)
+        waited += 0.1
+    return condition.call()
+
+
 func _check_levels() -> void:
     for file in DirAccess.get_files_at(_LEVELS_DIR):
         if not file.ends_with(".tscn"):
@@ -158,7 +168,9 @@ func _check_two_players() -> void:
     level.rider(0).position = gate + Vector2(0, -20)
     for animal in level.followers(0):
         animal.position = gate + Vector2(0, -40)
-    await _wait(6.0)
+    # NOTE (mristin):
+    # The animals walk to random spots in the pen (see the lamb above).
+    await _wait_until(func() -> bool: return level.finished, 20.0)
     _check(level.finished, "the mission is over when all the animals are home")
     for i in range(2):
         _check(level.talking_to(i) == grandmother, "Grandmother thanks the rider %d" % i)
@@ -306,7 +318,11 @@ func _run() -> void:
     _check(lamb.state == Animal.State.FOLLOWING, "the lamb follows the rider who stays near")
 
     rider.position = level.map.home().gate() + Vector2(0, -20)
-    await _wait(6.0)
+    # NOTE (mristin):
+    # The lamb walks the trail of the rider to the gate, and then to a random
+    # spot in the pen, which takes about 6 to 7 seconds; a fixed wait would
+    # miss the far spots now and then.
+    await _wait_until(func() -> bool: return lamb.state == Animal.State.HOME, 20.0)
     _check(lamb.state == Animal.State.HOME, "the lamb runs into the pen")
     _check(level.finished, "the level ends when all the animals are home")
     _check(level.talking_to() != null, "Grandmother thanks the rider")

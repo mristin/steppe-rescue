@@ -177,6 +177,31 @@ $GODOT --headless --fixed-fps 60 --path . --script tests/godot/end2end/test_one_
 
 GitHub Actions runs the pre-commit checks (without `--overwrite`) on every pull request and on every push to `main`; see `.github/workflows/ci.yaml`.
 
+## Exporting the game
+
+The export presets live in `export_presets.cfg`; there are presets for Linux, Windows and macOS.
+They include the ONNX models, the JSON data and the translations explicitly (`include_filter="*.onnx, *.json, *.po"`), since Godot does not export them as resources otherwise, and they exclude the tests, the development tools and the build outputs (`build/`, `dist/`, `notices/`).
+
+Install the .NET export templates of Godot 4.6.2 (in the editor: Editor, Manage Export Templates), and run, e.g.:
+
+```
+mkdir -p build/linux
+$GODOT --headless --path . --export-release "Linux" build/linux/steppe-rescue.x86_64
+```
+
+Godot builds the C# part for each platform itself (`dotnet publish`), including the native libraries of ONNX Runtime.
+Mind that Godot exits with zero even if that build fails, and then writes a package without the C# part; check its output for `ERROR`.
+
+The macOS app is universal, but ONNX Runtime provides its native library only for Apple Silicon, so the camera tracking does not work on Intel Macs.
+
+### Releases
+
+When you publish a release on GitHub, the workflow `.github/workflows/publish.yaml` exports the game for Linux, Windows and macOS, adds our license, [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and the license texts of the distributed components, and attaches the packages to the release.
+
+You can also start the workflow by hand (Actions, Publish, Run workflow).
+Without a tag, it only tries out the packaging and uploads the packages as the artifacts of the run.
+With the tag of an existing release, e.g., `v0.1.0`, it also attaches the packages to that release; they are then built from the branch the workflow runs on, not from the tag.
+
 ## Third-party components
 
 When you add a third-party component (a model, a font, a picture, a sound), list it in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) with its license, and put its license text next to it.

@@ -6,6 +6,8 @@ This covers the code, the scenes and everything the game draws in code.
 The game includes, or is built with, the following third-party components.
 Each keeps its own license.
 
+Every release package carries our [LICENSE](LICENSE), this file and, in the directory `licenses/`, the license texts of Godot Engine, ONNX Runtime (from its NuGet package), the three models and the font; see `.github/workflows/publish.yaml`.
+
 ## Distributed with the game
 
 ### Godot Engine

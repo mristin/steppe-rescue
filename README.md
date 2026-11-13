@@ -22,6 +22,18 @@ Two children can ride together on a split screen, each in her half of the camera
 
 The movement test (`scenes/movement_test/movement_test.tscn`, section 13 of the design) shows what the camera sees: the pose, the hat over the face, the speed bar from the squats and the turn from the hands.
 
+## Download
+
+Download the game for Linux, Windows or macOS from the [releases].
+Unzip the package and start the game.
+
+[releases]: https://github.com/mristin/steppe-rescue/releases
+
+The macOS package runs on Apple Silicon.
+On Intel Macs, the camera tracking does not work, since ONNX Runtime provides no library for them.
+
+You need a webcam which supports 640x480.
+
 ## Acknowledgments
 
 We track the player with the following models (each model directory contains its license):

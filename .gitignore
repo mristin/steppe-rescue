@@ -36,9 +36,11 @@ tests/**/obj/
 # The downloads of tools/download_and_convert_models.py
 /.cache/
 
-# The exported packages, see export_presets.cfg
+# The exported packages and their licenses, see export_presets.cfg and
+# .github/workflows/publish.yaml
 /build/
 /dist/
+/notices/
 
 # Python bytecode
 __pycache__/

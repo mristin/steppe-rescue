@@ -724,6 +724,7 @@ func referred() -> Array[Person]:
 
 
 func _update_animals(delta: float) -> void:
+    var solids := map.solids()
     for animal in animals:
         match animal.state:
             Animal.State.LOST:
@@ -734,6 +735,7 @@ func _update_animals(delta: float) -> void:
                 # its rider first, around the water, then into the pen.
                 if not animal.path.is_empty():
                     var passed := animal.walk_along(animal.path, animal.kind.speed, delta)
+                    animal.keep_out(solids)
                     animal.path = animal.path.slice(passed)
                     if (
                         animal.path.size() <= 1
@@ -759,6 +761,7 @@ func _update_animals(delta: float) -> void:
             )
             var passed := animal.walk_along(way, animal.kind.speed, delta)
             animal.crumb = maxi(animal.crumb, player.trail_start - 1) + passed
+            animal.keep_out(solids)
             # NOTE (mristin):
             # A follower which fell far behind calls out, and keeps calling
             # until it caught up; it never gets lost.

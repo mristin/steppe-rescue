@@ -149,6 +149,17 @@ func walk_along(points: PackedVector2Array, max_speed: float, delta: float) -> i
     return passed
 
 
+## Step out of what blocks the horse (the circles x, y, radius), e.g., a
+## follower which cut across a well on its way onto the trail of its rider.
+func keep_out(solids: Array[Vector3]) -> void:
+    for solid in solids:
+        var center := Vector2(solid.x, solid.y)
+        var away := position - center
+        if away.length() < solid.z + 1.0:
+            var out := away.normalized() if away.length() > 0.001 else Vector2.DOWN
+            position = center + out * (solid.z + 1.0)
+
+
 ## Call out to the rider (a follower which fell behind): waves rise over it.
 func call_out() -> void:
     call_time = CALL_SECONDS

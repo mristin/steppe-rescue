@@ -179,6 +179,14 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
     # [constant SLEEVE_UNDER]); the rest is drawn over it, since the arms
     # reach in front of the body to hold and pull the reins.
     var sleeve := texture("sleeve_" + preset)
+    # NOTE (mristin):
+    # The gold of the coat of the finery, once she won it, lies over her own
+    # coat and sleeves, the same on every rider.
+    var coat_trim := _trim("coat", looks)
+    var sleeve_trim := _trim("sleeve", looks)
+    var sleeves: Array[Texture2D] = [sleeve]
+    if sleeve_trim != null:
+        sleeves.append(sleeve_trim)
     var thickness := width * SLEEVE_SHARE / SLEEVE_THICKNESS
     var strips: Array = []
     for arm in [
@@ -196,17 +204,18 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
         strips.append(_sleeve_strip(start, elbow, joints[arm[2]], thickness))
     for strip in strips:
         var cut: int = strip[3]
-        _draw_strip(
-            canvas,
-            sleeve,
-            (strip[0] as PackedVector2Array).slice(0, cut + 1),
-            (strip[1] as PackedFloat32Array).slice(0, cut + 1),
-            SLEEVE_Y,
-            SLEEVE_BAND,
-            thickness,
-            color,
-            (strip[2] as PackedFloat32Array).slice(0, cut + 1)
-        )
+        for painting in sleeves:
+            _draw_strip(
+                canvas,
+                painting,
+                (strip[0] as PackedVector2Array).slice(0, cut + 1),
+                (strip[1] as PackedFloat32Array).slice(0, cut + 1),
+                SLEEVE_Y,
+                SLEEVE_BAND,
+                thickness,
+                color,
+                (strip[2] as PackedFloat32Array).slice(0, cut + 1)
+            )
 
     var coat := texture("coat_" + preset)
     if coat != null:
@@ -214,20 +223,34 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
         var y_axis := (hips - neck) / ((COAT_HEM_Y - COAT_SHOULDER_Y) * COAT_HIPS)
         var origin := neck - x_axis * (COAT_LEFT + COAT_RIGHT) * 0.5 - y_axis * COAT_SHOULDER_Y
         _draw(canvas, coat, Transform2D(x_axis, y_axis, origin), color)
+        if coat_trim != null:
+            _draw(canvas, coat_trim, Transform2D(x_axis, y_axis, origin), color)
 
     for strip in strips:
         var cut: int = strip[3]
-        _draw_strip(
-            canvas,
-            sleeve,
-            (strip[0] as PackedVector2Array).slice(cut),
-            (strip[1] as PackedFloat32Array).slice(cut),
-            SLEEVE_Y,
-            SLEEVE_BAND,
-            thickness,
-            color,
-            (strip[2] as PackedFloat32Array).slice(cut)
-        )
+        for painting in sleeves:
+            _draw_strip(
+                canvas,
+                painting,
+                (strip[0] as PackedVector2Array).slice(cut),
+                (strip[1] as PackedFloat32Array).slice(cut),
+                SLEEVE_Y,
+                SLEEVE_BAND,
+                thickness,
+                color,
+                (strip[2] as PackedFloat32Array).slice(cut)
+            )
+
+
+## The gold of the coat of the finery over the coat or the sleeve ([param
+## kind]) at the step which she won (see dev/pictures/cut_coat_trims.py), or
+## the step before if it is not painted; null without the coat.
+static func _trim(kind: String, looks: Dictionary) -> Texture2D:
+    for step in range(Finery.step(looks, "coat"), 0, -1):
+        var trim := texture("%s_trim_%d" % [kind, step])
+        if trim != null:
+            return trim
+    return null
 
 
 ## The sleeve from the shoulder over the elbow to the hand (or only to the

@@ -87,6 +87,17 @@ func _check_two_players() -> void:
     var grandmother := level.talking_to(0)
     _check(grandmother != null and level.talking_to(1) == grandmother, "Grandmother sends both out")
 
+    # NOTE (mristin):
+    # Grandmother's long talk in a half has pages: a squat turns each, and the
+    # squat on the last page ends it.
+    var talk := level.view(1).conversation
+    _check(talk.pages() > 1, "the long talk in a half has pages: %d" % talk.pages())
+    for page in range(1, talk.pages()):
+        await _wait(Level.TALK_SECONDS + 0.2)
+        service.SquatByKeyboard(1)
+        await _wait(0.3)
+        _check(talk.page() == page, "the squat turns the page %d" % page)
+        _check(level.talking_to(1) == grandmother, "and the talk goes on")
     await _wait(Level.TALK_SECONDS + 0.2)
     service.SquatByKeyboard(1)
     await _wait(0.3)
@@ -109,10 +120,13 @@ func _check_two_players() -> void:
         level.view(0).map_view.clues.size() == level.revealed().size(),
         "the map of the first rider shows it, too"
     )
-    await _wait(Level.TALK_SECONDS)
-    service.SquatByKeyboard(0)
-    service.SquatByKeyboard(1)
-    await _wait(0.3)
+    for page in range(8):
+        if level.talking_to(0) == null and level.talking_to(1) == null:
+            break
+        await _wait(Level.TALK_SECONDS + 0.2)
+        service.SquatByKeyboard(0)
+        service.SquatByKeyboard(1)
+        await _wait(0.3)
     _check(level.talking_to(0) == null and level.talking_to(1) == null, "both ride on")
     service.BrakeByKeyboard(0)
     service.BrakeByKeyboard(1)
@@ -180,24 +194,25 @@ func _check_dust() -> void:
 
 
 ## With one player, the camera picture glides out of the rider's way at the
-## bottom right of the steppe, and back once she is away.
+## bottom right of the steppe, and back once she is away; the conversation
+## stays where it is.
 func _check_give_way(level: Level) -> void:
     var rider := level.rider()
     var start := rider.position
+    var conversation := level.view().conversation.position
     rider.position = level.map.size - Vector2(120, 100)
     await _wait(Level.GIVE_WAY_SECONDS + 0.5)
-    _check(level.panel_away() == 1.0, "the camera picture gives way to the rider")
+    _check(level.hud().is_away("camera"), "the camera picture gives way to the rider")
+    var panel: Control = level.get_node("Hud/CameraPanel")
+    var on_screen := HudLayout.rider_rect(Vector2(960, 540) - Vector2(120, 100))
     _check(
-        level.view().conversation.position == Level.CONVERSATION_AWAY.position,
-        "and the conversation steps aside"
+        not Rect2(panel.position, panel.size).intersects(on_screen),
+        "it does not cover her any more"
     )
+    _check(level.view().conversation.position == conversation, "while the conversation stays")
     rider.position = start
     await _wait(Level.GIVE_WAY_SECONDS + 0.5)
-    _check(level.panel_away() == 0.0, "and comes back once she rode away")
-    _check(
-        level.view().conversation.position == Level.CONVERSATION.position,
-        "and so does the conversation"
-    )
+    _check(not level.hud().is_away("camera"), "and comes back once she rode away")
 
 
 func _run() -> void:

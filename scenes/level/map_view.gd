@@ -97,6 +97,13 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 
+## Move the small map to the position on the screen.
+func move_small(to: Vector2) -> void:
+    small_rect.position = to
+    if not large:
+        position = to
+
+
 func _place() -> void:
     var rect := large_rect if large else small_rect
     position = rect.position

@@ -135,7 +135,10 @@ func _update_texts() -> void:
         riders = tr("{first} and {second}").format(
             {"first": riders, "second": profile.rider_name(1)}
         )
-    _rider.text = "%s · %s" % [profile.session_name, riders]
+    # NOTE (mristin):
+    # The name of the journey and the riders, on two lines, so that the
+    # longest names fit.
+    _rider.text = "%s\n%s" % [profile.session_name, riders]
     # TRANSLATORS: The label of the row which opens the wardrobe of the finery.
     _row_labels[2].text = tr("Wardrobe")
     # TRANSLATORS: The button which opens the wardrobe, to choose what to wear.

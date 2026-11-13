@@ -47,6 +47,10 @@ func _ready() -> void:
     _worn_title = _label(_WORN)
     _not_worn_title = _label(_NOT_WORN)
     _empty = _label(Rect2(_WORN.position + Vector2(0, 90), _WORN.size))
+    # NOTE (mristin):
+    # The hint is long in some languages: it wraps onto a second line.
+    _empty.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _empty.size.y = 60
 
     for piece in Finery.PIECES:
         if not finery.has(piece):

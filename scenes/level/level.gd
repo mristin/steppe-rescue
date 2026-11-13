@@ -55,24 +55,22 @@ const GATE_DISTANCE := 60.0
 ## The riders of two players start this far apart, in pixels.
 const START_APART := 24.0
 
-## With one player, the camera picture and the small figure next to it give
-## way to the rider when she rides under them, at the right edge of the
-## steppe: they glide to the top left corner over about this many seconds...
-const GIVE_WAY_SECONDS := 1.2
+## The HUD glides out of the riders' way over this many seconds (see
+## [HudLayout]).
+const GIVE_WAY_SECONDS := HudLayout.GLIDE_SECONDS
 
-## ... once her rider comes this close to them, in pixels...
-const GIVE_WAY_NEAR := 12.0
-
-## ... and glide back once she is this far from their place.
-const GIVE_WAY_CLEAR := 64.0
-
-## Where the camera picture of one player stands when it gives way.
-const AWAY := Vector2(76, 8)
-
-## Where the conversation of one player stands, and where while the camera
-## picture gives way (to its right, before the small map).
+## Where the conversation of one player stands, below the missing animals;
+## with two players, each conversation stands at the top of its half.
 const CONVERSATION := Rect2(8, 40, 600, 100)
-const CONVERSATION_AWAY := Rect2(372, 40, 412, 100)
+const HALF_CONVERSATION := Rect2(8, 8, 464, 100)
+
+## The conversations are at most this high, so that they fit above the rider
+## in the middle of the view (see [member Conversation.max_height]).
+const CONVERSATION_HEIGHT := 170.0
+
+## Where the button OK stands at the end, with one and with two players.
+const OK_AT := Vector2(408, 148)
+const HALF_OK_AT := Vector2(380, 250)
 
 ## The level to play.
 @export var map_scene: PackedScene
@@ -111,12 +109,8 @@ var _finish_time := 0.0
 var _ok: DwellButton = null
 var _left := false
 
-## Where the camera picture stands at home, and how far it went away from
-## there (see [constant GIVE_WAY_SECONDS]), in [0, 1], and whether it goes
-## away now.
-var _panel_home := Vector2.ZERO
-var _panel_away := 0.0
-var _panel_leaving := false
+## Keeps the HUD out of the riders' way.
+var _layout := HudLayout.new()
 
 @onready var _world: Node2D = $World
 @onready var _animals: Node2D = $World/Animals
@@ -195,6 +189,14 @@ func _ready() -> void:
     _fit_views()
 
     _slots.animals = animals
+    _slots.size = _slots.strip_size()
+    _slots.position = Vector2(roundf((960.0 - _slots.size.x) * 0.5), 6)
+    # NOTE (mristin):
+    # The status of the camera wraps above the speed of the rider.
+    _status_label.position = Vector2(8, 436)
+    _status_label.size = Vector2(300, 42)
+    _status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    _status_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
     if count > 1:
         _camera_panel.position = Vector2(368, 364)
         _camera_panel.size = Vector2(224, 168)
@@ -203,8 +205,6 @@ func _ready() -> void:
         # that the line between the halves does not cross it.
         _status_label.position = Vector2(8, 384)
         _status_label.size = Vector2(288, 42)
-        _status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-        _status_label.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
         var divider := ColorRect.new()
         divider.color = Palette.OUTLINE
         divider.position = Vector2(479, 0)
@@ -212,9 +212,10 @@ func _ready() -> void:
         divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
         _hud.add_child(divider)
         _hud.move_child(divider, 0)
-    _panel_home = _camera_panel.position
     for player in _players:
         _build_coach(player)
+    _arrange()
+    for player in _players:
         # NOTE (mristin):
         # Grandmother sends every rider out.
         if _grandmother != null:
@@ -250,7 +251,8 @@ func _build_hud(player: LevelPlayer) -> void:
     _add(player.map_view, player.map_view.small_rect)
 
     player.conversation = Conversation.new()
-    _add(player.conversation, player.place(Rect2(8, 136, 464, 100) if two else CONVERSATION))
+    player.conversation.max_height = CONVERSATION_HEIGHT
+    _add(player.conversation, player.place(HALF_CONVERSATION if two else CONVERSATION))
 
     player.edge_label = Label.new()
     player.edge_label.visible = false
@@ -271,58 +273,143 @@ func _build_coach(player: LevelPlayer) -> void:
     _hud.add_child(player.coach)
 
 
-## With one player, let the camera picture and the small figure glide out of
-## the way of the rider to the top left corner while she rides under them,
-## and back once she is clearly away; the conversation moves to the right
-## meanwhile.
-func _give_way(delta: float) -> void:
-    if _players.size() != 1:
-        return
-    var player := _players[0]
-    var on_screen := (
-        player.rider.position
-        - player.center(map.size)
-        + player.rect.size * 0.5
-        + player.rect.position
-    )
-    var coach := player.coach
-    var home := Rect2(
-        Vector2(_panel_home.x - (_camera_panel.position.x - coach.position.x), _panel_home.y),
-        Vector2(
-            _camera_panel.size.x + _camera_panel.position.x - coach.position.x, _camera_panel.size.y
+## Let the HUD give way to the riders (see [HudLayout]), in the order of
+## priority: the conversations, which the riders read, and the button OK stay
+## where they open; the hints which show for a moment (the edge of the steppe,
+## Escape to quit) next, then the camera picture with the small figures, the
+## maps, the speeds, the water and the food, the status of the camera and the
+## missing animals make room.
+func _arrange() -> void:
+    var screen := Rect2(0, 0, 960, 540)
+    for player in _players:
+        var conversation := player.conversation
+        var at := conversation.position
+        _layout.add(
+            "conversation %d" % (player.index + 1),
+            player.rect,
+            func() -> Rect2: return Rect2(at, conversation.size),
+            func() -> bool: return conversation.visible,
+            func(to: Vector2) -> void: conversation.position = to
         )
-    )
-    var away := Rect2(home.position + AWAY - _panel_home, home.size)
-    if not _panel_leaving:
-        _panel_leaving = (
-            home.grow(GIVE_WAY_NEAR).has_point(on_screen)
-            and not away.grow(GIVE_WAY_CLEAR).has_point(on_screen)
-        )
-    elif not home.grow(GIVE_WAY_CLEAR).has_point(on_screen):
-        _panel_leaving = false
 
-    var before := _panel_away
-    _panel_away = move_toward(_panel_away, 1.0 if _panel_leaving else 0.0, delta / GIVE_WAY_SECONDS)
-    if before == _panel_away:
-        return
-    var offset := coach.position - _camera_panel.position
-    _camera_panel.position = _panel_home.lerp(AWAY, smoothstep(0.0, 1.0, _panel_away)).round()
-    coach.position = _camera_panel.position + offset
+    var ok_at := HALF_OK_AT if _players.size() > 1 else OK_AT
+    _layout.add(
+        "ok",
+        screen,
+        func() -> Rect2: return Rect2(ok_at, Vector2(200, 56)),
+        func() -> bool: return _ok != null,
+        func(to: Vector2) -> void: _ok.position = to
+    )
+
+    for player in _players:
+        _add_hint("edge %d" % (player.index + 1), player.edge_label, player.rect)
+    _add_hint("quit", _quit_hint, screen)
 
     # NOTE (mristin):
-    # The conversation steps aside as soon as the picture starts away, and
-    # comes back only once the picture is home again.
-    var aside := _panel_away > 0.0
-    var rect := CONVERSATION_AWAY if aside else CONVERSATION
-    if player.conversation.position != rect.position:
-        player.conversation.position = rect.position
-        player.conversation.size = rect.size
-        _show_conversation(player)
+    # The camera picture and the small figures next to it move together.
+    var group: Array[Control] = [_camera_panel]
+    for player in _players:
+        group.append(player.coach)
+    var camera := Rect2(_camera_panel.position, _camera_panel.size)
+    for control in group:
+        camera = camera.merge(Rect2(control.position, control.size))
+    var offsets: Array[Vector2] = []
+    for control in group:
+        offsets.append(control.position - camera.position)
+    _layout.add(
+        "camera",
+        screen,
+        func() -> Rect2: return camera,
+        func() -> bool: return true,
+        func(to: Vector2) -> void:
+            for i in range(group.size()):
+                group[i].position = to + offsets[i]
+    )
+
+    for player in _players:
+        var map_view := player.map_view
+        var small := map_view.small_rect
+        _layout.add(
+            "map %d" % (player.index + 1),
+            player.rect,
+            func() -> Rect2: return small,
+            func() -> bool: return not map_view.large,
+            func(to: Vector2) -> void: map_view.move_small(to)
+        )
+    for player in _players:
+        for named in [["speed", player.speed_bar], ["needs", player.needs_bars]]:
+            var control: Control = named[1]
+            var home := Rect2(control.position, control.size)
+            _layout.add(
+                "%s %d" % [named[0], player.index + 1],
+                player.rect,
+                func() -> Rect2: return home,
+                func() -> bool: return true,
+                func(to: Vector2) -> void: control.position = to
+            )
+
+    var status := Rect2(_status_label.position, _status_label.size)
+    _layout.add(
+        "status",
+        screen,
+        func() -> Rect2: return status,
+        func() -> bool: return _status_label.text != "",
+        func(to: Vector2) -> void: _status_label.position = to
+    )
+
+    # NOTE (mristin):
+    # The strip of the missing animals is small: it finds a gap the last.
+    var slots := Rect2(_slots.position, _slots.size)
+    _layout.add(
+        "slots",
+        screen,
+        func() -> Rect2: return slots,
+        func() -> bool: return not _slots.animals.is_empty(),
+        func(to: Vector2) -> void: _slots.position = to
+    )
 
 
-## How far the camera picture went out of the rider's way, in [0, 1].
-func panel_away() -> float:
-    return _panel_away
+## Add a hint of one line, centered in its label, as a piece only as big as
+## its text.
+func _add_hint(name: String, label: Label, bounds: Rect2) -> void:
+    var home := label.position
+    var text_size := func() -> Vector2:
+        var font := label.get_theme_font("font")
+        var font_size := label.get_theme_font_size("font_size")
+        return Vector2(
+            font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x,
+            label.size.y
+        )
+    _layout.add(
+        name,
+        bounds,
+        func() -> Rect2:
+            var size: Vector2 = text_size.call()
+            return Rect2(home + Vector2((label.size.x - size.x) * 0.5, 0.0), size),
+        func() -> bool: return label.visible and label.text != "",
+        func(to: Vector2) -> void:
+            var size: Vector2 = text_size.call()
+            label.position = to - Vector2((label.size.x - size.x) * 0.5, 0.0)
+    )
+
+
+## Glide the HUD out of the way of the riders, where they show on the screen.
+func _give_way(delta: float) -> void:
+    var riders: Array[Rect2] = []
+    for player in _players:
+        var at := (
+            player.rider.position
+            - player.center(map.size)
+            + player.rect.size * 0.5
+            + player.rect.position
+        )
+        riders.append(HudLayout.rider_rect(at))
+    _layout.update(riders, delta)
+
+
+## What keeps the HUD out of the riders' way, for the tests.
+func hud() -> HudLayout:
+    return _layout
 
 
 ## Put the control of the HUD at the rectangle, over the others (or at the
@@ -481,6 +568,12 @@ func _update_conversation(player: LevelPlayer, delta: float, gait: int) -> void:
     if player.talking != null:
         player.talk_time += delta
         if player.talk_time >= TALK_SECONDS and squats > player.talk_squats:
+            # NOTE (mristin):
+            # The squat turns the page of a long talk, and closes the last.
+            if player.conversation.next_page():
+                player.talk_time = 0.0
+                player.talk_squats = squats
+                return
             player.talked_to = player.talking
             player.talking = null
             player.conversation.close()
@@ -693,7 +786,7 @@ func _show_ok() -> void:
     # NOTE (mristin):
     # With two players, the button stands in the middle, where both reach it,
     # below their conversations and between their riders.
-    _ok.position = Vector2(380, 250) if _players.size() > 1 else Vector2(408, 148)
+    _ok.position = HALF_OK_AT if _players.size() > 1 else OK_AT
     _ok.pressed.connect(_leave)
     layer.add_child(_ok)
     var cursor := HandCursor.new()

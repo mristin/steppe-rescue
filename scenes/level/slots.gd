@@ -12,6 +12,14 @@ const _GAP := 6
 var animals: Array[Animal] = []
 
 
+## How big the strip of the slots is.
+func strip_size() -> Vector2:
+    var icon_size := Icons.SIZE * _SCALE
+    if animals.is_empty():
+        return Vector2.ZERO
+    return Vector2(animals.size() * (icon_size.x + _GAP) - _GAP + 8, icon_size.y + 6)
+
+
 func _process(_delta: float) -> void:
     queue_redraw()
 

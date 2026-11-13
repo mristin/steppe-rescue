@@ -4,13 +4,29 @@ extends Control
 ## Show what a person says: their portrait and name, and the lines, each with
 ## its pictures (the animals and the landmarks of a clue), so that a child who
 ## reads slowly still understands it.
+##
+## A long talk (e.g., Grandmother's, with all the people to ask) is split into
+## pages no higher than [member max_height], so that it never covers the
+## rider; dots at the bottom show the pages, and [method next_page] turns
+## them.
 
 ## The portrait is drawn this big, in pixels.
 const _PORTRAIT_SIDE := 64.0
 const _MARGIN := 8.0
 
+## The dots of the pages take this much room at the bottom.
+const _DOTS_HEIGHT := 8.0
+
+## The pages are at most this high, in pixels, with the margins.
+var max_height := 170.0
+
 var _portrait: Texture2D = null
 var _rows: VBoxContainer
+
+## The lines of each page (indices into the lines after the speaker), and
+## the page shown.
+var _pages: Array[Array] = []
+var _page := 0
 
 
 func _ready() -> void:
@@ -38,6 +54,11 @@ func open(portrait: Texture2D, speaker: String, lines: Array[Dictionary]) -> voi
 
     _rows.add_child(_label(speaker, width, Palette.CRIMSON_DARK))
     for line in lines:
+        # NOTE (mristin):
+        # The pictures and the text of a line stay together on a page.
+        var group := VBoxContainer.new()
+        group.mouse_filter = Control.MOUSE_FILTER_IGNORE
+        group.add_theme_constant_override("separation", 2)
         var icons: Array = line.get("icons", [])
         if not icons.is_empty():
             var row := HBoxContainer.new()
@@ -49,14 +70,33 @@ func open(portrait: Texture2D, speaker: String, lines: Array[Dictionary]) -> voi
                 picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
                 picture.custom_minimum_size = (icon[0] as Texture2D).get_size()
                 row.add_child(picture)
-            _rows.add_child(row)
+            group.add_child(row)
         var text: String = line.get("text", "")
         if text != "":
-            _rows.add_child(_label(text, width, Palette.OUTLINE))
+            group.add_child(_label(text, width, Palette.OUTLINE))
+        _rows.add_child(group)
 
     visible = true
-    _fit.call_deferred()
+    _paginate()
     queue_redraw()
+
+
+## How many pages the talk has.
+func pages() -> int:
+    return _pages.size()
+
+
+## The page shown, from 0.
+func page() -> int:
+    return _page
+
+
+## Show the next page; false if this is the last one.
+func next_page() -> bool:
+    if _page + 1 >= _pages.size():
+        return false
+    _show_page(_page + 1)
+    return true
 
 
 func close() -> void:
@@ -68,6 +108,9 @@ func _label(text: String, width: float, color: Color) -> Label:
     label.text = text
     label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     label.custom_minimum_size = Vector2(width, 0)
+    # NOTE (mristin):
+    # As wide as it will be, so that the pages know how high it wraps.
+    label.size = Vector2(width, 0)
     label.add_theme_color_override(
         "font_color", Palette.FELT if color == Palette.OUTLINE else Palette.GOLD
     )
@@ -77,10 +120,36 @@ func _label(text: String, width: float, color: Color) -> Label:
     return label
 
 
-## Make the panel as high as its lines, but at least as high as the portrait.
-func _fit() -> void:
+## Split the lines into pages no higher than [member max_height], and show
+## the first.
+func _paginate() -> void:
+    var separation := float(_rows.get_theme_constant("separation"))
+    var children := _rows.get_children()
+    var room := max_height - 2.0 * _MARGIN - _DOTS_HEIGHT
+    var speaker := (children[0] as Control).get_combined_minimum_size().y
+    _pages = [[]]
+    var used := speaker
+    for i in range(1, children.size()):
+        var high := (children[i] as Control).get_combined_minimum_size().y + separation
+        if used + high > room and not _pages[-1].is_empty():
+            _pages.append([])
+            used = speaker
+        _pages[-1].append(i)
+        used += high
+    _show_page(0)
+
+
+## Show the lines of the page, and make the panel as high as them, but at
+## least as high as the portrait.
+func _show_page(index: int) -> void:
+    _page = index
+    var children := _rows.get_children()
+    for i in range(1, children.size()):
+        (children[i] as Control).visible = i in _pages[index]
+    _rows.reset_size()
     var portrait := _PORTRAIT_SIDE + 2.0 * _MARGIN
-    size.y = maxf(portrait, _rows.get_combined_minimum_size().y + 2.0 * _MARGIN)
+    var dots := _DOTS_HEIGHT if _pages.size() > 1 else 0.0
+    size.y = maxf(portrait, _rows.get_combined_minimum_size().y + 2.0 * _MARGIN + dots)
     queue_redraw()
 
 
@@ -100,6 +169,17 @@ func _draw() -> void:
         draw_rect(Rect2(corner, Vector2(1, 5)), Palette.GOLD)
         draw_rect(Rect2(corner + Vector2(4, 0), Vector2(1, 5)), Palette.GOLD)
         draw_rect(Rect2(corner + Vector2(0, 4), Vector2(5, 1)), Palette.GOLD)
+
+    if _pages.size() > 1:
+        # NOTE (mristin):
+        # A dot for each page, the one shown golden, at the bottom right.
+        for i in range(_pages.size()):
+            var dot := Vector2(size.x - 14.0 - (_pages.size() - 1 - i) * 10.0, size.y - 10.0)
+            draw_rect(Rect2(dot - Vector2(3, 3), Vector2(6, 6)), Palette.OUTLINE)
+            draw_rect(
+                Rect2(dot - Vector2(2, 2), Vector2(4, 4)),
+                Palette.GOLD if i == _page else Palette.FELT
+            )
 
     if _portrait != null:
         var side := _PORTRAIT_SIDE

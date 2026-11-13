@@ -18,7 +18,8 @@ const DWELL_SECONDS := 3.0
 ## The hovered button grows by this many pixels on each side.
 const _GROW := 2.0
 
-## The text on the button, drawn in the pixel font.
+## The text on the button, drawn in the pixel font; a line break starts a
+## new line.
 @export var text := "":
     set(value):
         text = value
@@ -135,7 +136,8 @@ func _draw() -> void:
     draw_texture(Ornaments.panel(rect.size, style), rect.position)
 
     var font := get_theme_default_font()
-    var text_height := font.get_height(font_size) if text != "" else 0.0
+    var lines := text.split("\n")
+    var text_height := font.get_height(font_size) * lines.size() if text != "" else 0.0
     var content := text_height
     if picture != null:
         content += picture.get_height() + (2.0 if text != "" else 0.0)
@@ -161,15 +163,17 @@ func _draw() -> void:
     if text != "":
         var left := text_left if text_left > 0.0 else 4.0
         var width := rect.size.x - left - 4.0
-        draw_string(
-            font,
-            Vector2(rect.position.x + left, top + font.get_ascent(font_size)).round(),
-            text,
-            HORIZONTAL_ALIGNMENT_LEFT if text_left > 0.0 else HORIZONTAL_ALIGNMENT_CENTER,
-            width,
-            font_size,
-            Palette.FELT if primary and not selected else Palette.OUTLINE
-        )
+        for line in lines:
+            draw_string(
+                font,
+                Vector2(rect.position.x + left, top + font.get_ascent(font_size)).round(),
+                line,
+                HORIZONTAL_ALIGNMENT_LEFT if text_left > 0.0 else HORIZONTAL_ALIGNMENT_CENTER,
+                width,
+                font_size,
+                Palette.FELT if primary and not selected else Palette.OUTLINE
+            )
+            top += font.get_height(font_size)
 
     if progress > 0.0:
         # NOTE (mristin):

@@ -21,8 +21,12 @@ extends Control
 ## The most other journeys shown next to the last one.
 const OTHERS := 3
 
-const _CONTINUE := Rect2(36, 84, 260, 330)
-const _OTHER := Vector2(176, 236)
+const _CONTINUE := Rect2(36, 84, 260, 300)
+const _OTHER := Vector2(176, 206)
+
+## The name of the journey and its riders under each card wrap onto up to
+## this many lines, so that the longest names fit.
+const _NAME_LINES := 4
 const _OTHERS_LEFT := 330.0
 const _OTHERS_TOP := 178.0
 
@@ -74,7 +78,7 @@ func _ready() -> void:
         _continue.picture = _picture(_sessions[0])
         _continue.pressed.connect(func() -> void: choose(0))
         _names.append(
-            _label(Rect2(_CONTINUE.position.x, _CONTINUE.end.y + 6, _CONTINUE.size.x, 20))
+            _name_label(Rect2(_CONTINUE.position.x, _CONTINUE.end.y + 6, _CONTINUE.size.x, 0))
         )
 
     for i in range(1, mini(_sessions.size(), OTHERS + 1)):
@@ -83,7 +87,7 @@ func _ready() -> void:
         card.picture = _picture(_sessions[i])
         card.pressed.connect(func() -> void: choose(i))
         _others.append(card)
-        _names.append(_label(Rect2(rect.position.x, rect.end.y + 6, rect.size.x, 20)))
+        _names.append(_name_label(Rect2(rect.position.x, rect.end.y + 6, rect.size.x, 0)))
 
     _new = _button(Rect2(_OTHERS_LEFT, 84, 3 * _OTHER.x + 24.0, 72))
     _new.font_size = 32
@@ -265,11 +269,10 @@ func _update_texts() -> void:
         var card: DwellButton = _continue if i == 0 else _others[i - 1]
         if i == 0:
             # TRANSLATORS: The button which goes on with the last journey.
-            card.text = tr("Continue")
-            _names[i].text = "%s · %s ★%d" % [session["name"], rider, session["stars"]]
+            card.text = "%s ★%d" % [tr("Continue"), session["stars"]]
         else:
-            card.text = "%s ★%d" % [rider, session["stars"]]
-            _names[i].text = session["name"]
+            card.text = "★%d" % session["stars"]
+        _names[i].text = "%s\n%s" % [session["name"], rider]
     # TRANSLATORS: The button which starts a new journey (a new saved game).
     _new.text = tr("+ New journey")
     # TRANSLATORS: The button which opens the creator for the rider of the current journey.
@@ -349,6 +352,18 @@ func _label(rect: Rect2, font_size := 16) -> Label:
     label.add_theme_color_override("font_outline_color", Palette.OUTLINE)
     label.add_theme_constant_override("outline_size", 6)
     add_child(label)
+    return label
+
+
+## A label of the name of a journey and its riders under its card, which
+## wraps onto up to [constant _NAME_LINES] lines.
+func _name_label(rect: Rect2) -> Label:
+    var label := _label(rect)
+    label.clip_text = false
+    label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
+    label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    label.max_lines_visible = _NAME_LINES
+    label.size = Vector2(rect.size.x, 0)
     return label
 
 

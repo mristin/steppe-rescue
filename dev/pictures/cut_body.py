@@ -8,8 +8,6 @@ the prompts there): the pieces on a flat magenta background, with black dots.
 Each piece is keyed out, the dots removed, and it is brought into the canvas
 of its template, where the game expects its joints (see CameraPanel):
 
-* fist: the left fist, with the rein through it on the line of the two dots
-  (100, 512) and (924, 512) of the 1024x1024 canvas;
 * rein: the strap, cropped to its braid without the cut ends;
 * coat: the shoulders at y = 300, 400 pixels apart (312..712), the hem at
   y = 1150, in 1024x1536;
@@ -18,7 +16,9 @@ of its template, where the game expects its joints (see CameraPanel):
 * boot: the top of the leg at y = 300 (the knee), the sole at y = 1300,
   around x = 512, in 1024x1536.
 
-The dots of the fists and the rein stayed where they were, but those of the
+The fists are cut by cut_fists.py.
+
+The dots of the rein stayed where they were, but those of the
 coats, the sleeves and the boots moved, so these are placed by their outline.
 
 ChatGPT painted every coat and sleeve indigo, so they are recolored to the
@@ -39,7 +39,6 @@ OUT = REPO / "assets" / "pictures" / "body"
 SCALE = 0.5
 
 # The paintings, by their names in the download folder.
-FIST = "Watercolor Fist Gripping Braided Rein.png"
 REIN = "Braided Leather Strap with Golden Rings.png"
 COATS = [
     "a_detailed_illustration_on_a_bright_magenta_backgr.png",
@@ -146,13 +145,6 @@ def opaque_rows(alpha):
 def extent(alpha, y):
     cols = np.where(alpha[int(y)] > 128)[0]
     return cols[0], cols[-1]
-
-
-def fist(rgb):
-    rgba = key(rgb)
-    centers = sorted(dots(rgb)[:2], key=lambda c: c[0])
-    matrix = similarity(centers, [(100, 512), (924, 512)])
-    return warp(rgba, matrix, (1024, 1024))
 
 
 def rein(rgb):
@@ -278,7 +270,6 @@ def main():
     def read(name):
         return np.array(Image.open(folder / name).convert("RGB"))
 
-    save(fist(read(FIST)), "fist.png")
     save(rein(read(REIN)), "rein.png")
     for i, (preset, color) in enumerate(COAT_COLORS.items()):
         save(recolor(coat(read(COATS[i])), color), f"coat_{preset}.png")

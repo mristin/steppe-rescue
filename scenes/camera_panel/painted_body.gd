@@ -36,6 +36,22 @@ const SLEEVE_THICKNESS := 92.0
 ## from here on, so that it does not show on the shoulder.
 const SLEEVE_TRIM_X := 135.0
 
+## The sleeve begins round, as the shoulder does: over its first
+## [constant SLEEVE_DOME] pixels of its painting (from the fur cuff on), it
+## swells along a half ellipse from a point to its full thickness, in
+## [constant SLEEVE_DOME_STEPS] pieces, so that its outline goes round the
+## shoulder instead of ending square above it; the ellipse is
+## [constant SLEEVE_DOME_DEPTH] as deep as it is wide, so that the shoulder
+## does not rise like a puff.
+const SLEEVE_DOME := 80.0
+const SLEEVE_DOME_STEPS := 8
+const SLEEVE_DOME_DEPTH := 0.5
+
+## This share of the upper arm, from the shoulder, is drawn under the coat,
+## so that the armhole of the coat lies over the sleeve; the rest is drawn
+## over the coat, so that an arm reaching across the body stays in front.
+const SLEEVE_UNDER := 0.35
+
 ## The arm is this share of the shoulders thick.
 const SLEEVE_SHARE := 0.28
 
@@ -45,27 +61,41 @@ const SLEEVE_SHARE := 0.28
 const SLEEVE_BAND := 90.0
 const SLEEVE_STEPS := 24
 
-## The sleeve fades in over this many pixels of its painting from where it
-## starts, so that its start has no edge where the coat does not cover it.
-const SLEEVE_FADE := 60.0
-
-## The sleeve starts this share of the way from the shoulder to the neck, so
-## that the arm comes out from under the coat.
+## The middle of the round of the shoulder lies this share of the way from
+## the shoulder to the neck, so that the arm comes out from under the coat...
 const SLEEVE_TUCK := 0.12
+
+## ... and this share of the shoulders below it: the shoulder of the vision is
+## the top of the arm, not its middle, so that a raised arm does not stick out
+## above the shoulder.
+const SLEEVE_DROP := 0.1
 
 ## The boot, around x = [constant BOOT_X]: the knee and the ankle.
 const BOOT_X := 256.0
 const BOOT_KNEE_Y := 150.0
 const BOOT_ANKLE_Y := 575.0
 
-## The left fist, with the rein through its middle along y.
+## The left fists ("fist_low", "fist_middle", "fist_up"; see
+## dev/pictures/cut_fists.py), each with the rein through its middle along y:
+## low with the wrist above the fist (the arm hangs), middle holding the reins
+## in front of the chest (the forearm towards us), up with the wrist below the
+## fist (the arm raised).
 const FIST_CENTER := Vector2(256, 256)
 
-## The fist is this share of the shoulders wide, over this many pixels of
-## its painting; only the fist is drawn, [constant FIST_WIDTH] wide around
-## [constant FIST_CENTER], without the stubs of the rein.
+## Where the wrist of each fist points from [constant FIST_CENTER] in its
+## painting (none for the middle fist, whose forearm comes towards us).
+const FIST_WRISTS := {"low": Vector2.UP, "up": Vector2.DOWN}
+
+## The middle fist is this share of the shoulders wide, over this many pixels
+## of its painting; the others are painted to the same scale.
 const FIST_SHARE := 0.34
 const FIST_WIDTH := 180.0
+
+## The fist is raised (up) while the hand is this share of the shoulders
+## above them, and hangs (low) while the forearm points down at least this
+## much (the sine of its angle below the level).
+const FIST_RAISED := 0.25
+const FIST_HANGING := 0.5
 
 ## The rein is this share of the shoulders thick.
 const REIN_SHARE := 0.07
@@ -76,7 +106,7 @@ const REIN_SAG := 0.3
 static var _textures := {}
 
 
-## The painting of the piece ("coat_1", "fist", ...), or null.
+## The painting of the piece ("coat_1", "fist_middle", ...), or null.
 static func texture(piece: String) -> Texture2D:
     if not _textures.has(piece):
         var path := DIR + piece + ".png"
@@ -141,8 +171,9 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
 
     # NOTE (mristin):
     # Each arm comes out of the armhole: its sleeve starts a little inside the
-    # shoulder, and its upper half is drawn under the coat; the lower half is
-    # drawn over it, since the forearms hold the reins in front of the body.
+    # shoulder, and its start is drawn under the coat (see
+    # [constant SLEEVE_UNDER]); the rest is drawn over it, since the arms
+    # reach in front of the body to hold and pull the reins.
     var sleeve := texture("sleeve_" + preset)
     var thickness := width * SLEEVE_SHARE / SLEEVE_THICKNESS
     var strips: Array = []
@@ -153,10 +184,14 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
         var elbow: Variant = joints[arm[1]]
         if sleeve == null or elbow == null:
             continue
-        var start: Vector2 = (arm[0] as Vector2).lerp(neck, SLEEVE_TUCK)
-        strips.append(_sleeve_strip(start, elbow, joints[arm[2]]))
+        var start: Vector2 = (
+            (arm[0] as Vector2).lerp(neck, SLEEVE_TUCK) + down * width * SLEEVE_DROP
+        )
+        if start.distance_to(elbow) < 1.0:
+            continue
+        strips.append(_sleeve_strip(start, elbow, joints[arm[2]], thickness))
     for strip in strips:
-        var cut: int = strip[2]
+        var cut: int = strip[3]
         _draw_strip(
             canvas,
             sleeve,
@@ -166,8 +201,7 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
             SLEEVE_BAND,
             thickness,
             color,
-            SLEEVE_TRIM_X,
-            SLEEVE_FADE
+            (strip[2] as PackedFloat32Array).slice(0, cut + 1)
         )
 
     var coat := texture("coat_" + preset)
@@ -178,7 +212,7 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
         _draw(canvas, coat, Transform2D(x_axis, y_axis, origin), color)
 
     for strip in strips:
-        var cut: int = strip[2]
+        var cut: int = strip[3]
         _draw_strip(
             canvas,
             sleeve,
@@ -188,23 +222,41 @@ static func draw_body(canvas: CanvasItem, joints: Array, looks: Dictionary, alph
             SLEEVE_BAND,
             thickness,
             color,
-            SLEEVE_TRIM_X,
-            SLEEVE_FADE
+            (strip[2] as PackedFloat32Array).slice(cut)
         )
 
 
 ## The sleeve from the shoulder over the elbow to the hand (or only to the
 ## elbow without the hand) as one strip along a smooth curve, so that it bends
-## softly at the elbow instead of breaking there: [points, the columns of the
-## painting at them, the index of the point where the upper arm ends].
-static func _sleeve_strip(shoulder: Vector2, elbow: Vector2, hand: Variant) -> Array:
+## softly at the elbow instead of breaking there, and begins with the round of
+## the shoulder (see [constant SLEEVE_DOME]) around [param shoulder]; the
+## painting is [param scale] times its size: [points, the columns of the
+## painting at them, how thick the sleeve is at them (a share of its
+## thickness), the index of the point up to which it lies under the coat].
+static func _sleeve_strip(shoulder: Vector2, elbow: Vector2, hand: Variant, scale: float) -> Array:
     var points := PackedVector2Array()
     var us := PackedFloat32Array()
+    var widths := PackedFloat32Array()
+
+    # NOTE (mristin):
+    # The round of the shoulder: from a point behind the shoulder, towards the
+    # elbow, as wide as a half ellipse, the steps denser at the point.
+    var radius := SLEEVE_DOME * scale
+    var toward := (elbow - shoulder).normalized()
+    for i in range(SLEEVE_DOME_STEPS):
+        var angle := PI * 0.5 * i / SLEEVE_DOME_STEPS
+        var behind := cos(angle)
+        points.append(shoulder - toward * radius * SLEEVE_DOME_DEPTH * behind)
+        us.append(SLEEVE_TRIM_X + SLEEVE_DOME * (1.0 - behind))
+        widths.append(sin(angle))
+    var from := SLEEVE_TRIM_X + SLEEVE_DOME
+
+    var arm := PackedVector2Array()
     if hand == null:
         for i in range(SLEEVE_STEPS + 1):
             var t := float(i) / SLEEVE_STEPS
-            points.append(shoulder.lerp(elbow, t))
-            us.append(lerpf(SLEEVE_TRIM_X, SLEEVE_ELBOW_X, t))
+            arm.append(shoulder.lerp(elbow, t))
+            us.append(lerpf(from, SLEEVE_ELBOW_X, t))
     else:
         # NOTE (mristin):
         # The quadratic curve from the shoulder to the hand which passes
@@ -217,25 +269,30 @@ static func _sleeve_strip(shoulder: Vector2, elbow: Vector2, hand: Variant) -> A
             var t := float(i) / SLEEVE_STEPS
             var point := shoulder.lerp(control, t).lerp(control.lerp(end, t), t)
             if i > 0:
-                lengths.append(lengths[i - 1] + point.distance_to(points[i - 1]))
-            points.append(point)
+                lengths.append(lengths[i - 1] + point.distance_to(arm[i - 1]))
+            arm.append(point)
         var half := SLEEVE_STEPS / 2
         var to_elbow := maxf(lengths[half], 1e-3)
         var from_elbow := maxf(lengths[SLEEVE_STEPS] - lengths[half], 1e-3)
         for i in range(SLEEVE_STEPS + 1):
             if i <= half:
-                us.append(lerpf(SLEEVE_TRIM_X, SLEEVE_ELBOW_X, lengths[i] / to_elbow))
+                us.append(lerpf(from, SLEEVE_ELBOW_X, lengths[i] / to_elbow))
             else:
                 us.append(
                     lerpf(SLEEVE_ELBOW_X, SLEEVE_END_X, (lengths[i] - lengths[half]) / from_elbow)
                 )
-    return [points, us, SLEEVE_STEPS / 2 if hand != null else SLEEVE_STEPS]
+    points.append_array(arm)
+    for i in range(arm.size()):
+        widths.append(1.0)
+    var upper := SLEEVE_STEPS / 2 if hand != null else SLEEVE_STEPS
+    return [points, us, widths, SLEEVE_DOME_STEPS + roundi(upper * SLEEVE_UNDER)]
 
 
 ## Draw the band of the [param painting] around its row [param middle] (from
 ## [param band] above to [param band] below it, in its pixels) along the
 ## [param points], each at the column [param us] of the painting, scaled by
-## [param scale] across.
+## [param scale] across, and by the [param widths] at each point (all 1 if
+## empty).
 static func _draw_strip(
     canvas: CanvasItem,
     painting: Texture2D,
@@ -245,8 +302,7 @@ static func _draw_strip(
     band: float,
     scale: float,
     color: Color,
-    fade_from := -INF,
-    fade_length := 1.0
+    widths := PackedFloat32Array()
 ) -> void:
     var size := painting.get_size()
     var top := (middle - band) / size.y
@@ -255,14 +311,12 @@ static func _draw_strip(
     for i in range(points.size()):
         var before := points[maxi(0, i - 1)]
         var after := points[mini(points.size() - 1, i + 1)]
-        normals.append((after - before).orthogonal().normalized() * band * scale)
-    var faded := PackedColorArray()
-    for u in us:
-        faded.append(Color(color, color.a * clampf((u - fade_from) / fade_length, 0.0, 1.0)))
+        var wide := widths[i] if i < widths.size() else 1.0
+        normals.append((after - before).orthogonal().normalized() * band * scale * wide)
+    var colors := PackedColorArray([color, color, color, color])
     for i in range(points.size() - 1):
         var u0 := us[i] / size.x
         var u1 := us[i + 1] / size.x
-        var colors := PackedColorArray([faded[i], faded[i + 1], faded[i + 1], faded[i]])
         canvas.draw_primitive(
             PackedVector2Array(
                 [
@@ -281,15 +335,17 @@ static func _draw_strip(
 
 
 ## Draw the rein between the fists (each null if not seen), sagging unless
-## [param pull] in [0, 1] pulls it straight, and a fist on each hand, turned
-## along the rein; the right fist is the left one mirrored. [param width] is
-## the width of the shoulders. Return whether the paintings were there.
+## [param pull] in [0, 1] pulls it straight, and a fist on each hand; the
+## right fist is the left one mirrored. [param width] is the width of the
+## shoulders. With the [param joints] of the body (see [method draw_body]),
+## each fist shows as high as the hand is (see [method fist_pose]), its wrist
+## turned to the elbow; else, and in the middle, it is turned along the rein.
+## Return whether the paintings were there.
 static func draw_hands(
-    canvas: CanvasItem, left: Variant, right: Variant, width: float, pull: float
+    canvas: CanvasItem, left: Variant, right: Variant, width: float, pull: float, joints := []
 ) -> bool:
-    var fist := texture("fist")
     var rein := texture("rein")
-    if fist == null or rein == null:
+    if rein == null or texture("fist_middle") == null:
         return false
     if left != null and right != null:
         _draw_rein(canvas, rein, left, right, width, pull)
@@ -299,17 +355,47 @@ static func draw_hands(
         if hand == null:
             continue
         var other: Variant = right if side == 0 else left
+        var elbow: Variant = null
+        var shoulder: Variant = null
+        if joints.size() == CameraPanel.Joint.size():
+            elbow = joints[
+                CameraPanel.Joint.LEFT_ELBOW if side == 0 else CameraPanel.Joint.RIGHT_ELBOW
+            ]
+            shoulder = joints[
+                CameraPanel.Joint.LEFT_SHOULDER if side == 0 else CameraPanel.Joint.RIGHT_SHOULDER
+            ]
+        var pose := fist_pose(hand, elbow, shoulder, width)
+        var fist := texture("fist_" + pose)
+        if fist == null:
+            fist = texture("fist_middle")
+            pose = "middle"
         var angle := 0.0
-        if other != null:
+        if FIST_WRISTS.has(pose):
+            angle = ((elbow as Vector2) - hand).angle() - (FIST_WRISTS[pose] as Vector2).angle()
+        elif other != null:
             var toward: Vector2 = (other as Vector2) - hand
             angle = toward.angle() if side == 0 else (-toward).angle()
         var flip := 1.0 if side == 0 else -1.0
         var transform := Transform2D(angle, Vector2(scale * flip, scale), 0.0, hand)
-        var region := Rect2(FIST_CENTER.x - FIST_WIDTH * 0.5, 0.0, FIST_WIDTH, fist.get_height())
         canvas.draw_set_transform_matrix(transform * Transform2D(0.0, -FIST_CENTER))
-        canvas.draw_texture_rect_region(fist, region, region)
+        canvas.draw_texture(fist, Vector2.ZERO)
         canvas.draw_set_transform_matrix(Transform2D.IDENTITY)
     return true
+
+
+## Which fist shows on the hand ("low", "middle" or "up"), by where it is
+## from the elbow and the shoulder of its arm (null if not seen), with the
+## shoulders [param width] apart: up above the shoulders, low while the
+## forearm hangs, else in the middle.
+static func fist_pose(hand: Vector2, elbow: Variant, shoulder: Variant, width: float) -> String:
+    if elbow == null:
+        return "middle"
+    if shoulder != null and hand.y < (shoulder as Vector2).y - width * FIST_RAISED:
+        return "up"
+    var forearm := hand - (elbow as Vector2)
+    if forearm.length() > 1e-3 and forearm.normalized().y > FIST_HANGING:
+        return "low"
+    return "middle"
 
 
 static func _draw_rein(

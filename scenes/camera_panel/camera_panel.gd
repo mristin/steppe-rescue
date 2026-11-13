@@ -419,7 +419,11 @@ func _draw_fists(index: int, dressed: Dictionary) -> void:
         at.append(null if hand == null else (hand as Vector2) * size)
     var across: Vector2 = _service.GetHandsAcross(index)
     var pull := clampf(maxf(across.x, across.y), 0.0, 1.0)
-    if PaintedBody.draw_hands(self, at[0], at[1], unit, pull):
+    var joints: Array = []
+    var body: Dictionary = _service.GetBody(index)
+    for joint in body["joints"]:
+        joints.append(null if joint == null else (joint as Vector2) * size)
+    if PaintedBody.draw_hands(self, at[0], at[1], unit, pull, joints):
         return
 
     var radius := maxf(3.0, unit * 0.11)

@@ -32,6 +32,32 @@ func _process(delta: float) -> void:
     queue_redraw()
 
 
+## Listen at the point of the level, where the rider is: she hears every
+## lost animal near her which she does not see, and every follower which lags
+## far behind and calls out (see [member Animal.lagging]), each with its own
+## picture at the edge of the screen, in its direction, like a compass (see
+## section 4 of DESIGN.md).
+func listen(animals: Array[Animal], at: Vector2) -> void:
+    heard.clear()
+    rider_at = at
+    for animal in animals:
+        var calling := animal.state == Animal.State.FOLLOWING and animal.lagging
+        if not animal.is_lost() and not calling:
+            continue
+        var distance := animal.position.distance_to(at)
+        if distance < RADIUS and not on_screen(animal.position):
+            (
+                heard
+                . append(
+                    {
+                        "id": animal.kind.id,
+                        "at": animal.position,
+                        "closeness": 1.0 - distance / RADIUS,
+                    }
+                )
+            )
+
+
 ## Whether the point of the level is on the screen.
 func on_screen(at: Vector2) -> bool:
     var screen := view * at

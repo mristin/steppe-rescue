@@ -141,7 +141,7 @@ func update(riders: Array[Rect2], delta: float) -> void:
 
 ## The spots where the piece may stand, the nearest to its home first: its
 ## home, its home mirrored across its part of the screen, the spots of a grid
-## over that part (at its edges, its quarters and its middle), and the spots
+## over that part (at its edges and its eighths), and the spots
 ## right next to each of the [param obstacles].
 func _spots(each: Piece, home: Rect2, obstacles: Array[Rect2]) -> Array[Vector2]:
     var inner := each.bounds.grow(-MARGIN)
@@ -149,7 +149,10 @@ func _spots(each: Piece, home: Rect2, obstacles: Array[Rect2]) -> Array[Vector2]
     var mirrored := each.bounds.position + each.bounds.end - home.end
     var xs := [home.position.x, mirrored.x]
     var ys := [home.position.y, mirrored.y]
-    for fraction in [0.0, 0.25, 0.5, 0.75, 1.0]:
+    # NOTE (mristin):
+    # Eighths, so that a long piece (e.g., the missing animals) finds the gap
+    # between two conversations.
+    for fraction in [0.0, 0.125, 0.25, 0.375, 0.5, 0.625, 0.75, 0.875, 1.0]:
         xs.append(inner.position.x + (inner.size.x - size.x) * fraction)
         ys.append(inner.position.y + (inner.size.y - size.y) * fraction)
     for obstacle in obstacles:

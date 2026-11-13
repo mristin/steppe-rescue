@@ -34,9 +34,9 @@ const _ON_HORSE := [
 ]
 
 ## Where the pieces go on the painted riders, who all stand alike, facing the
-## viewer. The coat shows only on its card and in the camera picture; the
-## earrings only in the camera picture, since the painted girls wear their
-## own.
+## viewer. The coat is painted on the rider herself (see [method
+## Painting.dressed_rider]); the earrings show only in the camera picture,
+## since the painted girls wear their own.
 const _ON_RIDER := [
     ["boots", 0.5, 0.925, 0.58],
     ["belt", 0.5, 0.45, 0.46],
@@ -245,17 +245,26 @@ static func draw_home(item: CanvasItem, profile: Node, spotlight := false, playe
             item.draw_texture_rect(
                 Painting.fitted(Finery.PICTURES % [piece, 1], at.size), at, false
             )
-    var looks: Dictionary = profile.rider(player).dressed()
+    draw_pair(item, profile.rider(player).dressed(), _RIDER_FEET, _HORSE_GROUND)
+
+
+## Draw the painted rider of the looks standing in front of her painted horse,
+## both in the finery she wears: her feet at [param rider_feet], the hooves of
+## the horse at [param horse_ground], at [param scale] of their size at home
+## (e.g., smaller in the level select).
+static func draw_pair(
+    item: CanvasItem, looks: Dictionary, rider_feet: Vector2, horse_ground: Vector2, scale := 1.0
+) -> void:
     var horse := Painting.horse(looks.get("steed", "1"))
-    var horse_shown := horse.get_size() * 0.8
+    var horse_shown := horse.get_size() * 0.8 * scale
     var horse_rect := Rect2(
-        (_HORSE_GROUND - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown
+        (horse_ground - Vector2(horse_shown.x * 0.5, horse_shown.y)).round(), horse_shown
     )
     item.draw_texture_rect(horse, horse_rect, false)
     dress(item, horse_rect, looks, "horse")
-    var rider := Painting.rider(looks.get("rider", "1"))
-    var shown := rider.get_size() * 0.7
-    var rider_rect := Rect2((_RIDER_FEET - Vector2(shown.x * 0.5, shown.y)).round(), shown)
+    var rider := Painting.dressed_rider(looks)
+    var shown := rider.get_size() * 0.7 * scale
+    var rider_rect := Rect2((rider_feet - Vector2(shown.x * 0.5, shown.y)).round(), shown)
     item.draw_texture_rect(rider, rider_rect, false)
     dress(item, rider_rect, looks, "rider")
 

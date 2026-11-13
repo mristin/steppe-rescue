@@ -49,6 +49,16 @@ const EDGE_SECONDS := 2.5
 ## this long, in seconds.
 const STILL_SECONDS := 3.0
 
+## A follower which lags this far behind its place behind the rider (e.g.,
+## a slow sheep behind a gallop) calls out to her, in pixels...
+const CALL_DISTANCE := 120.0
+
+## ... every this many seconds, while it lags (see section 4 of DESIGN.md).
+const CALL_EVERY := 2.5
+
+## The pitch of the call of each kind of animal.
+const _CALL_PITCH := {"camel": 0.7, "horse": 1.0, "sheep": 1.25, "lamb": 1.45}
+
 ## The animals run into the pen when the rider is this close to its gate.
 const GATE_DISTANCE := 60.0
 
@@ -505,8 +515,14 @@ func _ride(player: LevelPlayer, delta: float) -> void:
             rider.jump()
     var speed: float = 0.0 if standing else player.needs.cap(_service.GetSpeed(player.index))
     rider.ride(delta, speed, 0.0 if standing else _service.GetTurn(player.index))
+    # NOTE (mristin):
+    # The horse drinks and grazes only while it stands, by its own speed (e.g.,
+    # in the air it flies on, whatever the player does).
     player.needs.update(
-        delta, speed, map.at_fresh_water(rider.position), map.on_pasture(rider.position)
+        delta,
+        rider.speed / Rider.MAX_SPEED,
+        map.at_fresh_water(rider.position),
+        map.on_pasture(rider.position)
     )
     player.speed_bar.speed = speed
     if rider.speed > 0.0:
@@ -524,6 +540,7 @@ func _ride(player: LevelPlayer, delta: float) -> void:
         player.trail.append(rider.position)
         if player.trail.size() > 1500:
             player.trail = player.trail.slice(500)
+            player.trail_start += 500
 
 
 ## How many stars the ride earned so far: three within the par time of the
@@ -712,7 +729,18 @@ func _update_animals(delta: float) -> void:
             Animal.State.LOST:
                 _update_lost(animal, delta)
             Animal.State.ENTERING:
-                if animal.walk_to(animal.spot, animal.kind.speed, delta) < 2.0:
+                # NOTE (mristin):
+                # A follower who lags behind walks the rest of the trail of
+                # its rider first, around the water, then into the pen.
+                if not animal.path.is_empty():
+                    var passed := animal.walk_along(animal.path, animal.kind.speed, delta)
+                    animal.path = animal.path.slice(passed)
+                    if (
+                        animal.path.size() <= 1
+                        and animal.position.distance_to(animal.path[0]) < 2.0
+                    ):
+                        animal.path = PackedVector2Array()
+                elif animal.walk_to(animal.spot, animal.kind.speed, delta) < 2.0:
                     animal.state = Animal.State.HOME
             Animal.State.HOME:
                 animal.graze(delta)
@@ -720,15 +748,41 @@ func _update_animals(delta: float) -> void:
     var home := map.home()
     for player in _players:
         for i in range(player.followers.size()):
+            # NOTE (mristin):
+            # The followers walk along the trail of the rider, point by point,
+            # so that one who lags behind goes around the water as she did,
+            # instead of straight across it.
             var animal := player.followers[i]
-            animal.walk_to(player.trail_point(FOLLOW_SPACING * (i + 1)), animal.kind.speed, delta)
+            var behind := FOLLOW_SPACING * (i + 1)
+            var way := player.trail_way(
+                animal.crumb + 1, player.trail_index(behind), 16, player.trail_point(behind)
+            )
+            var passed := animal.walk_along(way, animal.kind.speed, delta)
+            animal.crumb = maxi(animal.crumb, player.trail_start - 1) + passed
+            # NOTE (mristin):
+            # A follower which fell far behind calls out, and keeps calling
+            # until it caught up; it never gets lost.
+            animal.lagging = (
+                animal.position.distance_to(player.trail_point(behind)) > CALL_DISTANCE
+            )
+            if not animal.lagging:
+                animal.call_wait = 0.0
+                continue
+            animal.call_wait -= delta
+            if animal.call_wait <= 0.0:
+                animal.call_wait = CALL_EVERY
+                animal.call_out()
+                get_node("/root/Sounds").play("call", _CALL_PITCH.get(animal.kind.id, 1.0))
         if (
             not player.followers.is_empty()
             and player.rider.position.distance_to(home.gate()) < GATE_DISTANCE
         ):
             var pen := home.pen().grow(-12.0)
+            var end := player.trail_start + player.trail.size()
             for animal in player.followers:
                 animal.state = Animal.State.ENTERING
+                animal.lagging = false
+                animal.path = player.trail_way(animal.crumb + 1, end - 1, end, home.gate())
                 var spot := pen.position + Vector2(randf(), randf()) * pen.size
                 animal.settle(spot.round(), 10.0)
             player.followers.clear()
@@ -757,6 +811,7 @@ func _update_lost(animal: Animal, delta: float) -> void:
         animal.near_time += delta
         if animal.near_time >= Animal.JOIN_SECONDS:
             animal.state = Animal.State.FOLLOWING
+            animal.crumb = nearest.nearest_on_trail(animal.position)
             animal.heart_time = Animal.HEART_SECONDS
             get_node("/root/Sounds").play("chime")
             nearest.followers.append(animal)
@@ -840,28 +895,7 @@ func _update_hud() -> void:
 
 func _update_player_hud(player: LevelPlayer) -> void:
     var at := player.rider.position
-    # NOTE (mristin):
-    # She hears every lost animal near her which she does not see, each with
-    # its own picture at the edge of the screen, in its direction, like a
-    # compass (see section 4 of DESIGN.md).
-    var heard: Array[Dictionary] = []
-    for animal in animals:
-        if not animal.is_lost():
-            continue
-        var distance := animal.position.distance_to(at)
-        if distance < Hearing.RADIUS and not player.hearing.on_screen(animal.position):
-            (
-                heard
-                . append(
-                    {
-                        "id": animal.kind.id,
-                        "at": animal.position,
-                        "closeness": 1.0 - distance / Hearing.RADIUS,
-                    }
-                )
-            )
-    player.hearing.heard = heard
-    player.hearing.rider_at = at
+    player.hearing.listen(animals, at)
 
     var map_view := player.map_view
     map_view.rider_at = at

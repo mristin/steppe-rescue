@@ -21,6 +21,12 @@ const ROW_STEP := 44.0
 ## The list starts here.
 const LIST := Vector2(16, 16)
 
+## The riders of the journey with their horses stand at this share of their
+## size at home (see [method Reward.draw_pair]), this far apart with two
+## players.
+const PAIR_SCALE := 0.3
+const PAIR_APART := 96.0
+
 ## The name in a row starts this far from its left, after the number.
 const _TEXT_LEFT := 40.0
 
@@ -122,10 +128,21 @@ func _update_texts() -> void:
 func _draw() -> void:
     draw_texture(SteppeMap.texture(_paths.size()), Vector2.ZERO)
 
-    var rider := Painting.texture("res://assets/pictures/instruction/rider_on_horse.png")
-    var shown := rider.get_size() * 0.32
-    var feet := SteppeMap.AUL + Vector2(220, 50)
-    draw_texture_rect(rider, Rect2((feet - Vector2(shown.x * 0.5, shown.y)).round(), shown), false)
+    # NOTE (mristin):
+    # The riders of the journey stand next to the aul with their horses,
+    # dressed in the finery they wear (see section 8 of DESIGN.md), side by
+    # side with two players.
+    var profile := get_node("/root/Profile")
+    var count: int = clampi(profile.players, 1, 2)
+    for i in range(count):
+        var feet := SteppeMap.AUL + Vector2(220.0 + (i - (count - 1) * 0.5) * PAIR_APART, 50.0)
+        Reward.draw_pair(
+            self,
+            profile.rider(i).dressed(),
+            feet + Vector2(-100, 6) * PAIR_SCALE,
+            feet + Vector2(40, -14) * PAIR_SCALE,
+            PAIR_SCALE
+        )
 
     # NOTE (mristin):
     # The ring around the spot of the row pointed at, pulsing, under the spots.

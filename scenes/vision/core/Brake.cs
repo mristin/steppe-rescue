@@ -101,9 +101,10 @@ namespace SteppeRescue.Vision
             Pulled = pulled;
         }
 
-        /// <summary>Forget everything.</summary>
+        /// <summary>Forget everything, also how many times the player braked.</summary>
         public void Reset()
         {
+            Count = 0;
             Pulled = false;
             _upSince = double.NaN;
             _lastUp = double.NaN;

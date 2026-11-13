@@ -19,8 +19,8 @@ const _TROT_SPEED := 0.6
 ## The water and the food empty this much faster at a gallop.
 const _GALLOP_FACTOR := 1.5
 
-## The speed from which the horse gallops, in [0, 1].
-const _GALLOP_SPEED := 0.8
+## The speed from which the horse gallops, in [0, 1] (as SquatMeter.GallopFrom).
+const _GALLOP_SPEED := 0.72
 
 ## The food empties slower than the water, so that the two bars do not run
 ## low at the same time.
@@ -39,8 +39,9 @@ const LOW := 0.25
 ## An empty bar caps the speed of the horse (in [0, 1]) to a slow walk.
 const TIRED_SPEED := 0.2
 
-## Below this speed (in [0, 1]) the horse stands, and can drink and graze.
-const STANDING_SPEED := 0.05
+## Below this speed (in [0, 1]) the horse stands (as below SquatMeter.WalkFrom),
+## and can drink and graze.
+const STANDING_SPEED := 0.04
 
 ## The water, in [0, 1]: 1 is full.
 var water := 1.0

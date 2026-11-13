@@ -100,7 +100,7 @@ func _ready() -> void:
     music.call_deferred(true)
 
 
-## Play the sound: "click", "chime", "tune", "hoof" or "stamp"; the pitch
+## Play the sound: "click", "chime", "call", "tune", "hoof" or "stamp"; the pitch
 ## shifts it a little, e.g., for the hooves at a gallop.
 func play(sound: String, pitch := 1.0, volume_db := 0.0) -> void:
     if not enabled:
@@ -162,6 +162,8 @@ func _stream(sound: String) -> AudioStreamWAV:
                 samples = _pluck(_SCALE[7], 0.18, 0.5)
             "chime":
                 samples = _phrase([[5, 0.35], [7, 0.35], [9, 0.8]], 0.16, 0.6)
+            "call":
+                samples = _phrase([[4, 0.5], [2, 0.7]], 0.2, 0.5)
             "tune":
                 samples = _phrase(_TUNE, 0.28, 0.8)
             "music":

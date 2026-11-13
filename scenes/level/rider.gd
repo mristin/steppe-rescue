@@ -63,6 +63,10 @@ const SPLASH_SECONDS := 0.7
 ## The horse makes a stride every this many pixels.
 const _STRIDE := 14.0
 
+## A horse this close to a creek (beyond its radius) stands at its bank, in
+## pixels.
+const _BANK := 0.5
+
 ## The heading in radians: 0 is north, clockwise.
 var heading := 0.0
 
@@ -270,14 +274,22 @@ func slide(at: Vector2) -> Vector2:
     return at
 
 
-## Whether the jump which just ended fell short: the horse touches the creek on
-## the side it jumped from.
+## Whether the jump which just ended fell short: the horse stands at a creek
+## (by the circle of the creek nearest to it), on the side it jumped from. A
+## horse which jumped from a stand lands right at the bank (where the slide
+## put it before), so the bank counts with a little room.
 func _fell_short() -> bool:
-    if not at_creek():
+    var nearest := -1
+    var gap := INF
+    for i in range(_jumpable.size()):
+        var solid := _jumpable[i]
+        var away := position.distance_to(Vector2(solid.x, solid.y)) - solid.z - RADIUS
+        if away < gap:
+            gap = away
+            nearest = i
+    if nearest < 0 or gap > _BANK:
         return false
-    var all := _solids + _jumpable
-    var solid: Vector3 = all[blocked_by]
-    var center := Vector2(solid.x, solid.y)
+    var center := Vector2(_jumpable[nearest].x, _jumpable[nearest].y)
     return (_take_off - center).dot(position - center) > 0.0
 
 

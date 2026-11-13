@@ -28,6 +28,9 @@ const JOIN_DISTANCE := 36.0
 ## ... for this long, in seconds, while the ring fills.
 const JOIN_SECONDS := 1.0
 
+## The waves of a call show this long over an animal, in seconds.
+const CALL_SECONDS := 0.9
+
 ## The dashes of the ring around a lost animal.
 const _DASHES := 16
 
@@ -41,11 +44,29 @@ var heading := 0.0
 ## Where the animal grazes around.
 var spot := Vector2.ZERO
 
+## The point of its rider's trail which a follower reached last (see [member
+## LevelPlayer.trail_start]); -1 before it follows.
+var crumb := -1
+
+## The way which an animal entering the pen walks first (the rest of its
+## rider's trail), before it goes to its spot.
+var path := PackedVector2Array()
+
 ## How long the rider has been near, in seconds.
 var near_time := 0.0
 
 ## How long the heart still shows, in seconds.
 var heart_time := 0.0
+
+## Whether a follower lags far behind its rider (see [member Level.CALL_DISTANCE]),
+## so that she hears it; set by the level.
+var lagging := false
+
+## How long the waves of the last call still show, in seconds; how many times
+## the animal called; and how long until it calls again while it lags.
+var call_time := 0.0
+var calls := 0
+var call_wait := 0.0
 
 var _rng := RandomNumberGenerator.new()
 var _target := Vector2.ZERO
@@ -111,6 +132,29 @@ func walk_to(target: Vector2, max_speed: float, delta: float) -> float:
     return maxf(0.0, distance - (minf(distance, max_speed * delta)))
 
 
+## Walk along the points, in their order, at most at the speed, and return
+## how many of them it passed (all but the last, which it walks towards).
+func walk_along(points: PackedVector2Array, max_speed: float, delta: float) -> int:
+    var passed := 0
+    var budget := max_speed * delta
+    while passed < points.size() - 1:
+        var distance := position.distance_to(points[passed])
+        if distance > budget:
+            break
+        budget -= distance
+        position = points[passed]
+        passed += 1
+    if not points.is_empty() and delta > 0.0:
+        walk_to(points[passed], budget / delta, delta)
+    return passed
+
+
+## Call out to the rider (a follower which fell behind): waves rise over it.
+func call_out() -> void:
+    call_time = CALL_SECONDS
+    calls += 1
+
+
 ## Run a bit away from the point (a galloping horse scares the shy animals).
 func flee_from(point: Vector2) -> void:
     var away := (position - point).normalized()
@@ -122,6 +166,7 @@ func flee_from(point: Vector2) -> void:
 
 func _process(delta: float) -> void:
     _time += delta
+    call_time = maxf(0.0, call_time - delta)
     queue_redraw()
 
 
@@ -137,11 +182,26 @@ func _draw() -> void:
     draw_circle(Vector2(1, 2), texture.get_width() * 0.1, Palette.SHADOW)
     PaintedTopDown.draw(self, texture, Vector2.ZERO, heading)
 
+    if call_time > 0.0:
+        _draw_call(texture.get_height() * 0.25)
+
     if heart_time > 0.0:
         var heart := Icons.heart(0.75)
         var rise := roundf((HEART_SECONDS - heart_time) * 10.0)
         var at := Vector2(-heart.get_width() * 0.5, -texture.get_height() * 0.25 - 8.0 - rise)
         draw_texture(heart, at.floor(), Color(1, 1, 1, minf(1.0, heart_time * 2.0)))
+
+
+## The waves of a call, rising over the animal, [param above] pixels over its
+## middle, and fading.
+func _draw_call(above: float) -> void:
+    var phase := 1.0 - call_time / CALL_SECONDS
+    var alpha := minf(1.0, call_time * 3.0)
+    for i in range(2):
+        var radius := 4.0 + 5.0 * i + 4.0 * phase
+        var at := Vector2(0, -above - 2.0)
+        draw_arc(at, radius, -PI * 0.8, -PI * 0.2, 8, Color(Palette.OUTLINE, alpha), 2.5)
+        draw_arc(at, radius, -PI * 0.8, -PI * 0.2, 8, Color(Palette.GOLD, alpha), 1.5)
 
 
 ## A dashed ring, turning slowly, around a lost animal: ride into it and stay,

@@ -58,6 +58,20 @@ static func horse(preset: String, card := false) -> ImageTexture:
     return texture("res://assets/pictures/horses/%s%s.png" % ["card/" if card else "", id])
 
 
+## The painted rider of the looks standing, in the coat of the finery she
+## wears, at its step (assets/pictures/riders/coat_<step>/, see
+## dev/pictures/cut_standing_coat.py); in her own coat without it.
+static func dressed_rider(looks: Dictionary) -> ImageTexture:
+    var id: String = looks.get("rider", "")
+    if id not in Looks.PRESETS:
+        id = Looks.DEFAULT["rider"]
+    for step in range(Finery.step(looks, "coat"), 0, -1):
+        var path := "res://assets/pictures/riders/coat_%d/%s.png" % [step, id]
+        if ResourceLoader.exists(path):
+            return texture(path)
+    return rider(id)
+
+
 ## The painted rider of the preset (see [constant Looks.PRESETS]), standing,
 ## facing the viewer; on a card, 140 logical pixels tall, else 290.
 static func rider(preset: String, card := false) -> ImageTexture:

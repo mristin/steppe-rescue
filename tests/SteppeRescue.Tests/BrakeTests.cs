@@ -29,6 +29,15 @@ namespace SteppeRescue.Tests
         }
 
         [Fact]
+        public void Reset_forgets_the_brakes()
+        {
+            var brake = Raise(HeadY - 60f, 0.0, 0.5);
+            brake.Reset();
+            Assert.False(brake.Pulled);
+            Assert.Equal(0, brake.Count);
+        }
+
+        [Fact]
         public void A_hand_at_the_hair_does_not_brake()
         {
             var brake = Raise(HeadY - 20f, 0.0, 2.0);

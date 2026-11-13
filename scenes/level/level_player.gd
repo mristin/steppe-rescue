@@ -28,6 +28,10 @@ var needs := HorseNeeds.new()
 var followers: Array[Animal] = []
 var trail := PackedVector2Array()
 
+## The index of the first point of the [member trail] since she started, as
+## the oldest points are dropped (see [member Animal.crumb]).
+var trail_start := 0
+
 ## How many times she braked, to see when she brakes again.
 var brakes := 0
 
@@ -146,6 +150,44 @@ func view_transform(at: Vector2) -> Transform2D:
 ## The part of the steppe which the view shows.
 func seen(size: Vector2) -> Rect2:
     return Rect2(center(size) - rect.size * 0.5, rect.size)
+
+
+## The index (since she started, see [member trail_start]) of the newest
+## point of her trail which lies this far behind her, or more; one before the
+## trail if it is shorter.
+func trail_index(distance: float) -> int:
+    var previous := rider.position
+    var remaining := distance
+    for i in range(trail.size() - 1, -1, -1):
+        var segment := previous.distance_to(trail[i])
+        if segment >= remaining and segment > 0.0:
+            return trail_start + i
+        remaining -= segment
+        previous = trail[i]
+    return trail_start - 1
+
+
+## The index (since she started) of the point of her trail nearest to the
+## point, among her newest points.
+func nearest_on_trail(at: Vector2) -> int:
+    var best := trail.size() - 1
+    for i in range(trail.size() - 1, maxi(-1, trail.size() - 60), -1):
+        if trail[i].distance_to(at) < trail[best].distance_to(at):
+            best = i
+    return trail_start + best
+
+
+## The way along her trail from the point of the index (since she started) on:
+## the points of the trail up to the index [param to] (at most [param count]
+## of them), then [param last].
+func trail_way(from: int, to: int, count: int, last: Vector2) -> PackedVector2Array:
+    var way := PackedVector2Array()
+    var start := maxi(from, trail_start)
+    for k in range(start, mini(to, start + count - 1) + 1):
+        way.append(trail[k - trail_start])
+    if start + count - 1 >= to:
+        way.append(last)
+    return way
 
 
 ## The point on her trail this far behind her.

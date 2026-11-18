@@ -1,5 +1,7 @@
 # The Steppe Rescue
 
+![The Steppe Rescue: choosing a journey and a rider, then riding out to find the lost animals and bringing them home](docs/steppe-rescue.gif)
+
 **The Steppe Rescue is a free riding and searching game for children of about seven to ten, played by doing squats in front of a webcam.**
 
 You are a girl from a small aul in the steppe near Astana.

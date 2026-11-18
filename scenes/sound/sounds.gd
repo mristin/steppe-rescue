@@ -1,17 +1,22 @@
 extends Node
 
-## Play the sounds of the game (see section 11 of DESIGN.md), all synthesized
-## here, so that the game needs no sound files and no licenses for them: the
-## plucked strings of a dombra (Karplus-Strong) for the background music (the
-## melody of "Көзімнің қарасы" by Abai, in the public domain), the
-## celebration tune and the clicks, a low thud for the hooves, and filtered
-## noise for the wind of the steppe.
+## Play the sounds of the game (see section 11 of DESIGN.md). The music is
+## synthesized here: the plucked strings of a dombra (Karplus-Strong) play the
+## background music (the melody of "Көзімнің қарасы" by Abai, in the public
+## domain), the celebration tune and the clicks. The steppe is recorded: the
+## hooves of the horse in its gaits, its whinny and its snort, the calls of the
+## animals, the birds and the marmots, the locusts, the wind and the insects
+## in the grass, all cut from recordings under CC0 into assets/sounds/ by
+## dev/sounds/cut_sounds.py (see THIRD_PARTY_NOTICES.md).
 ##
 ## The sounds are made the first time they are played and kept. The player
 ## switches them on and off in the settings; the choice is saved next to the
 ## language (see the autoload Languages).
 
 const RATE := 22050
+
+## How many sounds play at once (besides the loops).
+const PLAYERS := 8
 
 ## The notes of the tunes: a minor pentatonic scale on D, as the dombra plays
 ## it, by their degree (0 is D3).
@@ -73,6 +78,31 @@ const _SONG_BEAT := 0.72
 ## The open strings of the dombra, D3 and A3, strummed softly on every beat.
 const _DRONE := [50, 57]
 
+## The recorded sounds, by their names, each with its variants, of which
+## [method play] picks one at random.
+const _RECORDED := {
+    "hoof": ["hoof"],
+    "whinny": ["whinny"],
+    "snort": ["snort"],
+    "horse": ["whinny"],
+    "sheep": ["sheep_1", "sheep_2"],
+    "camel": ["camel"],
+    "eagle": ["eagle_1", "eagle_2"],
+    "falcon": ["falcon"],
+    "swallow": ["swallow"],
+    "lark": ["lark"],
+    "marmot": ["marmot"],
+    "locust": ["locust"],
+}
+
+## The loops of the hooves, by the gait (1 walks, 2 trots, 3 gallops), and how
+## loud each plays, in dB.
+const _HOOVES := ["hooves_walk", "hooves_trot", "hooves_gallop"]
+const _HOOVES_DB := [-8.0, -6.0, -4.0]
+
+## The hooves fade in and out this fast, in full volume per second.
+const _HOOVES_FADE := 5.0
+
 ## Whether the sounds are on.
 var enabled := true
 
@@ -80,6 +110,10 @@ var _streams: Dictionary = {}
 var _players: Array[AudioStreamPlayer] = []
 var _music: AudioStreamPlayer
 var _wind: AudioStreamPlayer
+var _meadow: AudioStreamPlayer
+var _hooves: Array[AudioStreamPlayer] = []
+var _hooves_gain: Array[float] = [0.0, 0.0, 0.0]
+var _gait := 0
 
 
 func _ready() -> void:
@@ -87,7 +121,7 @@ func _ready() -> void:
     var settings := ConfigFile.new()
     if settings.load(get_node("/root/Languages").settings_path()) == OK:
         enabled = settings.get_value("general", "sound", true)
-    for i in range(6):
+    for i in range(PLAYERS):
         var player := AudioStreamPlayer.new()
         add_child(player)
         _players.append(player)
@@ -95,17 +129,51 @@ func _ready() -> void:
     _music.volume_db = -16.0
     add_child(_music)
     _wind = AudioStreamPlayer.new()
-    _wind.volume_db = -22.0
+    _wind.volume_db = -14.0
     add_child(_wind)
+    _meadow = AudioStreamPlayer.new()
+    _meadow.volume_db = -18.0
+    add_child(_meadow)
+    for i in range(_HOOVES.size()):
+        var player := AudioStreamPlayer.new()
+        player.stream = _recording(_HOOVES[i], true)
+        player.volume_db = -80.0
+        add_child(player)
+        _hooves.append(player)
     music.call_deferred(true)
 
 
-## Play the sound: "click", "chime", "call", "tune", "hoof" or "stamp"; the pitch
-## shifts it a little, e.g., for the hooves at a gallop.
+func _process(delta: float) -> void:
+    # NOTE (mristin):
+    # The loop of the gait fades in, the others fade out, so that the hooves
+    # change smoothly from a walk to a trot to a gallop.
+    for i in range(_hooves.size()):
+        var player := _hooves[i]
+        var target := 1.0 if enabled and _gait == i + 1 else 0.0
+        _hooves_gain[i] = move_toward(_hooves_gain[i], target, _HOOVES_FADE * delta)
+        if _hooves_gain[i] <= 0.0:
+            if player.playing:
+                player.stop()
+            continue
+        player.volume_db = _HOOVES_DB[i] + linear_to_db(_hooves_gain[i])
+        if not player.playing:
+            player.play(randf() * player.stream.get_length())
+
+
+## Play the sound: "click", "chime", "call" or "tune" of the dombra, or a
+## recorded one: "hoof", "whinny" and "snort" of the horse, the call of an
+## animal by its kind ("sheep", "camel", "horse") or of a wild creature
+## ("eagle", "falcon", "swallow", "lark", "marmot", "locust"); the pitch shifts
+## it a little.
 func play(sound: String, pitch := 1.0, volume_db := 0.0) -> void:
     if not enabled:
         return
-    var stream := _stream(sound)
+    var stream: AudioStream = null
+    if _RECORDED.has(sound):
+        var variants: Array = _RECORDED[sound]
+        stream = _recording(variants[randi() % variants.size()], false)
+    else:
+        stream = _stream(sound)
     if stream == null:
         return
     for player in _players:
@@ -119,12 +187,31 @@ func play(sound: String, pitch := 1.0, volume_db := 0.0) -> void:
 
 ## Play the gentle music of the dombra in a loop, or stop it.
 func music(on: bool) -> void:
-    _loop(_music, "music", on)
+    _loop(_music, _stream("music"), on)
 
 
-## Play the wind of the steppe in a loop, or stop it.
+## Let an animal of the kind call out: its own recorded call, or the call
+## of the dombra for a kind without one.
+func call_out(kind: String) -> void:
+    if _RECORDED.has(kind):
+        play(kind, randf_range(0.95, 1.08), -4.0)
+    else:
+        play("call")
+
+
+## Play the steppe in a loop, the wind and the insects in the grass, or stop
+## it.
 func wind(on: bool) -> void:
-    _loop(_wind, "wind", on)
+    _loop(_wind, _recording("wind", true), on)
+    _loop(_meadow, _recording("meadow", true), on)
+    if not on:
+        hooves(0)
+
+
+## Let the hooves sound in the gait (0 stands, 1 walks, 2 trots, 3 gallops),
+## in a loop until the gait changes.
+func hooves(gait: int) -> void:
+    _gait = clampi(gait, 0, _HOOVES.size())
 
 
 ## Switch the sounds on or off, and remember it.
@@ -135,6 +222,7 @@ func set_enabled(on: bool) -> void:
             player.stop()
     _music.stream_paused = not on
     _wind.stream_paused = not on
+    _meadow.stream_paused = not on
     var path: String = get_node("/root/Languages").settings_path()
     var settings := ConfigFile.new()
     settings.load(path)
@@ -143,15 +231,31 @@ func set_enabled(on: bool) -> void:
     settings.save(path)
 
 
-func _loop(player: AudioStreamPlayer, sound: String, on: bool) -> void:
+func _loop(player: AudioStreamPlayer, stream: AudioStream, on: bool) -> void:
     if not on:
         player.stop()
         return
     if player.playing:
         return
-    player.stream = _stream(sound)
+    player.stream = stream
     player.stream_paused = not enabled
     player.play()
+
+
+## The recording of assets/sounds/, looped or not.
+func _recording(name: String, looped: bool) -> AudioStream:
+    var key := "recorded/" + name
+    if not _streams.has(key):
+        # NOTE (mristin):
+        # The recordings stay out of the cache of the resources: the audio
+        # server may still hold one when the game quits, and the cache would
+        # report it as left in use.
+        var stream: AudioStreamOggVorbis = ResourceLoader.load(
+            "res://assets/sounds/%s.ogg" % name, "", ResourceLoader.CACHE_MODE_IGNORE
+        )
+        stream.loop = looped
+        _streams[key] = stream
+    return _streams[key]
 
 
 func _stream(sound: String) -> AudioStreamWAV:
@@ -168,16 +272,10 @@ func _stream(sound: String) -> AudioStreamWAV:
                 samples = _phrase(_TUNE, 0.28, 0.8)
             "music":
                 samples = _song(_SONG, _SONG_BEAT)
-            "hoof":
-                samples = _thud(0.12, 90.0)
-            "stamp":
-                samples = _thud(0.2, 70.0)
-            "wind":
-                samples = _wind_noise(6.0)
             _:
                 return null
         var stream := _wav(samples)
-        if sound in ["music", "wind"]:
+        if sound == "music":
             stream.loop_mode = AudioStreamWAV.LOOP_FORWARD
             stream.loop_end = samples.size()
         _streams[sound] = stream
@@ -256,38 +354,6 @@ func _mix(samples: PackedFloat32Array, sound: PackedFloat32Array, at: float) -> 
 ## The frequency of the MIDI note.
 static func _midi(note: int) -> float:
     return 440.0 * pow(2.0, (note - 69) / 12.0)
-
-
-## A thud of a hoof on the ground: a low, quickly falling tone with a click.
-func _thud(seconds: float, frequency: float) -> PackedFloat32Array:
-    var rng := RandomNumberGenerator.new()
-    rng.seed = roundi(frequency)
-    var count := roundi(seconds * RATE)
-    var result := PackedFloat32Array()
-    result.resize(count)
-    var phase := 0.0
-    for i in range(count):
-        var t := float(i) / RATE
-        var fall := exp(-t * 30.0)
-        phase += TAU * frequency * (1.0 + fall) / RATE
-        var click := rng.randf_range(-1.0, 1.0) * exp(-t * 300.0)
-        result[i] = (sin(phase) * 0.8 + click * 0.4) * fall
-    return result
-
-
-## The wind: noise, low-passed and swelling slowly, which loops seamlessly.
-func _wind_noise(seconds: float) -> PackedFloat32Array:
-    var rng := RandomNumberGenerator.new()
-    rng.seed = 11
-    var count := roundi(seconds * RATE)
-    var result := PackedFloat32Array()
-    result.resize(count)
-    var low := 0.0
-    for i in range(count):
-        low += (rng.randf_range(-1.0, 1.0) - low) * 0.02
-        var swell := 0.6 + 0.4 * sin(TAU * i / count * 2.0)
-        result[i] = low * 4.0 * swell
-    return result
 
 
 func _wav(samples: PackedFloat32Array) -> AudioStreamWAV:

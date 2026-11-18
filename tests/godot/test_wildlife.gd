@@ -1,10 +1,10 @@
 extends SceneTree
 ## Check the wild creatures of the steppe: every kind lives in the level; the
 ## hare, the saiga and the fox run away from the rider who comes near and
-## stay in the steppe; the marmot dives into its burrow and peeks out again
-## after she left; the lark flies up and lands farther on; the locusts hop
-## away; the eagle circles over its home, high; and the swallows dart around
-## the steppe on their own, lower.
+## stay in the steppe; the marmot whistles, dives into its burrow and peeks
+## out again after she left; the lark flies up singing and lands farther on;
+## the locusts hop away; the eagle circles over its home, high; and the
+## swallows dart around the steppe on their own, lower.
 
 var _failures: Array[String] = []
 
@@ -51,6 +51,10 @@ func _run() -> void:
     await _wait(0.2)
     _check(marmot.state == Wildlife.State.HIDDEN, "the marmot dives into its burrow")
     _check(lark.altitude > 0.0, "the lark flies up")
+    # NOTE (mristin):
+    # A kind which sounded keeps quiet for a while (see Wildlife._QUIET).
+    _check(wild._quiet.get("marmot", 0.0) > 0.0, "the marmot whistles as it dives")
+    _check(wild._quiet.get("lark", 0.0) > 0.0, "the lark sings as it flies up")
     _check(locust.state == Wildlife.State.FLEE, "the locust hops away")
 
     await _wait(1.0)

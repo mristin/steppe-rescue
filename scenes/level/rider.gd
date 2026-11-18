@@ -139,7 +139,7 @@ func rear() -> void:
     if rearing() > 0.0 or jump_time >= 0.0:
         return
     rear_time = 0.0
-    _sound("stamp", 0.7, 0.0)
+    _sound("whinny", 1.0, -2.0)
 
 
 ## Jump: the player jumped. A horse at a gallop flies longer and farther than
@@ -155,7 +155,7 @@ func jump() -> void:
     _jump_seconds = JUMP_SECONDS + JUMP_SPEED_SECONDS * fraction
     _jump_lift = JUMP_LIFT + JUMP_SPEED_LIFT * fraction
     _jump_speed = fraction
-    _sound("hoof", 0.8, 0.0)
+    _sound("hoof", 0.9, 0.0)
 
 
 ## How far through its jump the horse is, in [0, 1); -1 when it does not jump.
@@ -212,9 +212,9 @@ func ride(delta: float, speed_fraction: float, turn: float) -> void:
             if _fell_short():
                 short_jumps += 1
                 splash_time = 0.0
-                _sound("stamp", 0.6, 0.0)
+                _sound("hoof", 0.6, 0.0)
             else:
-                _sound("stamp", 1.1, -2.0)
+                _sound("hoof", 0.75, 0.0)
         else:
             # NOTE (mristin):
             # In the air, the horse keeps its speed and its heading.
@@ -224,7 +224,7 @@ func ride(delta: float, speed_fraction: float, turn: float) -> void:
         rear_time += delta
         if rear_time >= REAR_SECONDS:
             rear_time = -1.0
-            _sound("stamp", 0.8, -2.0)
+            _sound("hoof", 0.7, -2.0)
         else:
             # NOTE (mristin):
             # A rearing horse stands on its hind legs and does not go on.
@@ -241,12 +241,9 @@ func ride(delta: float, speed_fraction: float, turn: float) -> void:
     var stamping_before := stamping()
     still_time = still_time + delta if speed <= 0.0 else 0.0
     if stamping() and not stamping_before:
-        _sound("stamp", 1.0, -2.0)
+        _sound("snort", randf_range(0.95, 1.05), -6.0)
     position = slide(position + Vector2.UP.rotated(heading) * speed * delta)
-    var stride_before := int(_stride * 2.0)
     _stride += speed * delta / _STRIDE
-    if int(_stride * 2.0) != stride_before:
-        _sound("hoof", 0.9 + 0.1 * gait(), -6.0 if gait() < 3 else -2.0)
     queue_redraw()
 
 
@@ -303,6 +300,12 @@ func stamping() -> bool:
     if still_time < IMPATIENT_SECONDS:
         return false
     return fposmod(still_time - IMPATIENT_SECONDS, _STAMP_EVERY) < _STAMP_SECONDS
+
+
+## The gait in which the hooves sound now (see [method gait]); a horse in the
+## air or rearing up is silent.
+func hoof_gait() -> int:
+    return 0 if jump_time >= 0.0 or rearing() > 0.0 else gait()
 
 
 ## The gait of the horse at its speed now: 0 stands, 1 walks, 2 trots and 3

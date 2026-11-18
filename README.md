@@ -58,12 +58,15 @@ We track the player with the following models (each model directory contains its
 
 The text is set in [GNU Unifont] (SIL Open Font License 1.1), one of the few pixel fonts with all the Kazakh letters.
 
+The sounds of the steppe (the hooves, the horse, the animals, the birds, the marmots, the locusts, the wind and the insects in the grass) are recordings under CC0 from [Freesound], by craigsmith, CHallSmith, gbnelso, o_ciz, satoristudios3, 1888software, Vrymaa, eduardogon, Kinoton, SoundsLikeYukon, TRP and Garuda1982. Thank you!
+
 See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for all the components and their licenses.
 
 [RTMO]: https://github.com/open-mmlab/mmpose/tree/main/projects/rtmo
 [YOLOX-Body-Head-Hand]: https://github.com/PINTO0309/PINTO_model_zoo/tree/main/426_YOLOX-Body-Head-Hand
 [YuNet]: https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet
 [GNU Unifont]: https://unifoundry.com/unifont/
+[Freesound]: https://freesound.org
 
 ## Contributing
 

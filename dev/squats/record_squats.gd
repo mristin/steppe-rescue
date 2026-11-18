@@ -242,7 +242,7 @@ func _process(delta: float) -> bool:
         _calls.pop_front()
         _call_left = _CALL_SECONDS
         _service.MarkRecording("jump")
-        root.get_node("Sounds").play("stamp")
+        root.get_node("Sounds").play("hoof")
     _call.visible = _call_left > 0.0
 
     if _left <= 0.0:

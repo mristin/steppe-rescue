@@ -286,11 +286,17 @@ func _check_sounds(scene: Node, tag: String, in_level: bool) -> void:
         _report("%s: the music does not play exactly while the sound is on" % tag, state)
     if wind.playing != in_level or (in_level and wind.stream_paused == on):
         _report("%s: the wind does not blow exactly in a level with the sound on" % tag, state)
-    if players.size() != 6 or sounds.get_child_count() != players.size() + 2:
+    # NOTE (mristin):
+    # Besides the players of the sounds: the music, the wind, the insects in
+    # the grass and the three loops of the hooves.
+    if players.size() != sounds.PLAYERS or sounds.get_child_count() != players.size() + 6:
         _report(
             "%s: the players of the sounds pile up" % tag,
             "%s: %d players, %d children" % [tag, players.size(), sounds.get_child_count()]
         )
+    var hooves: Array[AudioStreamPlayer] = sounds._hooves
+    if not in_level and hooves.any(func(p: AudioStreamPlayer) -> bool: return p.playing):
+        _report("%s: the hooves sound out of a level" % tag, state)
     if not on and players.any(func(p: AudioStreamPlayer) -> bool: return p.playing):
         _report("%s: a sound plays while the sound is off" % tag, state)
     var saved := ConfigFile.new()

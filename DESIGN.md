@@ -365,7 +365,8 @@ At the end of each level, the rider chooses **one** new piece of finery for hers
 
 ### Sound
 
-* **The steppe:** wind in the grass, larks, the hooves of the horse (walk, trot and gallop sound different), the creak of the saddle.
+* **The steppe:** wind in the grass and the insects in it, the hooves of the horse (walk, trot and gallop sound different, each a recorded loop), its whinny when it rears up and its snort when it waits; the wild creatures sound near the rider, the nearer the louder: the eagle and the falcon cry high above, the swallows twitter, the lark sings as it flies up, the marmot whistles as it dives into its burrow, and the locusts rattle as they hop.
+* **Recorded, under CC0 only:** the sounds of the steppe and of the animals are field recordings under CC0 (from Freesound), credited in THIRD_PARTY_NOTICES.md.
 * **The animals:** each kind has a few calls, used both for hearing them from afar and when they follow.
 * **The music:** gentle dombra and kobyz music, public domain or CC0 only, quiet in the background; a short celebration tune for the rewards.
 * There are no voices.

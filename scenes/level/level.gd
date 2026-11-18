@@ -56,9 +56,6 @@ const CALL_DISTANCE := 120.0
 ## ... every this many seconds, while it lags (see section 4 of DESIGN.md).
 const CALL_EVERY := 2.5
 
-## The pitch of the call of each kind of animal.
-const _CALL_PITCH := {"camel": 0.7, "horse": 1.0, "sheep": 1.25, "lamb": 1.45}
-
 ## The animals run into the pen when the rider is this close to its gate.
 const GATE_DISTANCE := 60.0
 
@@ -480,6 +477,8 @@ func _process(delta: float) -> void:
     for i in range(1, _players.size()):
         others.append([_players[i].rider.position, _players[i].rider.gait()])
     _wildlife.update(delta, _players[0].rider.position, _players[0].rider.gait(), others)
+    var hooves := _players.map(func(p: LevelPlayer) -> int: return p.rider.hoof_gait())
+    get_node("/root/Sounds").hooves(hooves.max())
     _update_views()
     _give_way(delta)
     _update_hud()
@@ -775,7 +774,7 @@ func _update_animals(delta: float) -> void:
             if animal.call_wait <= 0.0:
                 animal.call_wait = CALL_EVERY
                 animal.call_out()
-                get_node("/root/Sounds").play("call", _CALL_PITCH.get(animal.kind.id, 1.0))
+                get_node("/root/Sounds").call_out(animal.kind.id)
         if (
             not player.followers.is_empty()
             and player.rider.position.distance_to(home.gate()) < GATE_DISTANCE

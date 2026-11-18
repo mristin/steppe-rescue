@@ -76,6 +76,38 @@ const _SWALLOW_TURN := 3.0
 ## A swallow flies to random points this far away, in pixels.
 const _SWALLOW_REACH := 260.0
 
+## The rider hears the creatures up to this far, in pixels; the nearer, the
+## louder.
+const HEARD := 480.0
+
+## The birds call on their own, each every so many seconds: [fewest, most].
+const _CALL_EVERY := {
+    "eagle": [14.0, 30.0],
+    "falcon": [10.0, 22.0],
+    "swallow": [6.0, 14.0],
+}
+
+## After a kind sounded, the steppe waits this long, in seconds, before it
+## sounds again, so that eight larks do not sing all at once.
+const _QUIET := {
+    "eagle": 6.0,
+    "falcon": 5.0,
+    "swallow": 2.5,
+    "lark": 5.0,
+    "marmot": 1.5,
+    "locust": 2.0,
+}
+
+## How loud each kind sounds, near the rider, in dB.
+const _LOUDNESS := {
+    "eagle": -8.0,
+    "falcon": -10.0,
+    "swallow": -10.0,
+    "lark": -12.0,
+    "marmot": -8.0,
+    "locust": -12.0,
+}
+
 ## The steppe keeps the creatures this far from its edge, in pixels.
 const _MARGIN := 16.0
 
@@ -93,6 +125,7 @@ class Creature:
     var stride := 0.0
     var altitude := 0.0
     var phase := 0.0
+    var call_wait := 0.0
 
     func on_ground() -> bool:
         return kind not in ["eagle", "falcon", "swallow"] and altitude <= 0.0
@@ -111,6 +144,13 @@ var _solids: Array[Vector3] = []
 var _rng := RandomNumberGenerator.new()
 var _sky: Node2D
 var _time := 0.0
+
+## How long each kind stays quiet yet, in seconds (see [constant _QUIET]).
+var _quiet: Dictionary = {}
+
+## The chance of the sounds, apart from the life of the creatures, so that the
+## steppe lives the same with the sound on and off.
+var _voice_rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -152,6 +192,8 @@ func populate(
                 creature.phase = _rng.randf() * TAU
                 if _ALTITUDES.has(creature.kind):
                     creature.altitude = _altitude(creature)
+                if _CALL_EVERY.has(creature.kind):
+                    creature.call_wait = _call_wait(creature.kind)
                 creatures.append(creature)
 
 
@@ -162,6 +204,8 @@ func populate(
 func update(delta: float, rider_at: Vector2, gait: int, others: Array = []) -> void:
     _time += delta
     var first_alarm := 1.0 + 0.35 * maxi(0, gait - 1)
+    for kind in _quiet:
+        _quiet[kind] = maxf(0.0, _quiet[kind] - delta)
     for creature in creatures:
         var alarm := first_alarm
         var near := rider_at
@@ -173,6 +217,7 @@ func update(delta: float, rider_at: Vector2, gait: int, others: Array = []) -> v
             ):
                 near = at
                 alarm = 1.0 + 0.35 * maxi(0, int(other[1]) - 1)
+        var state_before := creature.state
         match creature.kind:
             "eagle", "falcon":
                 _circle(creature, delta)
@@ -186,6 +231,7 @@ func update(delta: float, rider_at: Vector2, gait: int, others: Array = []) -> v
                 _locust(creature, delta, near, alarm)
             _:
                 _runner(creature, delta, near, alarm)
+        _listen(creature, delta, state_before, near)
     queue_redraw()
     _sky.queue_redraw()
 
@@ -197,6 +243,38 @@ func of_kind(kind: String) -> Array[Creature]:
         if creature.kind == kind:
             result.append(creature)
     return result
+
+
+## Let the creature sound, as the rider at [param rider_at] hears it: the
+## marmot whistles as it dives into its burrow, the lark sings as it flies up,
+## the locusts rattle as they hop, and the birds in the sky call now and then.
+func _listen(creature: Creature, delta: float, state_before: int, rider_at: Vector2) -> void:
+    var sounds := false
+    if _CALL_EVERY.has(creature.kind):
+        creature.call_wait -= delta
+        if creature.call_wait <= 0.0:
+            creature.call_wait = _call_wait(creature.kind)
+            sounds = true
+    elif creature.state != state_before:
+        sounds = creature.state in [State.HIDDEN, State.FLYING, State.FLEE]
+        sounds = sounds and creature.kind in ["marmot", "lark", "locust"]
+    if not sounds or _quiet.get(creature.kind, 0.0) > 0.0:
+        return
+    var distance := creature.position.distance_to(rider_at)
+    if distance >= HEARD:
+        return
+    var player := get_node_or_null("/root/Sounds")
+    if player == null:
+        return
+    _quiet[creature.kind] = _QUIET[creature.kind]
+    var closeness := 1.0 - distance / HEARD
+    var volume: float = _LOUDNESS[creature.kind] + linear_to_db(lerpf(0.25, 1.0, closeness))
+    player.play(creature.kind, _voice_rng.randf_range(0.94, 1.06), volume)
+
+
+func _call_wait(kind: String) -> float:
+    var every: Array = _CALL_EVERY[kind]
+    return _voice_rng.randf_range(every[0], every[1])
 
 
 ## A runner (saiga, roe deer, hare, fox) grazes, and flees from the rider who

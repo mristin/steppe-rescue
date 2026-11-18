@@ -1,0 +1,169 @@
+{
+  "_comment": "The sounds of the game, each cut from a CC0 recording on Freesound (see THIRD_PARTY_NOTICES.md); dev/sounds/cut_sounds.py downloads the high-quality previews and cuts them into assets/sounds/. start and end are in seconds of the recording; a loop is cross-faded seamlessly at its seam; effects are those of sox.",
+  "sounds": [
+    {
+      "name": "hooves_walk",
+      "freesound": 870717,
+      "author": "CHallSmith",
+      "title": "Riding Horse Thru Mud, Rider's Perspective",
+      "start": 25.0,
+      "end": 35.0,
+      "loop": true,
+      "effects": ["highpass", "40"]
+    },
+    {
+      "name": "hooves_trot",
+      "freesound": 479739,
+      "author": "craigsmith",
+      "title": "R14-02-Slow Trot on Grass.wav",
+      "start": 9.0,
+      "end": 19.0,
+      "loop": true,
+      "effects": ["highpass", "40"]
+    },
+    {
+      "name": "hooves_gallop",
+      "freesound": 479698,
+      "author": "craigsmith",
+      "title": "R13-26-Horse Muffled Hooves on Dirt.wav",
+      "start": 6.0,
+      "end": 16.0,
+      "loop": true,
+      "effects": ["highpass", "40"]
+    },
+    {
+      "name": "hoof",
+      "freesound": 684446,
+      "author": "gbnelso",
+      "title": "HorseGallop1.wav",
+      "start": 0.6,
+      "end": 0.85
+    },
+    {
+      "name": "whinny",
+      "freesound": 437110,
+      "author": "craigsmith",
+      "title": "G38-15-Perfect Horse Whinny.wav",
+      "start": 10.7,
+      "end": 12.5,
+      "effects": ["highpass", "80"]
+    },
+    {
+      "name": "snort",
+      "freesound": 475483,
+      "author": "o_ciz",
+      "title": "Horse(snort)_3.wav",
+      "start": 0.0,
+      "end": 0.6
+    },
+    {
+      "name": "sheep_1",
+      "freesound": 677221,
+      "author": "satoristudios3",
+      "title": "Ewe baa",
+      "start": 0.0,
+      "end": 1.3,
+      "effects": ["highpass", "80"]
+    },
+    {
+      "name": "sheep_2",
+      "freesound": 692898,
+      "author": "satoristudios3",
+      "title": "Twin Lambs Baa-ing",
+      "start": 0.1,
+      "end": 1.75,
+      "effects": ["highpass", "80"]
+    },
+    {
+      "name": "camel",
+      "freesound": 437937,
+      "author": "craigsmith",
+      "title": "G12-05-Camel Grunt.wav",
+      "start": 1.3,
+      "end": 3.7,
+      "effects": ["highpass", "50"]
+    },
+    {
+      "name": "eagle_1",
+      "freesound": 575524,
+      "author": "1888software",
+      "title": "red-tailed-hawk.wav",
+      "start": 6.1,
+      "end": 7.6,
+      "effects": ["highpass", "500"]
+    },
+    {
+      "name": "eagle_2",
+      "freesound": 575524,
+      "author": "1888software",
+      "title": "red-tailed-hawk.wav",
+      "start": 13.8,
+      "end": 15.4,
+      "effects": ["highpass", "500"]
+    },
+    {
+      "name": "falcon",
+      "freesound": 770032,
+      "author": "Vrymaa",
+      "title": "Bird - Red-shouldered hawk",
+      "start": 0.1,
+      "end": 2.3,
+      "effects": ["highpass", "800"]
+    },
+    {
+      "name": "swallow",
+      "freesound": 502948,
+      "author": "eduardogon",
+      "title": "Swallow_Zoom_H4.wav",
+      "start": 0.8,
+      "end": 2.0,
+      "effects": ["highpass", "1000"]
+    },
+    {
+      "name": "lark",
+      "freesound": 387426,
+      "author": "Kinoton",
+      "title": "Single Skylark",
+      "start": 20.0,
+      "end": 27.0,
+      "effects": ["highpass", "1000"]
+    },
+    {
+      "name": "marmot",
+      "freesound": 822939,
+      "author": "SoundsLikeYukon",
+      "title": "Hoary marmot whistles",
+      "start": 0.0,
+      "end": 0.95,
+      "effects": ["highpass", "1000"]
+    },
+    {
+      "name": "locust",
+      "freesound": 573934,
+      "author": "TRP",
+      "title": "Grasshopper wing snaps clicks KAMLOOPS 100824.flac",
+      "start": 0.5,
+      "end": 2.3,
+      "effects": ["highpass", "1000"]
+    },
+    {
+      "name": "wind",
+      "freesound": 656680,
+      "author": "Kinoton",
+      "title": "Heavy Wind, Through Grass & Bushes",
+      "start": 40.0,
+      "end": 70.0,
+      "loop": true
+    },
+    {
+      "name": "meadow",
+      "freesound": 529573,
+      "author": "Garuda1982",
+      "title": "Meadow with many insects chirps atmo field recording",
+      "start": 20.0,
+      "end": 50.0,
+      "loop": true,
+      "effects": ["highpass", "200"]
+    }
+  ]
+}

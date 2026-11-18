@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AnimalKind" format=3]
+
+[ext_resource type="Script" path="res://scenes/level_map/animal_kind.gd" id="1_kind"]
+
+[resource]
+script = ExtResource("1_kind")
+id = "horse"
+one = "a horse"
+many = "horses"
+speed = 170.0
+shy = true

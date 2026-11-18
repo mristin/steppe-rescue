@@ -1,0 +1,24 @@
+<Project Sdk="Godot.NET.Sdk/4.6.2">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework Condition=" '$(GodotTargetPlatform)' == 'android' ">net9.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>SteppeRescue</RootNamespace>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The tests live in their own project and must not end up in the game. -->
+    <Compile Remove="tests/**" />
+  </ItemGroup>
+  <ItemGroup>
+    <!--
+      NOTE (mristin):
+      We stay with ONNX Runtime 1.19, the last version whose libraries for
+      macOS run on macOS 11 on both the Intel and the Apple Silicon Macs (from
+      1.20 on, they need macOS 13.3, and from 1.24 on, there is none for the
+      Intel Macs). 1.16 would reach macOS 10.15 on the Intel Macs, too, but
+      runs the pose 15-20% slower. Keep the tests at the same version.
+    -->
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.19.2" />
+  </ItemGroup>
+</Project>

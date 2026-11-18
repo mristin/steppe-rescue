@@ -1,0 +1,10 @@
+label,seconds,title,instruction,calls
+stand 1,5,Stand still,"Stand still, facing the camera, your arms down.",
+gallop 1,15,Gallop,"Squat as you would to make your horse GALLOP, as fast as you comfortably can. Do not jump.",
+jump 1,18,Jump,"Stand, and JUMP with both feet each time you see JUMP! Land softly, then stand again.",2.5 5.5 8.5 11.5 14.5
+stand 2,5,Stand still,"Stand still, facing the camera, your arms down.",
+gallop 2,15,Gallop,"Squat as you would to make your horse GALLOP, as fast as you comfortably can. Do not jump.",
+jump 2,18,Jump,"Stand, and JUMP with both feet each time you see JUMP! Land softly, then stand again.",2.5 5.5 8.5 11.5 14.5
+stand 3,5,Stand still,"Stand still, facing the camera, your arms down.",
+gallop 3,15,Gallop,"Squat as you would to make your horse GALLOP, as fast as you comfortably can. Do not jump.",
+jump 3,18,Jump,"Stand, and JUMP with both feet each time you see JUMP! Land softly, then stand again.",2.5 5.5 8.5 11.5 14.5

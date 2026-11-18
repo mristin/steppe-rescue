@@ -1,0 +1,1696 @@
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: The Steppe Rescue\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#. Asked before riding; the player squats and swings her arms.
+#: scenes/free_space/free_space.gd
+#, fuzzy
+msgid "Make room! Nothing within 1 m around you: about 2 × 2 m free."
+msgstr "Освободи место! Вокруг тебя ничего ближе 1 м: около 2 × 2 м."
+
+#. Two metres, the side of the free square on the floor.
+#: scenes/free_space/free_space.gd
+#, fuzzy
+msgid "2 m"
+msgstr "2 м"
+
+#. The button which keeps the rider and starts the game.
+#: scenes/free_space/free_space.gd scenes/instruction/instruction.gd
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Ready!"
+msgstr "Поехали!"
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Squat to make your horse run: the faster you squat, the faster it runs!"
+msgstr "Приседай, и конь побежит: чем быстрее приседаешь, тем быстрее он бежит!"
+
+#. How to squat safely, after "Squat to make your horse run".
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Feet apart, back straight."
+msgstr "Ноги на ширине плеч, спина прямая."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Stand in front of the camera, like your rider."
+msgstr "Встань перед камерой, как твоя наездница."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Stop squatting, and your horse slows down and stops."
+msgstr "Перестань приседать, и конь замедлится и остановится."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Pull the reins: both hands to the left, and your horse turns left."
+msgstr "Тяни поводья: обе руки влево, и конь повернёт налево."
+
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Both hands to the right, and your horse turns right."
+msgstr "Обе руки вправо, и конь повернёт направо."
+
+#. In How to Play, before the jump is shown.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Squat briskly, and your horse gallops again."
+msgstr "Приседай быстро, и твоя лошадь снова поскачет галопом."
+
+#. In How to Play: when the player jumps, her horse jumps over a creek.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Jump, and your horse jumps, too: over a creek! From a gallop, it flies far."
+msgstr "Прыгай, и твой конь тоже прыгнет — через ручей! С галопа он летит далеко."
+
+#. In How to Play: raising both hands above the head is the brake.
+#: scenes/instruction/instruction.gd
+#, fuzzy
+msgid "Both hands up above your head: your horse stops at once. From a gallop, it rears up!"
+msgstr "Обе руки вверх над головой: лошадь сразу остановится. А с галопа встанет на дыбы!"
+
+#. The button which starts the game.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "Play"
+msgstr "Играть"
+
+#. The button which opens the map with all the levels.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "Levels"
+msgstr "Уровни"
+
+#. The button which shows how to ride by squatting and pulling the reins.
+#: scenes/intro/intro.gd
+#, fuzzy
+msgid "How to Play"
+msgstr "Как играть"
+
+#: scenes/intro/intro.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Settings"
+msgstr "Настройки"
+
+#: scenes/level/level.gd
+#, fuzzy
+msgid "Don't ride too far away!"
+msgstr "Не уезжай слишком далеко!"
+
+#: scenes/level/level.gd scenes/session_name/session_name.gd
+#, fuzzy
+msgid "OK"
+msgstr "ОК"
+
+#: scenes/level/level.gd
+#, fuzzy
+msgid "R: ride again · Esc: quit"
+msgstr "R: ещё раз · Esc: выход"
+
+#: scenes/level/level.gd
+#, fuzzy
+msgid "Ask the people of the steppe, too:"
+msgstr "Спроси и людей в степи:"
+
+#. {landmark@near} is a landmark in its form "near", e.g., "у родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} near {landmark@near}."
+msgstr "Видели {animals} {landmark@near}."
+
+#. {landmark@and}, {other@between}: landmarks in the forms "and", "between".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} between {landmark@and} and {other@between}."
+msgstr "Видели {animals} между {landmark@and} и {other@between}."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} north of {landmark@of}."
+msgstr "Видели {animals} к северу от {landmark@of}."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} south of {landmark@of}."
+msgstr "Видели {animals} к югу от {landmark@of}."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} east of {landmark@of}."
+msgstr "Видели {animals} к востоку от {landmark@of}."
+
+#. {landmark@of} is a landmark in its form "of", e.g., "родника".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "I saw {animals} west of {landmark@of}."
+msgstr "Видели {animals} к западу от {landmark@of}."
+
+#. Grandmother tells whom to ask; {person}: "Shepherd"; {landmark@near}: where.
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "{person} near {landmark@near} saw {animals}."
+msgstr "{person} {landmark@near} видел {animals}."
+
+#. Grandmother tells whom to ask; {person} is, e.g., "Shepherd".
+#: scenes/level_map/level_map.gd
+#, fuzzy
+msgid "{person} saw {animals}."
+msgstr "{person} видел {animals}."
+
+#. The button which goes back to the previous screen.
+#: scenes/level_select/level_select.gd scenes/session_name/session_name.gd
+#: scenes/sessions/sessions.gd scenes/settings/settings.gd scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Back"
+msgstr "Назад"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Movement test"
+msgstr "Проверка движений"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squat depth"
+msgstr "Глубина приседания"
+
+#. {count} is the number of the squats so far.
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Squats: {count}"
+msgstr "Приседания: {count}"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Space: squat · ←/→: turn · L: language · Esc: quit"
+msgstr "Пробел: присесть · ←/→: поворот · L: язык · Esc: выход"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse walks."
+msgstr "Лошадь идёт шагом."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse trots."
+msgstr "Лошадь бежит рысью."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse gallops!"
+msgstr "Лошадь скачет галопом!"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "The horse stands."
+msgstr "Лошадь стоит."
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning left"
+msgstr "Поворот налево"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Turning right"
+msgstr "Поворот направо"
+
+#: scenes/movement_test/movement_test.gd
+#, fuzzy
+msgid "Straight ahead"
+msgstr "Прямо"
+
+#. The title of the screen where the players choose whether one or two ride.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "How many riders?"
+msgstr "Сколько всадниц?"
+
+#. The card for a single player.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "1 · One rider"
+msgstr "1 · Одна всадница"
+
+#. The card for two players, who ride together on a split screen.
+#: scenes/player_count/player_count.gd
+#, fuzzy
+msgid "2 · Two riders"
+msgstr "2 · Две всадницы"
+
+#. The default name of the second rider, a girl, in your alphabet.
+#: scenes/profile/rider_profile.gd scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Dana"
+msgstr "Дана"
+
+#. The default name of the rider, a girl, in your alphabet.
+#: scenes/profile/rider_profile.gd scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Aigerim"
+msgstr "Айгерим"
+
+#. The second rider's default horse name, Жұлдыз ("star"), in your alphabet.
+#: scenes/profile/rider_profile.gd
+#, fuzzy
+msgid "Zhuldyz"
+msgstr "Жулдыз"
+
+#. The default name of the horse, Тұлпар, in your alphabet.
+#: scenes/profile/rider_profile.gd
+#, fuzzy
+msgid "Tulpar"
+msgstr "Тулпар"
+
+#: scenes/quit_hint/quit_hint.gd
+#, fuzzy
+msgid "Press Esc again to quit."
+msgstr "Нажми Esc ещё раз, чтобы выйти."
+
+#. {rider} is the rider's name; she rode a level again, whose gift
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Well done, {rider}! This ride gave its gift already."
+msgstr "Молодец, {rider}! За эту поездку подарок уже получен."
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "{rider}, you have won all the finery!"
+msgstr "{rider}, ты собрала все украшения!"
+
+#. {rider} is the rider's name; she chooses one of three gifts.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Well done, {rider}! Choose a gift."
+msgstr "Молодец, {rider}! Выбери подарок."
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "How beautiful!"
+msgstr "Как красиво!"
+
+#. The button which goes on from the gift to the map of the levels.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Go on"
+msgstr "Дальше"
+
+#. The label of the row which opens the wardrobe of the finery.
+#: scenes/reward/reward.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "Wardrobe"
+msgstr "Гардероб"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver studs"
+msgstr "Серебряные бляшки"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Painted saddle"
+msgstr "Расписное седло"
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered cloth"
+msgstr "Вышитый потник"
+
+#. The felt cloth under the saddle, тоқым.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Tassels"
+msgstr "Кисти"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver bridle"
+msgstr "Серебряная уздечка"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Bridle tassels"
+msgstr "Кисти на уздечке"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Breastplate"
+msgstr "Нагрудник"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver stirrups"
+msgstr "Серебряные стремена"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Braided mane"
+msgstr "Заплетённая грива"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Mane ribbons"
+msgstr "Ленты в гриве"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Owl-feather tassel"
+msgstr "Перо филина в гриве"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Owl feathers"
+msgstr "Перья филина"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered coat"
+msgstr "Вышитый чапан"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Ram's horn pattern"
+msgstr "Узор «рога барана»"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Earrings"
+msgstr "Серьги"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Bracelets"
+msgstr "Браслеты"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Silver belt"
+msgstr "Серебряный пояс"
+
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Embroidered boots"
+msgstr "Вышитые сапожки"
+
+#. The felt carpet of the yurt, сырмақ.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Felt carpet"
+msgstr "Войлочный ковёр"
+
+#. The carved and painted door of the yurt.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Carved door"
+msgstr "Резная дверь"
+
+#. The dombra, the two-stringed lute, hanging at home.
+#: scenes/reward/reward.gd
+#, fuzzy
+msgid "Dombra"
+msgstr "Домбра"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Rider: {name}"
+msgstr "Всадница: {name}"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Horse: {name}"
+msgstr "Конь: {name}"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Write the name of your rider"
+msgstr "Напиши имя своей всадницы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Write the name of your horse"
+msgstr "Напиши кличку своего коня"
+
+#. The button which closes the keys after writing a name.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Done"
+msgstr "Готово"
+
+#. In the creator of two players: whose rider it is ({number} is 1 or 2).
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Player {number}"
+msgstr "Игрок {number}"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Random"
+msgstr "Наугад"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Skin"
+msgstr "Кожа"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hair"
+msgstr "Причёска"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hair color"
+msgstr "Цвет волос"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Hat"
+msgstr "Шапка"
+
+#. The coat of the rider, a шапан.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Coat"
+msgstr "Шапан"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Dress"
+msgstr "Платье"
+
+#. The color of the coat of the horse.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Horse"
+msgstr "Масть коня"
+
+#. The white marking on the face of the horse.
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Marking"
+msgstr "Отметина"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgid "Mane"
+msgstr "Грива"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "very light"
+msgstr "очень светлая"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "light"
+msgstr "светлая"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "tanned"
+msgstr "смуглая"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "dark"
+msgstr "тёмная"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "skin"
+msgid "very dark"
+msgstr "очень тёмная"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "two braids"
+msgstr "две косы"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "one braid"
+msgstr "одна коса"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "a bun"
+msgstr "пучок"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "short"
+msgstr "короткие"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "loose"
+msgstr "распущенные"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "black"
+msgstr "чёрные"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "dark brown"
+msgstr "тёмно-каштановые"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "brown"
+msgstr "каштановые"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hair"
+msgid "auburn"
+msgstr "рыжеватые"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "тақия"
+msgstr "тақия"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "бөрік"
+msgstr "бөрік"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "headscarf"
+msgstr "платок"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "felt hat"
+msgstr "войлочная шапка"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "hat"
+msgid "no hat"
+msgstr "без шапки"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "crimson"
+msgstr "алый"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "indigo"
+msgstr "синий"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "emerald"
+msgstr "изумрудный"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "ochre"
+msgstr "охристый"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "white"
+msgstr "белый"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "coat"
+msgid "black"
+msgstr "чёрный"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "crimson"
+msgstr "алое"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "indigo"
+msgstr "синее"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "emerald"
+msgstr "изумрудное"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "ochre"
+msgstr "охристое"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "white"
+msgstr "белое"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "dress"
+msgid "black"
+msgstr "чёрное"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "bay"
+msgstr "гнедой"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "chestnut"
+msgstr "рыжий"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "grey"
+msgstr "серый"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "black"
+msgstr "вороной"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "dun"
+msgstr "буланый"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "horse"
+msgid "piebald"
+msgstr "пегий"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "none"
+msgstr "нет"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "a star"
+msgstr "звёздочка"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "marking"
+msgid "a blaze"
+msgstr "проточина"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "black"
+msgstr "чёрная"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "dark brown"
+msgstr "тёмно-бурая"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "flaxen"
+msgstr "светлая"
+
+#: scenes/rider_creator/rider_creator.gd
+#, fuzzy
+msgctxt "mane"
+msgid "grey"
+msgstr "серая"
+
+#. The title of the screen where the players name a new journey (a saved game).
+#: scenes/session_name/session_name.gd
+#, fuzzy
+msgid "Name your journey"
+msgstr "Назови своё путешествие"
+
+#. The title of the screen where the players choose their journey (a saved game).
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Your journeys"
+msgstr "Твои путешествия"
+
+#. The title of the journeys while the players choose one to delete.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Which journey to delete?"
+msgstr "Какое путешествие удалить?"
+
+#. The button which goes on with the last journey.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Continue"
+msgstr "Продолжить"
+
+#. The button which starts a new journey (a new saved game).
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "+ New journey"
+msgstr "+ Новое путешествие"
+
+#. The button which opens the creator for the rider of the current journey.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Change rider"
+msgstr "Изменить наездницу"
+
+#. The button which deletes a journey (a saved game), after asking.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Delete"
+msgstr "Удалить"
+
+#. Asked before a journey is deleted; {name} is its name, {riders} its riders.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Delete the journey {name} of {riders} for good?"
+msgstr "Удалить путешествие {name} ({riders}) навсегда?"
+
+#. The button which keeps a journey instead of deleting it.
+#: scenes/sessions/sessions.gd
+#, fuzzy
+msgid "Keep"
+msgstr "Оставить"
+
+#. The names of the two riders who ride together, e.g., "Aigerim and Dana".
+#: scenes/sessions/sessions.gd scenes/settings/settings.gd
+#, fuzzy
+msgid "{first} and {second}"
+msgstr "{first} и {second}"
+
+#: scenes/settings/settings.gd scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Step in front of the camera."
+msgstr "Встань перед камерой."
+
+#. The label of the row with the language of the game.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Language"
+msgstr "Язык"
+
+#. The label of the row with the journey (a saved game) and its rider,
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Journey"
+msgstr "Путешествие"
+
+#. The button which opens the wardrobe, to choose what to wear.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Choose what to wear"
+msgstr "Выбери, что надеть"
+
+#. The label of the row with the sound on or off.
+#: scenes/settings/settings.gd
+#, fuzzy
+msgid "Sound"
+msgstr "Звук"
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "On"
+msgstr "Вкл."
+
+#: scenes/settings/settings.gd
+#, fuzzy
+msgctxt "sound"
+msgid "Off"
+msgstr "Выкл."
+
+#. {pose}, {face}: ms for the body, the face; {rate}: bodies a second.
+#: scenes/vision/vision_status.gd
+msgid "I see you! (body {pose} ms, {rate} times a second; face {face} ms)"
+msgstr "Я тебя вижу! (тело {pose} мс, {rate} раз в секунду; лицо {face} мс)"
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The camera is off. Use the keyboard."
+msgstr "Камера выключена. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Looking for a camera..."
+msgstr "Ищу камеру..."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Loading..."
+msgstr "Загрузка..."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The models are missing. Use the keyboard."
+msgstr "Не хватает моделей. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The camera failed. Use the keyboard."
+msgstr "Ошибка камеры. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "The camera does not work on Windows yet. Use the keyboard."
+msgstr "Камера пока не работает на Windows. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "Windows does not allow the camera. Use the keyboard."
+msgstr "Windows не разрешает камеру. Играй с клавиатуры."
+
+#: scenes/vision/vision_status.gd
+#, fuzzy
+msgid "No camera found. Use the keyboard."
+msgstr "Камера не найдена. Играй с клавиатуры."
+
+#. The wardrobe: the title of the panel of the finery which she wears.
+#: scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Wearing"
+msgstr "Надето"
+
+#. The wardrobe: the title of the panel of the finery which she won, but took off.
+#: scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Not wearing"
+msgstr "Не надето"
+
+#. In the wardrobe, before the rider won any finery.
+#: scenes/wardrobe/wardrobe.gd
+#, fuzzy
+msgid "Bring the animals home to win finery!"
+msgstr "Приводи животных домой, чтобы получать украшения!"
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/camel.tres
+#, fuzzy
+msgid "a camel"
+msgstr "верблюда"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/camel.tres
+#, fuzzy
+msgid "camels"
+msgstr "верблюдов"
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/horse.tres
+#, fuzzy
+msgid "a horse"
+msgstr "лошадь"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/horse.tres
+#, fuzzy
+msgid "horses"
+msgstr "лошадей"
+
+#. one animal in the clues, as in 'I saw {animals} near the spring', e.g. 'a sheep'
+#: data/animals/sheep.tres
+#, fuzzy
+msgid "a sheep"
+msgstr "овцу"
+
+#. several animals in the clues, as in 'I saw {animals} near the spring', e.g. 'sheep'
+#: data/animals/sheep.tres
+#, fuzzy
+msgid "sheep"
+msgstr "овец"
+
+#. the name of a level, a few words
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "The lamb by the spring"
+msgstr "Ягнёнок у родника"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "Thank you, {rider}! The lamb is home again."
+msgstr "Спасибо, {rider}! Ягнёнок снова дома."
+
+#. the name of a person of the steppe
+#: data/levels/01_the_lamb_by_the_spring.tscn data/levels/02_after_the_storm.tscn
+#: data/levels/03_grandmothers_camel.tscn data/levels/04_the_foals.tscn
+#: data/levels/05_the_birch_groves.tscn data/levels/06_along_the_esil.tscn
+#: data/levels/07_the_salt_lake.tscn data/levels/08_the_herders_request.tscn
+#: data/levels/09_autumn_migration.tscn data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "Grandmother"
+msgstr "Бабушка"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/01_the_lamb_by_the_spring.tscn
+#, fuzzy
+msgid "Our lamb ran off in the night. Please bring it home, {rider}!"
+msgstr "Ночью наш ягнёнок убежал. Пожалуйста, приведи его домой, {rider}!"
+
+#. the name of a level, a few words
+#: data/levels/02_after_the_storm.tscn
+#, fuzzy
+msgid "After the storm"
+msgstr "После бури"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/02_after_the_storm.tscn
+#, fuzzy
+msgid "Thank you, {rider}! All our sheep are home after the storm."
+msgstr "Спасибо, {rider}! После бури все наши овцы дома."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/02_after_the_storm.tscn
+#, fuzzy
+msgid "The storm scattered our sheep, {rider}! Please find them."
+msgstr "Буря разогнала наших овец, {rider}! Пожалуйста, найди их."
+
+#. the name of a person of the steppe
+#: data/levels/02_after_the_storm.tscn data/levels/03_grandmothers_camel.tscn
+#: data/levels/05_the_birch_groves.tscn data/levels/06_along_the_esil.tscn
+#: data/levels/07_the_salt_lake.tscn data/levels/08_the_herders_request.tscn
+#: data/levels/09_autumn_migration.tscn data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "Shepherd"
+msgstr "Пастух"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/02_after_the_storm.tscn
+#, fuzzy
+msgid "Good day, {rider}! I saw one of your sheep."
+msgstr "Добрый день, {rider}! Я видел одну из твоих овец."
+
+#. the name of a level, a few words
+#: data/levels/03_grandmothers_camel.tscn
+#, fuzzy
+msgid "Grandmother's camel"
+msgstr "Бабушкин верблюд"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/03_grandmothers_camel.tscn
+#, fuzzy
+msgid "Thank you, {rider}! My camel is home, and the sheep too."
+msgstr "Спасибо, {rider}! Мой верблюд дома, и овцы тоже."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/03_grandmothers_camel.tscn
+#, fuzzy
+msgid ""
+"My old camel wandered far away, over the creek, {rider}. The creek has no ford: gallop at it and "
+"jump, and your horse will jump over!"
+msgstr ""
+"Мой старый верблюд ушёл далеко, за ручей, {rider}. Брода через ручей нет: скачи к нему галопом и "
+"прыгни, и твоя лошадь перепрыгнет!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/03_grandmothers_camel.tscn
+#, fuzzy
+msgid "Hello, {rider}! Two sheep came to drink at my well."
+msgstr "Привет, {rider}! Две овцы пришли попить к моему колодцу."
+
+#. the name of a level, a few words
+#: data/levels/04_the_foals.tscn
+#, fuzzy
+msgid "The foals"
+msgstr "Жеребята"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/04_the_foals.tscn
+#, fuzzy
+msgid "Thank you, {rider}! The foals are home with their mothers."
+msgstr "Спасибо, {rider}! Жеребята дома, со своими мамами."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/04_the_foals.tscn
+#, fuzzy
+msgid ""
+"The foals ran off over the creek, {rider}. Jump the creek at a gallop, but ride slowly to the "
+"foals, or they run away!"
+msgstr ""
+"Жеребята убежали за ручей, {rider}. Перепрыгни ручей галопом, а к жеребятам подъезжай медленно, а "
+"то они убегут!"
+
+#. the name of a person of the steppe
+#: data/levels/04_the_foals.tscn data/levels/05_the_birch_groves.tscn
+#: data/levels/06_along_the_esil.tscn data/levels/07_the_salt_lake.tscn
+#: data/levels/08_the_herders_request.tscn data/levels/09_autumn_migration.tscn
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "Beekeeper"
+msgstr "Пчеловод"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/04_the_foals.tscn
+#, fuzzy
+msgid "Hello, {rider}! A young horse grazes near my hives. Come slowly!"
+msgstr "Привет, {rider}! У моих ульев пасётся молодая лошадь. Подъезжай медленно!"
+
+#. the name of a level, a few words
+#: data/levels/05_the_birch_groves.tscn
+#, fuzzy
+msgid "The birch groves"
+msgstr "Берёзовые рощи"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/05_the_birch_groves.tscn
+#, fuzzy
+msgid "Thank you, {rider}! You found them all among the trees."
+msgstr "Спасибо, {rider}! Ты нашла всех среди деревьев."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn
+#, fuzzy
+msgid "Our animals hide among the birches, {rider}. The map shows on which side!"
+msgstr "Наши животные прячутся среди берёз, {rider}. Карта покажет, с какой стороны!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn
+#, fuzzy
+msgid "Good day, {rider}! A camel rests in the shade of the trees."
+msgstr "Добрый день, {rider}! Верблюд отдыхает в тени деревьев."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/05_the_birch_groves.tscn data/levels/09_autumn_migration.tscn
+#, fuzzy
+msgid "Hello, {rider}! Your sheep visited my bees."
+msgstr "Привет, {rider}! Твои овцы заходили к моим пчёлам."
+
+#. the name of a level, a few words
+#: data/levels/06_along_the_esil.tscn
+#, fuzzy
+msgid "Along the Esil"
+msgstr "Вдоль Есиля"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/06_along_the_esil.tscn
+#, fuzzy
+msgid "Thank you, {rider}! Everyone is back across the Esil."
+msgstr "Спасибо, {rider}! Все вернулись из-за Есиля."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+#, fuzzy
+msgid "Our animals crossed the Esil, {rider}. Cross only at the fords, where the water is shallow!"
+msgstr "Наши животные перешли Есиль, {rider}. Переправляйся только по бродам, где мелко!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+#, fuzzy
+msgid "Good day, {rider}! Two sheep went over the river."
+msgstr "Добрый день, {rider}! Две овцы ушли за реку."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/06_along_the_esil.tscn
+#, fuzzy
+msgid "Hello, {rider}! Your horses graze on my side of the river."
+msgstr "Привет, {rider}! Твои лошади пасутся на моём берегу реки."
+
+#. the name of a level, a few words
+#: data/levels/07_the_salt_lake.tscn
+#, fuzzy
+msgid "The salt lake"
+msgstr "Солёное озеро"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/07_the_salt_lake.tscn
+#, fuzzy
+msgid "Thank you, {rider}! You rode across the whole salt steppe!"
+msgstr "Спасибо, {rider}! Ты проехала всю солончаковую степь!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+#, fuzzy
+msgid ""
+"Our camels went towards the salt lake, {rider}. Its water is too salty, so let your horse drink "
+"elsewhere!"
+msgstr ""
+"Наши верблюды ушли к солёному озеру, {rider}. Его вода слишком солёная: пусть твоя лошадь пьёт в "
+"другом месте!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+#, fuzzy
+msgid "Good day, {rider}! I saw sheep far in the east."
+msgstr "Добрый день, {rider}! Я видел овец далеко на востоке."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/07_the_salt_lake.tscn
+#, fuzzy
+msgid "Hello, {rider}! Horses run between the rock and the bushes."
+msgstr "Привет, {rider}! Между камнем и кустами бегают лошади."
+
+#. the name of a level, a few words
+#: data/levels/08_the_herders_request.tscn
+#, fuzzy
+msgid "The herder's request"
+msgstr "Просьба пастуха"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/08_the_herders_request.tscn
+#, fuzzy
+msgid "Thank you, {rider}! Asking around helped!"
+msgstr "Спасибо, {rider}! Расспросы помогли!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+#, fuzzy
+msgid "Our camels are gone, {rider}! Ask the shepherd at the well; he sees far."
+msgstr "Наши верблюды пропали, {rider}! Спроси пастуха у колодца: он видит далеко."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+#, fuzzy
+msgid "Good day, {rider}! The beekeeper by the birch grove saw your camels. And I saw sheep."
+msgstr "Добрый день, {rider}! Пчеловод у берёзовой рощи видел твоих верблюдов. А я видел овец."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/08_the_herders_request.tscn
+#, fuzzy
+msgid "Hello, {rider}! Yes, I saw your camels."
+msgstr "Привет, {rider}! Да, я видела твоих верблюдов."
+
+#. the name of a level, a few words
+#: data/levels/09_autumn_migration.tscn
+#, fuzzy
+msgid "Autumn migration"
+msgstr "Осенняя откочёвка"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/09_autumn_migration.tscn
+#, fuzzy
+msgid "Thank you, {rider}! The whole herd is ready for the winter pastures."
+msgstr "Спасибо, {rider}! Всё стадо готово идти на зимние пастбища."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/09_autumn_migration.tscn
+#, fuzzy
+msgid "Autumn has come, {rider}. We move to the winter pastures, but our animals are scattered!"
+msgstr "Пришла осень, {rider}. Мы откочёвываем на зимовье, а наши животные разбрелись!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/09_autumn_migration.tscn
+#, fuzzy
+msgid "Good day, {rider}! I saw camels and horses on my way."
+msgstr "Добрый день, {rider}! По дороге я видел верблюдов и лошадей."
+
+#. the name of a level, a few words
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "The first snow"
+msgstr "Первый снег"
+
+#. what Grandmother says when all the animals are home; {rider} is the rider's name
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid ""
+"Thank you, {rider}! Everyone is home before the snow. Let's celebrate with the dombra and songs!"
+msgstr "Спасибо, {rider}! Все дома до снега. Давай праздновать с домброй и песнями!"
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "The first snow is coming, {rider}! Bring everyone home, and we will celebrate together."
+msgstr "Скоро первый снег, {rider}! Собери всех домой, и мы устроим праздник."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "Good day, {rider}! I saw horses by the lake and sheep by the spring."
+msgstr "Добрый день, {rider}! Я видел лошадей у озера и овец у родника."
+
+#. what a person says to the rider, at most two short sentences; {rider} is her name
+#: data/levels/10_the_first_snow.tscn
+#, fuzzy
+msgid "Hello, {rider}! One little sheep is south of the birches."
+msgstr "Привет, {rider}! Одна маленькая овечка к югу от берёз."
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "near"
+msgid "the birch grove"
+msgstr "у берёзовой рощи"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "of"
+msgid "the birch grove"
+msgstr "берёзовой рощи"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "and"
+msgid "the birch grove"
+msgstr "берёзовой рощей"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/birches.tres
+#, fuzzy
+msgctxt "between"
+msgid "the birch grove"
+msgstr "берёзовой рощей"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "near"
+msgid "the bushes"
+msgstr "у кустов"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "of"
+msgid "the bushes"
+msgstr "кустов"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "and"
+msgid "the bushes"
+msgstr "кустами"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/bushes.tres
+#, fuzzy
+msgctxt "between"
+msgid "the bushes"
+msgstr "кустами"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "near"
+msgid "the creek"
+msgstr "у ручья"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "of"
+msgid "the creek"
+msgstr "ручья"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "and"
+msgid "the creek"
+msgstr "ручьём"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/creek.tres
+#, fuzzy
+msgctxt "between"
+msgid "the creek"
+msgstr "ручьём"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "near"
+msgid "the old kurgan"
+msgstr "у старого кургана"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "of"
+msgid "the old kurgan"
+msgstr "старого кургана"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "and"
+msgid "the old kurgan"
+msgstr "старым курганом"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/kurgan.tres
+#, fuzzy
+msgctxt "between"
+msgid "the old kurgan"
+msgstr "старым курганом"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "near"
+msgid "the lake"
+msgstr "у озера"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "of"
+msgid "the lake"
+msgstr "озера"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "and"
+msgid "the lake"
+msgstr "озером"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/lake.tres
+#, fuzzy
+msgctxt "between"
+msgid "the lake"
+msgstr "озером"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "near"
+msgid "the pasture"
+msgstr "у пастбища"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "of"
+msgid "the pasture"
+msgstr "пастбища"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "and"
+msgid "the pasture"
+msgstr "пастбищем"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/pasture.tres
+#, fuzzy
+msgctxt "between"
+msgid "the pasture"
+msgstr "пастбищем"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/river.tres
+#, fuzzy
+msgctxt "near"
+msgid "the Esil"
+msgstr "у Есиля"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/river.tres
+#, fuzzy
+msgctxt "of"
+msgid "the Esil"
+msgstr "Есиля"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/river.tres
+#, fuzzy
+msgctxt "and"
+msgid "the Esil"
+msgstr "Есилем"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/river.tres
+#, fuzzy
+msgctxt "between"
+msgid "the Esil"
+msgstr "Есилем"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "near"
+msgid "the big rock"
+msgstr "у большого камня"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "of"
+msgid "the big rock"
+msgstr "большого камня"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "and"
+msgid "the big rock"
+msgstr "большим камнем"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/rock.tres
+#, fuzzy
+msgctxt "between"
+msgid "the big rock"
+msgstr "большим камнем"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/salt_lake.tres
+#, fuzzy
+msgctxt "near"
+msgid "the salt lake"
+msgstr "у солёного озера"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/salt_lake.tres
+#, fuzzy
+msgctxt "of"
+msgid "the salt lake"
+msgstr "солёного озера"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/salt_lake.tres
+#, fuzzy
+msgctxt "and"
+msgid "the salt lake"
+msgstr "солёным озером"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/salt_lake.tres
+#, fuzzy
+msgctxt "between"
+msgid "the salt lake"
+msgstr "солёным озером"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "near"
+msgid "the spring"
+msgstr "у родника"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "of"
+msgid "the spring"
+msgstr "родника"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "and"
+msgid "the spring"
+msgstr "родником"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/spring.tres
+#, fuzzy
+msgctxt "between"
+msgid "the spring"
+msgstr "родником"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "near"
+msgid "the well"
+msgstr "у колодца"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "of"
+msgid "the well"
+msgstr "колодца"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "and"
+msgid "the well"
+msgstr "колодцем"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/well.tres
+#, fuzzy
+msgctxt "between"
+msgid "the well"
+msgstr "колодцем"
+
+#. the form of the landmark for {landmark@near} in the translations: near the landmark, e.g. 'у
+#. родника', 'бұлақтың жанында'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "near"
+msgid "the yurt"
+msgstr "у юрты"
+
+#. the form of the landmark for {landmark@of} in the translations: as in 'north of the landmark',
+#. e.g. 'родника' in 'к северу от родника', 'бұлақтың' in 'бұлақтың солтүстік жағында'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "of"
+msgid "the yurt"
+msgstr "юрты"
+
+#. the form of the landmark for {landmark@and} in the translations: the first of two, as in 'between
+#. the landmark and ...', e.g. 'родником', 'бұлақ пен'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "and"
+msgid "the yurt"
+msgstr "юртой"
+
+#. the form of the landmark for {landmark@between} in the translations: the second of two, as in
+#. 'between ... and the landmark', e.g. 'родником', 'бұлақтың'
+#: data/landmarks/yurt.tres
+#, fuzzy
+msgctxt "between"
+msgid "the yurt"
+msgstr "юртой"
+
+#, fuzzy
+#~ msgid "The foals ran off, {rider}. Ride slowly to them, or they run away!"
+#~ msgstr "Жеребята убежали, {rider}. Подъезжай к ним медленно, а то они убегут!"
+
+#, fuzzy
+#~ msgid "My old camel wandered far away, {rider}. Listen: you will hear it before you see it!"
+#~ msgstr "Мой старый верблюд ушёл далеко, {rider}. Слушай: ты услышишь его раньше, чем увидишь!"
+
+#, fuzzy
+#~ msgid "I see you! (body {pose} ms, face {face} ms)"
+#~ msgstr "Я тебя вижу! (тело {pose} мс, лицо {face} мс)"
+
+#, fuzzy
+#~ msgid "Both hands up above your head: your horse rears up and stops at once!"
+#~ msgstr "Обе руки вверх над головой: лошадь встаёт на дыбы и сразу останавливается!"
+
+#, fuzzy
+#~ msgid "Who rides today?"
+#~ msgstr "Кто сегодня скачет?"
+
+#, fuzzy
+#~ msgid "+ New"
+#~ msgstr "+ Новая"
+
+#, fuzzy
+#~ msgid "Rider"
+#~ msgstr "Наездница"
+
+#, fuzzy
+#~ msgid "The Steppe Rescue"
+#~ msgstr "Спасение в степи"
+
+#, fuzzy
+#~ msgid "Find the lost animals and bring them home!"
+#~ msgstr "Найди потерявшихся животных и приведи их домой!"

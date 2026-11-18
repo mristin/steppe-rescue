@@ -1,0 +1,150 @@
+# Third-party notices
+
+The Steppe Rescue is licensed under the MIT License; see [LICENSE](LICENSE).
+This covers the code, the scenes and everything the game draws in code.
+
+The game includes, or is built with, the following third-party components.
+Each keeps its own license.
+
+Every release package carries our [LICENSE](LICENSE), this file and, in the directory `licenses/`, the license texts of Godot Engine, ONNX Runtime (from its NuGet package), the three models and the font (the sounds are under CC0 and need no license text), and the Windows package also the license text of CameraServerExtension; see `.github/workflows/publish.yaml`.
+
+## Distributed with the game
+
+### Godot Engine
+
+* Version: 4.6.2 (.NET)
+* License: MIT
+* Copyright (c) 2014-present Godot Engine contributors; Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur
+* Source: https://godotengine.org
+* License text: [licenses/godot/LICENSE.txt](licenses/godot/LICENSE.txt)
+
+Godot Engine itself includes third-party components under their own licenses.
+Their notices are in [licenses/godot/COPYRIGHT.txt](licenses/godot/COPYRIGHT.txt), generated from the Godot binary with `dev/write_godot_licenses.gd`.
+
+### .NET runtime
+
+* License: MIT
+* Copyright (c) .NET Foundation and Contributors
+* Source: https://github.com/dotnet/runtime
+* Third-party notices: https://github.com/dotnet/runtime/blob/main/THIRD-PARTY-NOTICES.TXT
+
+### ONNX Runtime
+
+* Package: `Microsoft.ML.OnnxRuntime` 1.19.2
+* License: MIT
+* Copyright (c) Microsoft Corporation
+* Source: https://github.com/microsoft/onnxruntime
+
+### CameraServerExtension (only in the Windows package)
+
+* Version: 2026.03.27 (the prebuilt Windows x86_64 library of the release)
+* License: MIT
+* Copyright (c) 2024-present Jason Kuo
+* Source: https://github.com/j20001970/godot-cameraserver-extension
+* License text: [addons/CameraServerExtension/LICENSE](addons/CameraServerExtension/LICENSE)
+
+Godot 4.6 implements no camera on Windows; the extension provides it there, with Media Foundation.
+
+### RTMO (pose)
+
+* File: `scenes/vision/rtmo/model/rtmo_t_body7_416x416.onnx`
+* License: Apache License 2.0
+* Copyright (c) OpenMMLab
+* Source: MMPose, https://github.com/open-mmlab/mmpose/tree/main/projects/rtmo, the checkpoint `rtmo-t_8xb32-600e_body7-416x416-f48f75cb_20231219.pth`, exported to ONNX with MMDeploy 1.3.0; taken over from [ergo-chaos](https://github.com/mristin/ergo-chaos) (SHA-256 `20aad6e2e42359cac1c5b4a0b2da00e29bfe91a72a782fdcf287d273a04c1b24`)
+* License text: [scenes/vision/rtmo/model/LICENSE](scenes/vision/rtmo/model/LICENSE)
+
+The model was trained on the Body7 collection of datasets, some of which carry their own terms of use; check them before a commercial release.
+
+### YOLOX-Body-Head-Hand (heads)
+
+* File: `scenes/vision/yolox/model/yolox_n_body_head_hand_Nx3xHxW.onnx`
+* License: Apache License 2.0
+* Copyright (c) PINTO0309 (Katsuya Hyodo); based on YOLOX by Megvii (https://github.com/Megvii-BaseDetection/YOLOX)
+* Source: https://github.com/PINTO0309/PINTO_model_zoo/tree/main/426_YOLOX-Body-Head-Hand, the nano model; taken over from [bird-dog](https://github.com/mristin/bird-dog) (SHA-256 `2cfe872bbf195743a5cac7a36c45c18f10422b01e7ca33cad486c9665283d6a1`)
+* License text: [scenes/vision/yolox/model/LICENSE](scenes/vision/yolox/model/LICENSE)
+
+We distribute the model unmodified.
+
+### YuNet (face landmarks)
+
+* File: `scenes/vision/yunet/model/face_detection_yunet_2023mar_dynamic.onnx`
+* License: MIT
+* Copyright (c) 2020 Shiqi Yu
+* Source: https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet, file `face_detection_yunet_2023mar.onnx` (SHA-256 `8f2383e4dd3cfbb4553ea8718107fc0423210dc964f9f4280604804ed2552fa4`); taken over from [bird-dog](https://github.com/mristin/bird-dog)
+* License text: [scenes/vision/yunet/model/LICENSE](scenes/vision/yunet/model/LICENSE)
+
+**Altered:** the height and the width of the input were made dynamic, so that it runs on small head crops; the graph and the weights are unchanged.
+
+### GNU Unifont
+
+* File: `assets/fonts/unifont/unifont-16.0.04.otf`
+* License: SIL Open Font License 1.1 (dual-licensed with the GNU GPL 2+ with the font embedding exception; we use it under the OFL)
+* Copyright (c) Roman Czyborra, Paul Hardy and the Unifont contributors
+* Source: https://unifoundry.com/pub/unifont/unifont-16.0.04/font-builds/unifont-16.0.04.otf (SHA-256 `0e3981ab552231b5a2a870f2b61741903a4bf25c23ef5aeb05fdced1b3c7af4d`)
+* License text: [assets/fonts/unifont/OFL-1.1.txt](assets/fonts/unifont/OFL-1.1.txt)
+
+### The portraits of the people (no longer shown in the game)
+
+* Files: `assets/pictures/sources/grandmother.jpg`, `shepherd.jpg` and `beekeeper.jpg`, pixelized into `assets/pictures/portraits/` by `dev/pictures/pixelize.py`
+* License: Public domain (photographs from about 1865–1872; Wikimedia Commons: PD-old-100-1923)
+* Source: the Turkestan Album, "Tipy narodnostei turkestanskago kraia" (Types of the peoples of the Turkestan region), Library of Congress, Prints and Photographs Division, via Wikimedia Commons:
+  * Grandmother: "Kirgiz-Kazachki. Tunuk-ai", LCCN 2007682007, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazachki._Tunuk-ai_LCCN2007682007.jpg
+  * The shepherd: "Kirgiz-Kazaki. Utkul'-bai", LCCN 2007681449, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Kirgiz-Kazaki-_Utkul%27-bai_LCCN2007681449.jpg
+  * The beekeeper: "Cholak-Kazachki. Ai-kara", LCCN 2007682050, https://commons.wikimedia.org/wiki/File:Tipy_narodnostei_turkestanskago_kraia._Cholak-Kazachki._Ai-kara_LCCN2007682050.jpg
+
+**Altered:** cropped to the head, shrunk to 128x128 pixels and painted in the sepia colors of the game's palette; Grandmother's photograph is also cut out along her outline and retouched with a smooth warp, which lifts the corners of her mouth into a gentle smile, and its shadows are lightened. The sources keep the 960-pixel-wide copies from Wikimedia Commons, as downloaded; the crops, the outline and the retouching are listed in `assets/pictures/sources/sources.json`.
+
+### The paintings
+
+* Files: everything in `assets/pictures/` except `portraits/` and `sources/`: the intro painting, the backgrounds, the maps, the riders and the horses, the girl squatting and pulling the reins, the horse in its gaits, the creatures, the people and the landmarks seen from above, the portraits in `people/`, the ground, the pen, the finery, the icons and the panels of the buttons
+* Made by: generated with ChatGPT (OpenAI) by the author of the game, from prompts written for the game (see `dev/pictures/export_art.gd` for what each picture is used for)
+* Terms: OpenAI's terms of use assign the rights in the output, as far as there are any, to the user; pictures generated by a machine may not be protected by copyright at all. We distribute them with the game under its MIT License, as far as we hold any rights in them.
+
+**Altered:** cut out of the generated sprite sheets (their painted checkerboard or black backgrounds removed), cropped, scaled, and aligned on common canvases so that the frames of an animation stand on the same spot; the pen is turned around so that its gate faces north; the salt lake (`landmarks/salt_lake.png`, `icons/landmark_salt_lake.png`) is the painted lake with its water made milky and a white crust of salt around it; the girl with her hands up, the horse rearing from the side (its painted checkerboard removed) and the four horses rearing from above are cut out and scaled to the frames they join; the river and its ford are cut off their white background, and the ford fades out to its sides, so that it lies over the river; the ground is softened a little; the photographs of the people are no longer shown in the game; the clothes of the body over the camera picture (`body/`: the rein, and the coat, the sleeve and the boot of each rider) are cut off their magenta background and aligned by their dots and outlines (`dev/pictures/cut_body.py`); the three fists (`body/fist_low.png`, `fist_middle.png`, `fist_up.png`) are cut out of one painting of three fists on magenta, the rope beside them taken off, levelled by the rope and scaled alike (`dev/pictures/cut_fists.py`); and the coats and the sleeves, all painted indigo, are recolored to the coats of the riders. The jumps (the horses from above, `top_down/horses/<n>/jump_*.png`, and the girl, `girl/jump_*.png`) are cut out of their sprite sheets on magenta (`dev/pictures/cut_jump.py`), aligned by the saddle cloth and by the ground, and the sheets of the horses, painted in the reverse order, are matched to the horses by their coats.
+
+### The sounds of the steppe
+
+* Files: `assets/sounds/*.ogg`, cut by `dev/sounds/cut_sounds.py` as listed in `dev/sounds/sources.json`
+* License: Creative Commons Zero (CC0 1.0), public domain dedication, https://creativecommons.org/publicdomain/zero/1.0/
+* Source: Freesound, https://freesound.org; the high-quality previews of the recordings below
+
+CC0 asks for no attribution; we thank the recordists all the same:
+
+| File | What it is in the game | Recording | Cut |
+|---|---|---|---|
+| `hooves_walk.ogg` | the hooves at a walk (a loop) | ["Riding Horse Thru Mud, Rider's Perspective"](https://freesound.org/s/870717/) by CHallSmith | 25–35 s |
+| `hooves_trot.ogg` | the hooves at a trot (a loop) | ["R14-02-Slow Trot on Grass.wav"](https://freesound.org/s/479739/) by craigsmith | 9–19 s |
+| `hooves_gallop.ogg` | the hooves at a gallop (a loop) | ["R13-26-Horse Muffled Hooves on Dirt.wav"](https://freesound.org/s/479698/) by craigsmith | 6–16 s |
+| `hoof.ogg` | a single hoof: the jump, the landing and the end of a rear | ["HorseGallop1.wav"](https://freesound.org/s/684446/) by gbnelso | 0.6–0.85 s |
+| `whinny.ogg` | the horse rears up; a lagging horse calls | ["G38-15-Perfect Horse Whinny.wav"](https://freesound.org/s/437110/) by craigsmith | 10.7–12.5 s |
+| `snort.ogg` | the impatient horse standing still | ["Horse(snort)_3.wav"](https://freesound.org/s/475483/) by o_ciz | 0–0.6 s |
+| `sheep_1.ogg` | a lagging sheep calls (the ewe) | ["Ewe baa"](https://freesound.org/s/677221/) by satoristudios3 | 0–1.3 s |
+| `sheep_2.ogg` | a lagging sheep calls (the lamb) | ["Twin Lambs Baa-ing"](https://freesound.org/s/692898/) by satoristudios3 | 0.1–1.75 s |
+| `camel.ogg` | a lagging camel calls | ["G12-05-Camel Grunt.wav"](https://freesound.org/s/437937/) by craigsmith | 1.3–3.7 s |
+| `eagle_1.ogg` | the eagle (a red-tailed hawk stands in for it) | ["red-tailed-hawk.wav"](https://freesound.org/s/575524/) by 1888software | 6.1–7.6 s |
+| `eagle_2.ogg` | the eagle (a red-tailed hawk stands in for it) | ["red-tailed-hawk.wav"](https://freesound.org/s/575524/) by 1888software | 13.8–15.4 s |
+| `falcon.ogg` | the falcon (a red-shouldered hawk stands in for it) | ["Bird - Red-shouldered hawk"](https://freesound.org/s/770032/) by Vrymaa | 0.1–2.3 s |
+| `swallow.ogg` | the swallows | ["Swallow_Zoom_H4.wav"](https://freesound.org/s/502948/) by eduardogon | 0.8–2 s |
+| `lark.ogg` | the lark flies up (a skylark) | ["Single Skylark"](https://freesound.org/s/387426/) by Kinoton | 20–27 s |
+| `marmot.ogg` | the marmot dives into its burrow (a hoary marmot) | ["Hoary marmot whistles"](https://freesound.org/s/822939/) by SoundsLikeYukon | 0–0.95 s |
+| `locust.ogg` | the locusts hop (the wing snaps of a grasshopper) | ["Grasshopper wing snaps clicks KAMLOOPS 100824.flac"](https://freesound.org/s/573934/) by TRP | 0.5–2.3 s |
+| `wind.ogg` | the wind of the steppe (a loop) | ["Heavy Wind, Through Grass & Bushes"](https://freesound.org/s/656680/) by Kinoton | 40–70 s |
+| `meadow.ogg` | the insects in the grass (a loop) | ["Meadow with many insects chirps atmo field recording"](https://freesound.org/s/529573/) by Garuda1982 | 20–50 s |
+
+No CC0 recordings of a golden or a steppe eagle, nor of a falcon of the steppe, were to be found, so the calls of two American hawks stand in for them.
+
+**Altered:** cut out of the recordings, mixed down to mono at 44.1 kHz, high-passed, faded in and out, normalized, and re-encoded as Ogg Vorbis; the loops (the hooves, the wind and the insects) are cross-faded at their seams so that they repeat seamlessly.
+
+### The melody of "Көзімнің қарасы"
+
+* Files: the notes in `scenes/sound/sounds.gd` and `assets/music/kozimnin_karasi.mid`, both written by `dev/music/kozimnin_karasi.py`
+* Composer: Abai Qunanbaiuly (1845–1904)
+* License: Public domain (the composer died more than 70 years ago)
+* Source: only the melody, transcribed from the oboe (bars 1–8) and the flute (bars 9–16) of a band arrangement published by the Center for Middle Eastern Studies of the University of Arizona, https://cmes.arizona.edu/node/648; the arrangement itself is not used.
+
+**Altered:** transposed an octave down to the range of the dombra, and played by the game's synthesized dombra over a soft strum of its open strings.
+
+## Used only for the development
+
+* The test photo `tests/SteppeRescue.Tests/data/astronaut_640x480.png` is a public-domain NASA photo of Eileen Collins (the scikit-image "astronaut"), fitted into a 640x480 frame.
+* xUnit (Apache-2.0), StbImageSharp (public domain), gdtoolkit (MIT), black (MIT), polib (MIT) and Pillow (MIT-CMU).

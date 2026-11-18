@@ -1,0 +1,55 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scenes/level/level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://data/levels/01_the_lamb_by_the_spring.tscn" id="2_map"]
+[ext_resource type="Script" path="res://scenes/level/rider.gd" id="3_rider"]
+[ext_resource type="Script" path="res://scenes/level/slots.gd" id="4_slots"]
+[ext_resource type="Script" path="res://scenes/camera_panel/camera_panel.gd" id="8_camera_panel"]
+[ext_resource type="Script" path="res://scenes/quit_hint/quit_hint.gd" id="10_quit_hint"]
+
+[node name="Level" type="Node2D"]
+script = ExtResource("1_level")
+map_scene = ExtResource("2_map")
+
+[node name="World" type="Node2D" parent="."]
+
+[node name="Animals" type="Node2D" parent="World"]
+
+[node name="Rider" type="Node2D" parent="World"]
+script = ExtResource("3_rider")
+
+[node name="Views" type="CanvasLayer" parent="."]
+layer = 0
+
+[node name="Hud" type="CanvasLayer" parent="."]
+
+[node name="Slots" type="Control" parent="Hud"]
+layout_mode = 3
+anchors_preset = 0
+offset_top = 6.0
+offset_right = 960.0
+offset_bottom = 34.0
+mouse_filter = 2
+script = ExtResource("4_slots")
+
+[node name="CameraPanel" type="Control" parent="Hud"]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 664.0
+offset_top = 316.0
+offset_right = 952.0
+offset_bottom = 532.0
+mouse_filter = 2
+script = ExtResource("8_camera_panel")
+
+[node name="StatusLabel" type="Label" parent="Hud"]
+offset_left = 8.0
+offset_top = 458.0
+offset_right = 700.0
+offset_bottom = 476.0
+
+[node name="QuitHint" type="Label" parent="Hud"]
+offset_top = 300.0
+offset_right = 960.0
+offset_bottom = 318.0
+script = ExtResource("10_quit_hint")

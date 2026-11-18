@@ -149,15 +149,54 @@ func walk_along(points: PackedVector2Array, max_speed: float, delta: float) -> i
     return passed
 
 
+## Walk along the points at the speed of the kind and around what blocks the
+## horse (see [method walk_along] and [method keep_out]); return how many of
+## the points it passed.
+func walk_around(points: PackedVector2Array, solids: Array[Vector3], delta: float) -> int:
+    var from := position
+    var passed := walk_along(points, kind.speed, delta)
+    keep_out(solids, from, kind.speed * delta)
+    return passed
+
+
 ## Step out of what blocks the horse (the circles x, y, radius), e.g., a
 ## follower which cut across a well on its way onto the trail of its rider.
-func keep_out(solids: Array[Vector3]) -> void:
+##
+## The animal stood at [param from] before this frame's step and may move at
+## most [param max_step] in all, so that stepping out never makes it run
+## faster than its kind: if pushing it straight out would carry it too far, it
+## slides along the edge of the solid instead.
+func keep_out(solids: Array[Vector3], from: Vector2, max_step: float) -> void:
     for solid in solids:
         var center := Vector2(solid.x, solid.y)
+        var edge := solid.z + 1.0
         var away := position - center
-        if away.length() < solid.z + 1.0:
-            var out := away.normalized() if away.length() > 0.001 else Vector2.DOWN
-            position = center + out * (solid.z + 1.0)
+        if away.length() >= edge:
+            continue
+        var out := away.normalized() if away.length() > 0.001 else Vector2.DOWN
+        var pushed := center + out * edge
+        if from.distance_to(pushed) <= max_step:
+            position = pushed
+            continue
+
+        # NOTE (mristin):
+        # Of the points on the edge which the animal can still reach this
+        # frame (where the edge meets the circle of max_step around from), we
+        # take the one closest to where it would have been pushed.
+        var to_from := from - center
+        var d := to_from.length()
+        if d > 0.001 and absf(edge - max_step) <= d and d <= edge + max_step:
+            var along := (edge * edge - max_step * max_step + d * d) / (2.0 * d)
+            var aside := sqrt(maxf(0.0, edge * edge - along * along))
+            var u := to_from / d
+            var base := center + u * along
+            var perp := Vector2(-u.y, u.x) * aside
+            var a := base + perp
+            var b := base - perp
+            position = a if a.distance_to(pushed) <= b.distance_to(pushed) else b
+        else:
+            # The edge is out of reach this frame; step towards it.
+            position = from + (pushed - from).limit_length(max_step)
 
 
 ## Call out to the rider (a follower which fell behind): waves rise over it.

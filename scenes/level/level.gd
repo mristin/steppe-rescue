@@ -733,8 +733,7 @@ func _update_animals(delta: float) -> void:
                 # A follower who lags behind walks the rest of the trail of
                 # its rider first, around the water, then into the pen.
                 if not animal.path.is_empty():
-                    var passed := animal.walk_along(animal.path, animal.kind.speed, delta)
-                    animal.keep_out(solids)
+                    var passed := animal.walk_around(animal.path, solids, delta)
                     animal.path = animal.path.slice(passed)
                     if (
                         animal.path.size() <= 1
@@ -758,9 +757,8 @@ func _update_animals(delta: float) -> void:
             var way := player.trail_way(
                 animal.crumb + 1, player.trail_index(behind), 16, player.trail_point(behind)
             )
-            var passed := animal.walk_along(way, animal.kind.speed, delta)
+            var passed := animal.walk_around(way, solids, delta)
             animal.crumb = maxi(animal.crumb, player.trail_start - 1) + passed
-            animal.keep_out(solids)
             # NOTE (mristin):
             # A follower which fell far behind calls out, and keeps calling
             # until it caught up; it never gets lost.
